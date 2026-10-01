@@ -1,0 +1,35 @@
+---
+name: Publish Arch git package
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - src/**
+      - package.json
+      - bun.lock
+      - mise.toml
+      - LICENSE
+      - .scripts/linux/PKGBUILD
+      - .scripts/linux/ha-bridge.install
+      - .scripts/linux/ha-bridge.service
+      - .github/workflows/publish-arch-git.yml
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-arch-git-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish Arch package (ha-bridge-git)
+    uses: timmo001/workflows/.github/workflows/build-arch-package.yml@da1f8d52a56ce02034b676a8c91275e822934a68 # 20261001.0
+    with:
+      package-name: ha-bridge-git
+    secrets:
+      ARCH_REPO_DISPATCH_TOKEN: ${{ secrets.ARCH_REPO_DISPATCH_TOKEN }}

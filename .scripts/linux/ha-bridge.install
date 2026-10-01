@@ -1,0 +1,73 @@
+post_install() {
+  _ha_bridge_configure_user_service start
+}
+
+post_upgrade() {
+  _ha_bridge_configure_user_service try-restart
+}
+
+pre_remove() {
+  _ha_bridge_disable_user_service
+}
+
+_ha_bridge_unit="ha-bridge.service"
+
+# Runs systemctl --user for the installing user, if they have a running user session.
+_ha_bridge_user_systemctl() {
+  local user="$1"
+  shift
+  local uid
+  local runtime_dir
+  local bus_path
+
+  uid="$(id -u "$user" 2>/dev/null)" || return 1
+  runtime_dir="/run/user/$uid"
+  bus_path="$runtime_dir/bus"
+
+  if [ ! -S "$bus_path" ]; then
+    return 1
+  fi
+
+  runuser -u "$user" -- env \
+    XDG_RUNTIME_DIR="$runtime_dir" \
+    DBUS_SESSION_BUS_ADDRESS="unix:path=$bus_path" \
+    systemctl --user "$@" >/dev/null 2>&1
+}
+
+_ha_bridge_configure_user_service() {
+  # start on first install; try-restart on upgrade, so a service the user
+  # stopped on purpose stays stopped.
+  local activate="${1:-start}"
+
+  if command -v systemctl >/dev/null 2>&1; then
+    systemctl --global enable "$_ha_bridge_unit" >/dev/null 2>&1 || true
+  fi
+
+  if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != "root" ]; then
+    _ha_bridge_user_systemctl "$SUDO_USER" daemon-reload &&
+      _ha_bridge_user_systemctl "$SUDO_USER" enable "$_ha_bridge_unit" &&
+      _ha_bridge_user_systemctl "$SUDO_USER" "$activate" "$_ha_bridge_unit"
+  fi
+
+  cat <<'EOF'
+ha-bridge: installed user service ha-bridge.service
+
+- Enabled for future logins with systemd user sessions.
+- If the installing user has a running user session, it was started for them too.
+- Each user's Home Assistant URL and token live in ~/.config/ha-bridge/config.yml; run `ha-bridge setup` to set them.
+
+If the service isn't running in your current session, run:
+  systemctl --user daemon-reload
+  systemctl --user enable --now ha-bridge.service
+EOF
+}
+
+_ha_bridge_disable_user_service() {
+  if command -v systemctl >/dev/null 2>&1; then
+    systemctl --global disable "$_ha_bridge_unit" >/dev/null 2>&1 || true
+  fi
+
+  if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != "root" ]; then
+    _ha_bridge_user_systemctl "$SUDO_USER" disable --now "$_ha_bridge_unit" || true
+  fi
+}

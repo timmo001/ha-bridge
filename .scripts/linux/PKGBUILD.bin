@@ -1,0 +1,30 @@
+#!/bin/sh
+# Maintainer: Aidan Timson (Timmo) <aidan@timmo.dev>
+pkgname=ha-bridge-bin
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="One shared Home Assistant connection for your machine, served to local apps over a single socket (prebuilt binary)"
+arch=('x86_64' 'aarch64')
+url="https://github.com/timmo001/ha-bridge"
+license=('Apache-2.0')
+keywords=('home-assistant' 'automation' 'cli' 'websocket')
+install=ha-bridge.install
+depends=('glibc')
+provides=('ha-bridge')
+conflicts=('ha-bridge' 'ha-bridge-git')
+options=('!strip')
+source=('ha-bridge.bash' 'ha-bridge.fish' '_ha-bridge' 'ha-bridge.service' 'LICENSE')
+source_x86_64=("ha-bridge-${pkgver}-linux-x86_64.tar.gz::$url/releases/download/${pkgver}/ha-bridge-${pkgver}-linux-x86_64.tar.gz")
+source_aarch64=("ha-bridge-${pkgver}-linux-aarch64.tar.gz::$url/releases/download/${pkgver}/ha-bridge-${pkgver}-linux-aarch64.tar.gz")
+sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP')
+sha256sums_x86_64=('SKIP')
+sha256sums_aarch64=('SKIP')
+
+package() {
+  install -Dm755 ha-bridge "$pkgdir/usr/bin/ha-bridge"
+  install -Dm644 ha-bridge.service "$pkgdir/usr/lib/systemd/user/ha-bridge.service"
+  install -Dm644 ha-bridge.bash "$pkgdir/usr/share/bash-completion/completions/ha-bridge"
+  install -Dm644 ha-bridge.fish "$pkgdir/usr/share/fish/vendor_completions.d/ha-bridge.fish"
+  install -Dm644 _ha-bridge "$pkgdir/usr/share/zsh/site-functions/_ha-bridge"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

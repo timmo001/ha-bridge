@@ -1,0 +1,15 @@
+[Unit]
+Description=ha-bridge shared Home Assistant connection
+Documentation=https://github.com/timmo001/ha-bridge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=XDG_RUNTIME_DIR=%t
+ExecStart=/usr/bin/ha-bridge serve
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
