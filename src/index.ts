@@ -17,6 +17,9 @@ import { RpcClientError } from "effect/rpc/RpcClientError";
 import packageJson from "../package.json" with { type: "json" };
 import {
   AssistSatellite,
+  AssistSatelliteAnnounceOptions,
+  AssistSatelliteAskQuestionData,
+  AssistSatelliteStartConversationData,
   Climate,
   ClimateSetTemperatureData,
   Cover,
@@ -37,6 +40,10 @@ import {
   type EntityUpdate,
 } from "@timmo001/effect-ha-bridge";
 import { serve as serveBridge } from "./bridge/Server.js";
+import {
+  invalidAnswerOptionMessage,
+  parseAnswerOptions,
+} from "./homeassistant/assistSatellite.js";
 import {
   climateStateText,
   coverStateText,
@@ -96,7 +103,7 @@ const withBridge = <A, E, R>(
 const callAction = Effect.fn("callAction")(function* (action: Action) {
   const client = yield* BridgeClient;
 
-  yield* client.CallAction(action).pipe(
+  return yield* client.CallAction(action).pipe(
     Effect.catchTag("HomeAssistantError", (error) =>
       Effect.fail(
         new CommandError({
@@ -227,6 +234,32 @@ const inputNumberName = nameArgument(
   "Entity name without the input_number. prefix",
 );
 
+const areaArgument = (description: string) =>
+  Argument.String("area_id").pipe(Argument.withDescription(description));
+
+const preannounceFlags = {
+  preannounce: optionalFlag(
+    Flag.Boolean("preannounce"),
+    "Play the pre-announcement sound first (the default); --no-preannounce skips it",
+  ),
+  preannounce_media_id: optionalFlag(
+    Flag.String("preannounce-media-id"),
+    "Media ID to play as the pre-announcement",
+  ),
+};
+
+const decodeAnnounceOptions = Schema.decodeUnknownEffect(
+  AssistSatelliteAnnounceOptions,
+);
+
+const decodeStartConversation = Schema.decodeUnknownEffect(
+  AssistSatelliteStartConversationData,
+);
+
+const decodeAskQuestion = Schema.decodeUnknownEffect(
+  AssistSatelliteAskQuestionData,
+);
+
 const assistSatellite = domainCommand(
   "assist_satellite",
   "as",
@@ -235,20 +268,125 @@ const assistSatellite = domainCommand(
     Command.make(
       "announce",
       {
-        area: Argument.String("area_id").pipe(
-          Argument.withDescription("Area to announce in"),
-        ),
+        area: areaArgument("Area to announce in"),
         message: Argument.String("message").pipe(
           Argument.withDescription("Message to announce"),
         ),
-      },
-      ({ area, message }) =>
-        callAction(AssistSatellite.announce({ area_id: area }, message)).pipe(
-          withBridge,
+        media_id: optionalFlag(
+          Flag.String("media-id"),
+          "Media ID to play instead of speaking the message",
         ),
+        ...preannounceFlags,
+      },
+      ({ area, message, ...flags }) =>
+        Effect.gen(function* () {
+          const options = yield* decodeData(
+            "announce options",
+            decodeAnnounceOptions(setFields(flags)),
+          );
+
+          yield* callAction(
+            AssistSatellite.announce({ area_id: area }, message, options),
+          );
+        }).pipe(withBridge),
     ).pipe(
       Command.withAlias("a"),
       Command.withDescription("Announce a message on an area's satellites"),
+    ),
+    Command.make(
+      "start-conversation",
+      {
+        area: areaArgument("Area to start the conversation in"),
+        message: Argument.String("message").pipe(
+          Argument.withDescription("Message to start with"),
+        ),
+        start_media_id: optionalFlag(
+          Flag.String("media-id"),
+          "Media ID to play instead of speaking the message",
+        ),
+        extra_system_prompt: optionalFlag(
+          Flag.String("extra-system-prompt"),
+          "Context for the conversation agent, such as why it was started",
+        ),
+        ...preannounceFlags,
+      },
+      ({ area, message, ...flags }) =>
+        Effect.gen(function* () {
+          const data = yield* decodeData(
+            "conversation options",
+            decodeStartConversation({
+              start_message: message,
+              ...setFields(flags),
+            }),
+          );
+
+          yield* callAction(
+            AssistSatellite.startConversation({ area_id: area }, data),
+          );
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withAlias("c"),
+      Command.withDescription(
+        "Speak a message on an area's satellites, then listen for a reply",
+      ),
+    ),
+    Command.make(
+      "ask-question",
+      {
+        name: nameArgument("Entity name without the assist_satellite. prefix"),
+        question: Argument.String("question").pipe(
+          Argument.withDescription("Question to ask"),
+        ),
+        answers: Flag.String("answer").pipe(
+          Flag.withDescription(
+            "Possible answer as id=sentence,sentence; repeat for more answers",
+          ),
+          Flag.atLeast(0),
+        ),
+        question_media_id: optionalFlag(
+          Flag.String("media-id"),
+          "Media ID to play instead of speaking the question",
+        ),
+        ...preannounceFlags,
+      },
+      ({ name, question, answers, ...flags }) =>
+        Effect.gen(function* () {
+          const answerOptions = parseAnswerOptions(answers);
+
+          if (answerOptions === undefined) {
+            return yield* failWith(invalidAnswerOptionMessage);
+          }
+
+          const data = yield* decodeData(
+            "question options",
+            decodeAskQuestion({
+              question,
+              ...setFields({
+                ...flags,
+                answers: Option.some(answerOptions).pipe(
+                  Option.filter((options) => options.length > 0),
+                ),
+              }),
+            }),
+          );
+
+          const response = yield* callAction(
+            AssistSatellite.askQuestion(`assist_satellite.${name}`, data),
+          );
+
+          const reply = yield* AssistSatellite.answerFrom(response).pipe(
+            Effect.mapError(
+              (error) => new CommandError({ message: error.message }),
+            ),
+          );
+
+          yield* Console.log(JSON.stringify(reply));
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withAlias("q"),
+      Command.withDescription(
+        "Ask a question on a satellite and print the reply as JSON",
+      ),
     ),
   ],
 );

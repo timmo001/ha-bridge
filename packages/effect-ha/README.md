@@ -94,6 +94,21 @@ const response = yield* session.callAction(
 const events = yield* Calendar.eventsFrom("calendar.work", response);
 ```
 
+## Assist satellite questions
+
+`AssistSatellite.askQuestion` builds an `assist_satellite.ask_question` action and `AssistSatellite.answerFrom` reads the reply from its response:
+
+```ts
+const response = yield* session.callAction(
+  AssistSatellite.askQuestion("assist_satellite.kitchen", {
+    question: "What music would you like?",
+    answers: [{ id: "genre", sentences: ["play {genre}", "{genre}"] }],
+  }),
+);
+
+const answer = yield* AssistSatellite.answerFrom(response);
+```
+
 ## Camera snapshots
 
 Home Assistant only serves camera images over REST, so `cameraSnapshot` needs an `HttpClient` instead of the session:

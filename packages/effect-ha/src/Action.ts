@@ -1,4 +1,5 @@
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
+import { HomeAssistantError } from "./HomeAssistantError.js";
 
 const Ids = Schema.Union([Schema.String, Schema.Array(Schema.String)]);
 
@@ -25,13 +26,14 @@ export type Action = typeof Action.Type;
 
 export type EntityId<Domain extends string> = `${Domain}.${string}`;
 
+type ActionData = Readonly<Record<string, Schema.Json | undefined>>;
+
 // Unset optional fields are left out, so Home Assistant applies its defaults.
-const onEntity = (
+const onTarget = (
   action: string,
-  entityId: string,
-  data?: Readonly<Record<string, Schema.Json | undefined>>,
+  target: Target,
+  data?: ActionData,
 ): Action => {
-  const target = { entity_id: entityId };
   const fields = definedFields(data);
 
   return fields === undefined
@@ -39,9 +41,10 @@ const onEntity = (
     : { action, data: fields, target };
 };
 
-const definedFields = (
-  data: Readonly<Record<string, Schema.Json | undefined>> | undefined,
-) => {
+const onEntity = (action: string, entityId: string, data?: ActionData) =>
+  onTarget(action, { entity_id: entityId }, data);
+
+const definedFields = (data: ActionData | undefined) => {
   const fields: Record<string, Schema.Json> = {};
 
   for (const [key, value] of Object.entries(data ?? {})) {
@@ -299,10 +302,125 @@ export const Climate = {
     }),
 };
 
-export const AssistSatellite = {
-  announce: (target: Target, message: string): Action => ({
-    action: "assist_satellite.announce",
-    data: { message },
-    target,
+// A media ID, or the value a media selector gives. Core keeps only the ID.
+export const MediaId = Schema.Union([
+  Schema.String,
+  Schema.Struct({
+    media_content_id: Schema.String,
+    media_content_type: Schema.String,
   }),
+]);
+
+export type MediaId = typeof MediaId.Type;
+
+// `assist_satellite.announce` options besides the message. `media_id` plays
+// instead of speaking the message; `preannounce` defaults to true.
+export const AssistSatelliteAnnounceOptions = Schema.Struct({
+  media_id: Schema.optionalKey(MediaId),
+  preannounce: Schema.optionalKey(Schema.Boolean),
+  preannounce_media_id: Schema.optionalKey(MediaId),
+});
+
+export type AssistSatelliteAnnounceOptions =
+  typeof AssistSatelliteAnnounceOptions.Type;
+
+const AssistSatelliteStartConversationFields = Schema.Struct({
+  start_message: Schema.optionalKey(Schema.String),
+  start_media_id: Schema.optionalKey(MediaId),
+  extra_system_prompt: Schema.optionalKey(Schema.String),
+  preannounce: Schema.optionalKey(Schema.Boolean),
+  preannounce_media_id: Schema.optionalKey(MediaId),
+});
+
+type AssistSatelliteStartConversationFields =
+  typeof AssistSatelliteStartConversationFields.Type;
+
+// `assist_satellite.start_conversation` data. Set `start_message`,
+// `start_media_id` or both.
+export const AssistSatelliteStartConversationData =
+  AssistSatelliteStartConversationFields.check(
+    atLeastOne<AssistSatelliteStartConversationFields>([
+      "start_message",
+      "start_media_id",
+    ]),
+  );
+
+export type AssistSatelliteStartConversationData =
+  typeof AssistSatelliteStartConversationData.Type;
+
+// A possible answer to `assist_satellite.ask_question`. Sentences use Assist's
+// template syntax, such as `play {genre}`, without punctuation.
+export const AssistSatelliteAnswerOption = Schema.Struct({
+  id: Schema.String,
+  sentences: Schema.Array(Schema.NonEmptyString).check(Schema.isMinLength(1)),
+});
+
+export type AssistSatelliteAnswerOption =
+  typeof AssistSatelliteAnswerOption.Type;
+
+const AssistSatelliteAskQuestionFields = Schema.Struct({
+  question: Schema.optionalKey(Schema.String),
+  question_media_id: Schema.optionalKey(MediaId),
+  preannounce: Schema.optionalKey(Schema.Boolean),
+  preannounce_media_id: Schema.optionalKey(MediaId),
+  answers: Schema.optionalKey(Schema.Array(AssistSatelliteAnswerOption)),
+});
+
+type AssistSatelliteAskQuestionFields =
+  typeof AssistSatelliteAskQuestionFields.Type;
+
+// `assist_satellite.ask_question` data. Set `question`, `question_media_id` or
+// both.
+export const AssistSatelliteAskQuestionData =
+  AssistSatelliteAskQuestionFields.check(
+    atLeastOne<AssistSatelliteAskQuestionFields>([
+      "question",
+      "question_media_id",
+    ]),
+  );
+
+export type AssistSatelliteAskQuestionData =
+  typeof AssistSatelliteAskQuestionData.Type;
+
+// The reply to `assist_satellite.ask_question`. `id` is the matched answer's
+// ID, or null when the reply matched none; `slots` holds the matched values.
+export const AssistSatelliteAnswer = Schema.Struct({
+  id: Schema.NullOr(Schema.String),
+  sentence: Schema.String,
+  slots: Schema.Record(Schema.String, Schema.Json),
+});
+
+export type AssistSatelliteAnswer = typeof AssistSatelliteAnswer.Type;
+
+const decodeAnswer = Schema.decodeUnknownEffect(AssistSatelliteAnswer);
+
+export const AssistSatellite = {
+  announce: (
+    target: Target,
+    message: string,
+    options?: AssistSatelliteAnnounceOptions,
+  ) => onTarget("assist_satellite.announce", target, { message, ...options }),
+  startConversation: (
+    target: Target,
+    data: AssistSatelliteStartConversationData,
+  ) => onTarget("assist_satellite.start_conversation", target, data),
+  // Waits for the satellite's user to reply; read it with `answerFrom`.
+  askQuestion: (
+    entityId: EntityId<"assist_satellite">,
+    data: AssistSatelliteAskQuestionData,
+  ): Action => ({
+    action: "assist_satellite.ask_question",
+    data: { entity_id: entityId, ...definedFields(data) },
+    return_response: true,
+  }),
+  // Reads the answer from an `assist_satellite.ask_question` response.
+  answerFrom: (response: Schema.Json | null) =>
+    decodeAnswer(response).pipe(
+      Effect.mapError(
+        (error) =>
+          new HomeAssistantError({
+            message: `decode assist satellite answer: ${error.message}`,
+          }),
+      ),
+    ),
 };
