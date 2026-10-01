@@ -1,10 +1,9 @@
 import { Deferred, Effect, Fiber, Redacted, Ref, Schema } from "effect";
 import { Socket } from "effect/socket";
-import {
-  EntityState,
-  HomeAssistantError,
-  type Action,
-} from "@timmo001/effect-ha-bridge";
+import type { Action } from "./Action.js";
+import { EntityState } from "./Entity.js";
+import { HomeAssistantConfig } from "./HomeAssistantConfig.js";
+import { HomeAssistantError } from "./HomeAssistantError.js";
 
 const AuthMessage = Schema.Struct({
   type: Schema.Literals(["auth_required", "auth_ok", "auth_invalid"]),
@@ -35,7 +34,7 @@ const decodeMessage = Schema.decodeUnknownEffect(
   ),
 );
 
-// Requests the bridge sends; `request` adds the message id.
+// Supported requests; `request` adds the message id.
 export type HomeAssistantCommand =
   | {
       readonly type:
@@ -63,9 +62,23 @@ export interface HomeAssistantSession {
   readonly request: (
     command: HomeAssistantCommand,
   ) => Effect.Effect<unknown, HomeAssistantError>;
+  // Succeeds with the action's response when `return_response` is set, otherwise null.
+  readonly callAction: (
+    action: Action,
+  ) => Effect.Effect<Schema.Json | null, HomeAssistantError>;
+  readonly getConfig: Effect.Effect<HomeAssistantConfig, HomeAssistantError>;
   // Fails once the connection is lost; never succeeds.
   readonly closed: Effect.Effect<never, HomeAssistantError>;
 }
+
+const decodeConfig = Schema.decodeUnknownEffect(HomeAssistantConfig);
+
+const decodeActionResult = Schema.decodeUnknownEffect(
+  Schema.Struct({ response: Schema.optionalKey(Schema.Json) }),
+);
+
+const failWith = (context: string) => (error: { readonly message: string }) =>
+  new HomeAssistantError({ message: `${context}: ${error.message}` });
 
 export const websocketUrl = (url: string) => {
   const parsed = new URL(url);
@@ -209,5 +222,39 @@ export const connect = Effect.fn("HomeAssistant.connect")(function* (options: {
       );
     });
 
-  return { request, closed } satisfies HomeAssistantSession;
+  const callAction = Effect.fn("HomeAssistant.callAction")(function* (
+    action: Action,
+  ) {
+    const separator = action.action.indexOf(".");
+
+    const result = yield* request({
+      type: "call_service",
+      domain: action.action.slice(0, separator),
+      service: action.action.slice(separator + 1),
+      service_data: action.data,
+      target: action.target,
+      return_response: action.return_response,
+    });
+
+    const { response } = yield* decodeActionResult(result).pipe(
+      Effect.mapError(failWith("decode action result")),
+    );
+
+    return response ?? null;
+  });
+
+  const getConfig = request({ type: "get_config" }).pipe(
+    Effect.flatMap((result) =>
+      decodeConfig(result).pipe(
+        Effect.mapError(failWith("decode Home Assistant config")),
+      ),
+    ),
+  );
+
+  return {
+    request,
+    callAction,
+    getConfig,
+    closed,
+  } satisfies HomeAssistantSession;
 });
