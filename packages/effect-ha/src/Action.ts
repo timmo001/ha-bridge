@@ -468,3 +468,103 @@ export const Camera = {
       format,
     }),
 };
+
+export const Button = {
+  press: (entityId: EntityId<"button">) => onEntity("button.press", entityId),
+};
+
+export const InputButton = {
+  press: (entityId: EntityId<"input_button">) =>
+    onEntity("input_button.press", entityId),
+  reload: reload("input_button"),
+};
+
+// `code` is the lock's code, when it needs one.
+export interface LockOptions {
+  readonly code?: string;
+}
+
+export const Lock = {
+  lock: (entityId: EntityId<"lock">, options?: LockOptions) =>
+    onEntity("lock.lock", entityId, { code: options?.code }),
+  unlock: (entityId: EntityId<"lock">, options?: LockOptions) =>
+    onEntity("lock.unlock", entityId, { code: options?.code }),
+  open: (entityId: EntityId<"lock">, options?: LockOptions) =>
+    onEntity("lock.open", entityId, { code: options?.code }),
+};
+
+export const Valve = {
+  open: (entityId: EntityId<"valve">) => onEntity("valve.open_valve", entityId),
+  close: (entityId: EntityId<"valve">) =>
+    onEntity("valve.close_valve", entityId),
+  toggle: (entityId: EntityId<"valve">) => onEntity("valve.toggle", entityId),
+  stop: (entityId: EntityId<"valve">) => onEntity("valve.stop_valve", entityId),
+  // `position` is 0 to 100.
+  setPosition: (entityId: EntityId<"valve">, position: number) =>
+    onEntity("valve.set_valve_position", entityId, { position }),
+};
+
+// `siren.turn_on` data. `tone` is one of the siren's `available_tones`.
+export const SirenTurnOnData = Schema.Struct({
+  tone: Schema.optionalKey(Schema.Union([Schema.String, Schema.Int])),
+  duration: Schema.optionalKey(
+    Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  ),
+  volume_level: Schema.optionalKey(between(0, 1)),
+});
+
+export type SirenTurnOnData = typeof SirenTurnOnData.Type;
+
+export const Siren = {
+  ...switchable("siren"),
+  turnOn: (entityId: EntityId<"siren">, data?: SirenTurnOnData) =>
+    onEntity("siren.turn_on", entityId, data),
+};
+
+const NonNegativeInt = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
+
+// `remote.send_command` data. Core repeats `num_repeats` times (default 1),
+// waits `delay_secs` between commands (default 0.4) and holds each for
+// `hold_secs` (default 0).
+export const RemoteSendCommandData = Schema.Struct({
+  command: Schema.Array(Schema.String).check(Schema.isMinLength(1)),
+  device: Schema.optionalKey(Schema.String),
+  num_repeats: Schema.optionalKey(NonNegativeInt),
+  delay_secs: Schema.optionalKey(Schema.Finite),
+  hold_secs: Schema.optionalKey(Schema.Finite),
+});
+
+export type RemoteSendCommandData = typeof RemoteSendCommandData.Type;
+
+// `remote.learn_command` data. `command_type` is `ir` (the default) or `rf`.
+export const RemoteLearnCommandData = Schema.Struct({
+  command: Schema.optionalKey(Schema.Array(Schema.String)),
+  device: Schema.optionalKey(Schema.String),
+  command_type: Schema.optionalKey(Schema.String),
+  alternative: Schema.optionalKey(Schema.Boolean),
+  timeout: Schema.optionalKey(NonNegativeInt),
+});
+
+export type RemoteLearnCommandData = typeof RemoteLearnCommandData.Type;
+
+export const Remote = {
+  ...switchable("remote"),
+  // `activity` is one of the remote's `activity_list`.
+  turnOn: (
+    entityId: EntityId<"remote">,
+    options?: { readonly activity?: string },
+  ) => onEntity("remote.turn_on", entityId, { activity: options?.activity }),
+  sendCommand: (entityId: EntityId<"remote">, data: RemoteSendCommandData) =>
+    onEntity("remote.send_command", entityId, data),
+  learnCommand: (entityId: EntityId<"remote">, data?: RemoteLearnCommandData) =>
+    onEntity("remote.learn_command", entityId, data),
+  deleteCommand: (
+    entityId: EntityId<"remote">,
+    command: ReadonlyArray<string>,
+    options?: { readonly device?: string },
+  ) =>
+    onEntity("remote.delete_command", entityId, {
+      command,
+      device: options?.device,
+    }),
+};

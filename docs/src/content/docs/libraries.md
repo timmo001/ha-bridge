@@ -46,6 +46,6 @@ See the [client README](https://github.com/timmo001/ha-bridge/tree/main/packages
 bun add @timmo001/effect-ha effect
 ```
 
-`connect` opens and authenticates a WebSocket session with `callAction`, `getConfig` and raw `request`. The library also has typed action builders (`Light`, `Switch`, `Cover`, `Climate`, `InputBoolean`, `InputNumber`, `AssistSatellite`, `Camera` and `Calendar`) with schemas for their action data, the `EntityState` schema, frontend-style entity naming and `cameraSnapshot`.
+`connect` opens and authenticates a WebSocket session with `callAction`, `getConfig` and raw `request`. The library also has typed action builders for each domain on the [Actions](/actions/) pages (such as `Light`, `Cover`, `Climate` and `Lock`, plus `Calendar`) with schemas for their action data, the `EntityState` schema, frontend-style entity naming and `cameraSnapshot`.
 
 See the [`effect-ha` README](https://github.com/timmo001/ha-bridge/tree/main/packages/effect-ha#readme) for details.

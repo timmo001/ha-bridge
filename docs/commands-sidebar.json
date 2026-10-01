@@ -10,5 +10,11 @@
   "/reference/commands/switch",
   "/reference/commands/cover",
   "/reference/commands/climate",
-  "/reference/commands/camera"
+  "/reference/commands/camera",
+  "/reference/commands/button",
+  "/reference/commands/input-button",
+  "/reference/commands/lock",
+  "/reference/commands/valve",
+  "/reference/commands/siren",
+  "/reference/commands/remote"
 ]

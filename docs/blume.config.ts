@@ -38,6 +38,11 @@ export default defineConfig({
           "/actions/climate",
           "/actions/assist-satellites",
           "/actions/cameras",
+          "/actions/buttons",
+          "/actions/locks",
+          "/actions/valves",
+          "/actions/sirens",
+          "/actions/remotes",
         ],
       },
       {

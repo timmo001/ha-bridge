@@ -20,20 +20,30 @@ import {
   AssistSatelliteAnnounceOptions,
   AssistSatelliteAskQuestionData,
   AssistSatelliteStartConversationData,
+  Button,
   Camera,
   Climate,
   ClimateSetTemperatureData,
   Cover,
   HvacMode,
   InputBoolean,
+  InputButton,
   InputNumber,
   Light,
+  Lock,
+  Remote,
+  RemoteLearnCommandData,
+  RemoteSendCommandData,
+  Siren,
+  SirenTurnOnData,
+  Valve,
   LightTurnOffData,
   LightTurnOnData,
   Switch,
   type Action,
   type CoverMoveOptions,
   type EntityId,
+  type LockOptions,
 } from "@timmo001/effect-ha";
 import {
   BridgeClient,
@@ -125,12 +135,13 @@ const domainCommand = <
   const Subcommands extends ReadonlyArray<Command.Command.SubcommandEntry>,
 >(
   name: string,
-  alias: string,
+  alias: string | undefined,
   description: string,
   subcommands: Subcommands,
 ) =>
   Command.make(name).pipe(
-    Command.withAlias(alias),
+    (command) =>
+      alias === undefined ? command : command.pipe(Command.withAlias(alias)),
     Command.withDescription(description),
     Command.withSubcommands(subcommands),
   );
@@ -200,7 +211,7 @@ const parsePercent = (value: string) => {
 
   return position >= 0 && position <= 100
     ? Effect.succeed(position)
-    : failWith("cover position must be an integer from 0 to 100");
+    : failWith("position must be an integer from 0 to 100");
 };
 
 const percentArgument = Argument.String("position").pipe(
@@ -858,6 +869,234 @@ const camera = Command.make("camera").pipe(
   ]),
 );
 
+const codeFlag = optionalFlag(Flag.String("code"), "The lock's code");
+
+const lockCommand = (
+  name: string,
+  toAction: (entityId: EntityId<"lock">, options: LockOptions) => Action,
+  description: string,
+) =>
+  Command.make(
+    name,
+    {
+      name: nameArgument("Entity name without the lock. prefix"),
+      code: codeFlag,
+    },
+    (input) =>
+      callAction(
+        toAction(`lock.${input.name}`, {
+          code: Option.getOrUndefined(input.code),
+        }),
+      ).pipe(withBridge),
+  ).pipe(Command.withDescription(description));
+
+const lock = domainCommand("lock", undefined, "Lock actions", [
+  lockCommand("lock", Lock.lock, "Lock"),
+  lockCommand("unlock", Lock.unlock, "Unlock"),
+  lockCommand("open", Lock.open, "Open the latch"),
+]);
+
+const button = domainCommand("button", undefined, "Button actions", [
+  entityActionCommand("button", "press", Button.press, "Press the button"),
+]);
+
+const inputButton = domainCommand(
+  "input_button",
+  undefined,
+  "Input button actions",
+  [
+    entityActionCommand(
+      "input_button",
+      "press",
+      InputButton.press,
+      "Press the button",
+    ),
+    reloadCommand("input_button", InputButton.reload),
+  ],
+);
+
+const valveName = nameArgument("Entity name without the valve. prefix");
+
+const valve = domainCommand("valve", undefined, "Valve actions", [
+  entityActionCommand("valve", "open", Valve.open, "Open the valve"),
+  entityActionCommand("valve", "close", Valve.close, "Close the valve"),
+  entityActionCommand(
+    "valve",
+    "toggle",
+    Valve.toggle,
+    "Open or close the valve",
+  ),
+  entityActionCommand("valve", "stop", Valve.stop, "Stop the valve"),
+  Command.make(
+    "position",
+    { name: valveName, position: percentArgument },
+    (input) =>
+      Effect.gen(function* () {
+        const position = yield* parsePercent(input.position);
+
+        yield* callAction(Valve.setPosition(`valve.${input.name}`, position));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Set the position")),
+]);
+
+const decodeSirenTurnOn = Schema.decodeUnknownEffect(SirenTurnOnData);
+
+const siren = domainCommand("siren", undefined, "Siren actions", [
+  Command.make(
+    "turn-on",
+    {
+      name: nameArgument("Entity name without the siren. prefix"),
+      tone: optionalFlag(
+        Flag.String("tone"),
+        "Tone, one of the siren's available_tones",
+      ),
+      duration: optionalFlag(Flag.Int("duration"), "Seconds to sound for"),
+      volume_level: optionalFlag(
+        Flag.Finite("volume-level"),
+        "Volume from 0 to 1",
+      ),
+    },
+    ({ name, ...flags }) =>
+      Effect.gen(function* () {
+        const data = yield* decodeData(
+          "siren options",
+          decodeSirenTurnOn(setFields(flags)),
+        );
+
+        yield* callAction(Siren.turnOn(`siren.${name}`, data));
+      }).pipe(withBridge),
+  ).pipe(Command.withAlias("on"), Command.withDescription("Turn on")),
+  entityActionCommand("siren", "turn-off", Siren.turnOff, "Turn off").pipe(
+    Command.withAlias("off"),
+  ),
+  entityActionCommand("siren", "toggle", Siren.toggle, "Toggle").pipe(
+    Command.withAlias("t"),
+  ),
+]);
+
+const remoteName = nameArgument("Entity name without the remote. prefix");
+
+const deviceFlag = optionalFlag(
+  Flag.String("device"),
+  "Device the command is for",
+);
+
+const commandsArgument = Argument.String("command").pipe(
+  Argument.withDescription("Command to send; repeat for a sequence"),
+  Argument.atLeast(1),
+);
+
+const decodeRemoteSendCommand = Schema.decodeUnknownEffect(
+  RemoteSendCommandData,
+);
+
+const decodeRemoteLearnCommand = Schema.decodeUnknownEffect(
+  RemoteLearnCommandData,
+);
+
+const remote = domainCommand("remote", undefined, "Remote actions", [
+  Command.make(
+    "turn-on",
+    {
+      name: remoteName,
+      activity: optionalFlag(
+        Flag.String("activity"),
+        "Activity, one of the remote's activity_list",
+      ),
+    },
+    (input) =>
+      callAction(
+        Remote.turnOn(`remote.${input.name}`, {
+          activity: Option.getOrUndefined(input.activity),
+        }),
+      ).pipe(withBridge),
+  ).pipe(Command.withAlias("on"), Command.withDescription("Turn on")),
+  entityActionCommand("remote", "turn-off", Remote.turnOff, "Turn off").pipe(
+    Command.withAlias("off"),
+  ),
+  entityActionCommand("remote", "toggle", Remote.toggle, "Toggle").pipe(
+    Command.withAlias("t"),
+  ),
+  Command.make(
+    "send-command",
+    {
+      name: remoteName,
+      command: commandsArgument,
+      device: deviceFlag,
+      num_repeats: optionalFlag(
+        Flag.Int("num-repeats"),
+        "Times to repeat the commands (default: 1)",
+      ),
+      delay_secs: optionalFlag(
+        Flag.Finite("delay-secs"),
+        "Seconds between commands (default: 0.4)",
+      ),
+      hold_secs: optionalFlag(
+        Flag.Finite("hold-secs"),
+        "Seconds to hold each command (default: 0)",
+      ),
+    },
+    ({ name, command, ...flags }) =>
+      Effect.gen(function* () {
+        const data = yield* decodeData(
+          "remote command",
+          decodeRemoteSendCommand({ command, ...setFields(flags) }),
+        );
+
+        yield* callAction(Remote.sendCommand(`remote.${name}`, data));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Send commands")),
+  Command.make(
+    "learn-command",
+    {
+      name: remoteName,
+      command: Argument.String("command").pipe(
+        Argument.withDescription("Name for each command to learn"),
+        Argument.atLeast(0),
+      ),
+      device: deviceFlag,
+      command_type: optionalFlag(
+        Flag.Literals("command-type", ["ir", "rf"]),
+        "Command type (default: ir)",
+      ),
+      alternative: optionalFlag(
+        Flag.Boolean("alternative"),
+        "Learn an alternative code for the command",
+      ),
+      timeout: optionalFlag(
+        Flag.Int("timeout"),
+        "Seconds to wait for each command",
+      ),
+    },
+    ({ name, command, ...flags }) =>
+      Effect.gen(function* () {
+        const data = yield* decodeData(
+          "remote learn options",
+          decodeRemoteLearnCommand(
+            setFields({
+              ...flags,
+              command: Option.some(command).pipe(
+                Option.filter((commands) => commands.length > 0),
+              ),
+            }),
+          ),
+        );
+
+        yield* callAction(Remote.learnCommand(`remote.${name}`, data));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Learn commands from a physical remote")),
+  Command.make(
+    "delete-command",
+    { name: remoteName, command: commandsArgument, device: deviceFlag },
+    (input) =>
+      callAction(
+        Remote.deleteCommand(`remote.${input.name}`, input.command, {
+          device: Option.getOrUndefined(input.device),
+        }),
+      ).pipe(withBridge),
+  ).pipe(Command.withDescription("Delete learned commands")),
+]);
+
 const serve = Command.make("serve", {}, () =>
   Effect.flatMap(socketPath, serveBridge).pipe(
     Effect.provide(
@@ -978,6 +1217,12 @@ haBridge.pipe(
     cover,
     climate,
     camera,
+    button,
+    inputButton,
+    lock,
+    valve,
+    siren,
+    remote,
   ]),
   Command.run({ version: packageJson.version }),
   Effect.catchCause(reportCliCause),

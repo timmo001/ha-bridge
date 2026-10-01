@@ -28,5 +28,10 @@ ha-bridge light turn-on bedroom_lamp
 | [Climate](/actions/climate/) | `climate` | `cl` | HVAC mode, temperature, humidity and other modes |
 | [Assist satellites](/actions/assist-satellites/) | `assist_satellite` | `as` | Announce, start a conversation or ask a question |
 | [Cameras](/actions/cameras/) | `camera` | None | Snapshots, recording, streams and motion detection |
+| [Buttons](/actions/buttons/) | `button`, `input_button` | None | Press, and reload input buttons |
+| [Locks](/actions/locks/) | `lock` | None | Lock, unlock and open |
+| [Valves](/actions/valves/) | `valve` | None | Open, close, stop and position |
+| [Sirens](/actions/sirens/) | `siren` | None | On, off and toggle, with tone and volume |
+| [Remotes](/actions/remotes/) | `remote` | None | On, off, and send, learn or delete commands |
 
 [Commands](/reference/commands/) lists every argument and flag. Any other action can be called from your own app with [`CallAction`](/libraries/).

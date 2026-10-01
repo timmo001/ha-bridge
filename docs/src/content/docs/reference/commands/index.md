@@ -20,6 +20,12 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`cover`](/reference/commands/cover/) | `c` |
 | [`climate`](/reference/commands/climate/) | `cl` |
 | [`camera`](/reference/commands/camera/) | None |
+| [`button`](/reference/commands/button/) | None |
+| [`input_button`](/reference/commands/input-button/) | None |
+| [`lock`](/reference/commands/lock/) | None |
+| [`valve`](/reference/commands/valve/) | None |
+| [`siren`](/reference/commands/siren/) | None |
+| [`remote`](/reference/commands/remote/) | None |
 
 ## Global flags
 
@@ -52,4 +58,10 @@ SUBCOMMANDS
   cover, c            Cover actions
   climate, cl         Climate actions
   camera              Camera actions
+  button              Button actions
+  input_button        Input button actions
+  lock                Lock actions
+  valve               Valve actions
+  siren               Siren actions
+  remote              Remote actions
 ```
