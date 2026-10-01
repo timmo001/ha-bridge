@@ -32,3 +32,5 @@ ha-bridge ai_task generate-image openai_image poster "A cosy living room at dusk
 | `conversation reload` | `conversation.reload` |
 | `ai_task generate-data` | `ai_task.generate_data` |
 | `ai_task generate-image` | `ai_task.generate_image` |
+
+See [`ha-bridge conversation`](/reference/commands/conversation) and [`ha-bridge ai_task`](/reference/commands/ai-task) for every argument and flag.

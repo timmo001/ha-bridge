@@ -20,3 +20,5 @@ ha-bridge valve position garden 50
 | `valve toggle` | `valve.toggle` |
 | `valve stop` | `valve.stop_valve` |
 | `valve position` | `valve.set_valve_position` |
+
+See [`ha-bridge valve`](/reference/commands/valve) for every argument and flag.

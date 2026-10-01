@@ -73,3 +73,5 @@ ha-bridge mp search kitchen "Abbey Road"
 | `shuffle`, `repeat`, `clear-playlist` | `media_player.shuffle_set`, `repeat_set`, `clear_playlist` |
 | `join`, `unjoin` | `media_player.join`, `unjoin` |
 | `browse`, `search` | `media_player.browse_media`, `search_media` |
+
+See [`ha-bridge media_player`](/reference/commands/media-player) for every argument and flag.

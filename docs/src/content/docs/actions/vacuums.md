@@ -46,3 +46,5 @@ ha-bridge lawn_mower dock front
 | `vacuum send-command` | `vacuum.send_command` |
 | `lawn_mower start` | `lawn_mower.start_mowing` |
 | `lawn_mower pause`, `stop`, `dock` | `lawn_mower.pause`, `stop`, `dock` |
+
+See [`ha-bridge vacuum`](/reference/commands/vacuum) and [`ha-bridge lawn_mower`](/reference/commands/lawn-mower) for every argument and flag.

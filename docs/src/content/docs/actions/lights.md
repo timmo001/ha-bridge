@@ -57,3 +57,5 @@ Use at most one brightness flag and one colour flag (`--color-temp-kelvin`, the 
 ```bash
 ha-bridge light turn-off desk_lamp --transition 5
 ```
+
+See [`ha-bridge light`](/reference/commands/light) for every argument and flag.

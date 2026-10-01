@@ -10,7 +10,7 @@ ha-bridge image snapshot doorbell_last_ring /config/www/doorbell.jpg
 ha-bridge image_processing scan front_door_faces
 ```
 
-For camera snapshots on this machine, see [Cameras](/actions/cameras/).
+For camera snapshots on this machine, see [Cameras](/actions/cameras).
 
 ## Device trackers
 
@@ -26,3 +26,5 @@ ha-bridge device_tracker see --dev-id phone --latitude 51.5072 --longitude -0.12
 | `image snapshot` | `image.snapshot` |
 | `image_processing scan` | `image_processing.scan` |
 | `device_tracker see` | `device_tracker.see` |
+
+See [`ha-bridge image`](/reference/commands/image), [`ha-bridge image_processing`](/reference/commands/image-processing) and [`ha-bridge device_tracker`](/reference/commands/device-tracker) for every argument and flag.

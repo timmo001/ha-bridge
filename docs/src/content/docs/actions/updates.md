@@ -17,3 +17,5 @@ ha-bridge update clear-skipped esphome_kitchen
 | `update install` | `update.install` |
 | `update skip` | `update.skip` |
 | `update clear-skipped` | `update.clear_skipped` |
+
+See [`ha-bridge update`](/reference/commands/update) for every argument and flag.

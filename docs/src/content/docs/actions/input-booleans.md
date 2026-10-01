@@ -28,3 +28,5 @@ ha-bridge input_boolean reload
 | `input_boolean turn-off` | `input_boolean.turn_off` |
 | `input_boolean toggle` | `input_boolean.toggle` |
 | `input_boolean reload` | `input_boolean.reload` |
+
+See [`ha-bridge input_boolean`](/reference/commands/input-boolean) for every argument and flag.

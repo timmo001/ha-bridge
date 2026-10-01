@@ -21,3 +21,5 @@ ha-bridge s t desk_fan
 | `switch turn-on` | `switch.turn_on` |
 | `switch turn-off` | `switch.turn_off` |
 | `switch toggle` | `switch.toggle` |
+
+See [`ha-bridge switch`](/reference/commands/switch) for every argument and flag.

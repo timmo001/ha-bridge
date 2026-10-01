@@ -22,7 +22,7 @@ ha-bridge datetime set-value away_until "2026-10-03 18:00"
 | `time` | `HH:MM` or `HH:MM:SS` |
 | `datetime` | A date and time, such as `2026-10-03 18:00`, in Home Assistant's time zone unless it has an offset |
 
-For input numbers, see [Input numbers](/actions/input-numbers/).
+For input numbers, see [Input numbers](/actions/input-numbers).
 
 ## Input date and time helpers
 
@@ -47,3 +47,5 @@ ha-bridge input_datetime set-datetime last_backup --timestamp 1790000000
 | `datetime set-value` | `datetime.set_value` |
 | `input_datetime set-datetime` | `input_datetime.set_datetime` |
 | `input_datetime reload` | `input_datetime.reload` |
+
+See [`ha-bridge number`](/reference/commands/number), [`ha-bridge text`](/reference/commands/text), [`ha-bridge date`](/reference/commands/date), [`ha-bridge time`](/reference/commands/time), [`ha-bridge datetime`](/reference/commands/datetime), [`ha-bridge input_text`](/reference/commands/input-text) and [`ha-bridge input_datetime`](/reference/commands/input-datetime) for every argument and flag.

@@ -37,3 +37,5 @@ The temperature is in the entity's unit, and the operation mode is one of its `o
 | `water_heater temperature` | `water_heater.set_temperature` |
 | `water_heater operation-mode` | `water_heater.set_operation_mode` |
 | `water_heater away-mode` | `water_heater.set_away_mode` |
+
+See [`ha-bridge humidifier`](/reference/commands/humidifier) and [`ha-bridge water_heater`](/reference/commands/water-heater) for every argument and flag.

@@ -30,3 +30,5 @@ ha-bridge input_select reload
 | `select-next`, `select-previous` | `select.select_next`, `select_previous` (and `input_select`) |
 | `input_select set-options` | `input_select.set_options` |
 | `input_select reload` | `input_select.reload` |
+
+See [`ha-bridge select`](/reference/commands/select) and [`ha-bridge input_select`](/reference/commands/input-select) for every argument and flag.

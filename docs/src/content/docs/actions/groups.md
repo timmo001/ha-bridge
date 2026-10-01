@@ -19,3 +19,5 @@ ha-bridge group remove office_lights
 | `group set` | `group.set` |
 | `group remove` | `group.remove` |
 | `group reload` | `group.reload` |
+
+See [`ha-bridge group`](/reference/commands/group) for every argument and flag.

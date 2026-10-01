@@ -56,3 +56,5 @@ All three commands take:
 | `assist_satellite announce` | `assist_satellite.announce` | `area_id` |
 | `assist_satellite start-conversation` | `assist_satellite.start_conversation` | `area_id` |
 | `assist_satellite ask-question` | `assist_satellite.ask_question` | `assist_satellite.<name>` |
+
+See [`ha-bridge assist_satellite`](/reference/commands/assist-satellite) for every argument and flag.

@@ -48,7 +48,7 @@ ha-bridge climate swing-horizontal-mode air_conditioner on
 
 ## Watching
 
-`climate watch` prints the HVAC mode, fan mode and target temperature as bar JSON, now and on every change. See [Watching entities](/using/watching/#covers-and-climate).
+`climate watch` prints the HVAC mode, fan mode and target temperature as bar JSON, now and on every change. See [Watching entities](/using/watching#covers-and-climate).
 
 ## Actions
 
@@ -64,3 +64,5 @@ ha-bridge climate swing-horizontal-mode air_conditioner on
 | `climate fan-mode` | `climate.set_fan_mode` |
 | `climate swing-mode` | `climate.set_swing_mode` |
 | `climate swing-horizontal-mode` | `climate.set_swing_horizontal_mode` |
+
+See [`ha-bridge climate`](/reference/commands/climate) for every argument and flag.

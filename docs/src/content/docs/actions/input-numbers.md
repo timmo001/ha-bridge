@@ -23,3 +23,5 @@ ha-bridge input_number reload
 | `input_number decrement` | `input_number.decrement` |
 | `input_number set-value` | `input_number.set_value` |
 | `input_number reload` | `input_number.reload` |
+
+See [`ha-bridge input_number`](/reference/commands/input-number) for every argument and flag.

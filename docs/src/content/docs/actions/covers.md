@@ -33,7 +33,7 @@ ha-bridge cover tilt-position office_blind 40
 
 ## Watching
 
-`cover watch` prints the cover's state and tilt position as bar JSON, now and on every change. See [Watching entities](/using/watching/#covers-and-climate).
+`cover watch` prints the cover's state and tilt position as bar JSON, now and on every change. See [Watching entities](/using/watching#covers-and-climate).
 
 ## Actions
 
@@ -49,3 +49,5 @@ ha-bridge cover tilt-position office_blind 40
 | `cover toggle-tilt` | `cover.toggle_cover_tilt` |
 | `cover stop-tilt` | `cover.stop_cover_tilt` |
 | `cover tilt-position` | `cover.set_cover_tilt_position` |
+
+See [`ha-bridge cover`](/reference/commands/cover) for every argument and flag.

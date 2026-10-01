@@ -58,3 +58,5 @@ ha-bridge homeassistant set-location 51.5072 -0.1276 --elevation 11
 | `homeassistant set-location` | `homeassistant.set_location` |
 | `zone reload` | `zone.reload` |
 | `person reload` | `person.reload` |
+
+See [`ha-bridge homeassistant`](/reference/commands/homeassistant), [`ha-bridge zone`](/reference/commands/zone) and [`ha-bridge person`](/reference/commands/person) for every argument and flag.
