@@ -1,7 +1,9 @@
 import {
   Context,
+  Data,
   Effect,
   Layer,
+  Match,
   Option,
   PubSub,
   Ref,
@@ -44,6 +46,17 @@ export interface HomeAssistantService {
 
 const reconnectDelay = "5 seconds";
 
+// `State` is one entity change. `Reset` means the cache was replaced from a
+// `get_states` snapshot; watchers re-read it instead of receiving every entity.
+// Publishing the whole snapshot would drop entities once a subscriber's buffer
+// (4096) is full, so a watched entity could stay stale after a reconnect.
+type CacheEvent = Data.TaggedEnum<{
+  State: { readonly state: EntityState };
+  Reset: {};
+}>;
+
+const { State: stateEvent, Reset: cacheReset } = Data.taggedEnum<CacheEvent>();
+
 const decodeStates = Schema.decodeUnknownEffect(Schema.Array(EntityState));
 
 const decodeDisplay = Schema.decodeUnknownEffect(EntityRegistryDisplay);
@@ -62,7 +75,7 @@ export class HomeAssistant extends Context.Service<
       const states = new Map<string, EntityState>();
       const namer = yield* Ref.make<EntityNamer | undefined>(undefined);
       const session = yield* Ref.make(Option.none<HomeAssistantSession>());
-      const changes = yield* PubSub.sliding<EntityState>(4096);
+      const changes = yield* PubSub.sliding<CacheEvent>(4096);
 
       const withName = (state: EntityState) =>
         Effect.map(Ref.get(namer), (current) => ({
@@ -72,7 +85,7 @@ export class HomeAssistant extends Context.Service<
 
       const store = (state: EntityState) =>
         Effect.sync(() => states.set(state.entity_id, state)).pipe(
-          Effect.andThen(PubSub.publish(changes, state)),
+          Effect.andThen(PubSub.publish(changes, stateEvent({ state }))),
         );
 
       const refreshNamer = Effect.fn("HomeAssistant.refreshNamer")(function* (
@@ -118,7 +131,7 @@ export class HomeAssistant extends Context.Service<
             states.set(state.entity_id, state);
           }
         });
-        yield* PubSub.publishAll(changes, snapshot);
+        yield* PubSub.publish(changes, cacheReset());
         // Naming is best-effort; friendly names are the fallback.
         yield* refreshNamer(current).pipe(
           Effect.catch((error) =>
@@ -159,7 +172,16 @@ export class HomeAssistant extends Context.Service<
             return Stream.concat(
               Stream.fromIterable(current === undefined ? [] : [current]),
               Stream.fromSubscription(subscription).pipe(
-                Stream.filter((state) => state.entity_id === entityId),
+                Stream.map((change) =>
+                  Match.value(change).pipe(
+                    Match.tag("Reset", () => states.get(entityId)),
+                    Match.tag("State", ({ state }) =>
+                      state.entity_id === entityId ? state : undefined,
+                    ),
+                    Match.exhaustive,
+                  ),
+                ),
+                Stream.filter((state) => state !== undefined),
               ),
             ).pipe(Stream.mapEffect(withName));
           }),
