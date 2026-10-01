@@ -38,4 +38,4 @@ The scene ID uses lowercase letters, digits and `_`. `delete` only removes scene
 | `scene delete` | `scene.delete` |
 | `scene reload` | `scene.reload` |
 
-See [`ha-bridge scene`](/reference/commands/scene) for every argument and flag.
+See [`ha-bridge scene`](/commands/scene) for every argument and flag.

@@ -47,4 +47,4 @@ ha-bridge schedule get heating
 | `schedule get` | `schedule.get_schedule` |
 | `schedule reload` | `schedule.reload` |
 
-See [`ha-bridge timer`](/reference/commands/timer) and [`ha-bridge schedule`](/reference/commands/schedule) for every argument and flag.
+See [`ha-bridge timer`](/commands/timer) and [`ha-bridge schedule`](/commands/schedule) for every argument and flag.

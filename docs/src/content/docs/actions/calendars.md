@@ -33,4 +33,4 @@ ha-bridge weather forecast home --type hourly
 | `calendar create-event` | `calendar.create_event` |
 | `weather forecast` | `weather.get_forecasts` |
 
-See [`ha-bridge calendar`](/reference/commands/calendar) and [`ha-bridge weather`](/reference/commands/weather) for every argument and flag.
+See [`ha-bridge calendar`](/commands/calendar) and [`ha-bridge weather`](/commands/weather) for every argument and flag.

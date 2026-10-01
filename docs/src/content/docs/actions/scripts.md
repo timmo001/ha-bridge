@@ -41,4 +41,4 @@ ha-bridge script run announce_weather --variables '{"room":"kitchen"}'
 | `script run` | `script.<name>` |
 | `script reload` | `script.reload` |
 
-See [`ha-bridge script`](/reference/commands/script) for every argument and flag.
+See [`ha-bridge script`](/commands/script) for every argument and flag.

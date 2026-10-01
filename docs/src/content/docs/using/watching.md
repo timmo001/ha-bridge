@@ -25,7 +25,7 @@ ha-bridge watch entity input_boolean.guest_mode \
   --class-off inactive
 ```
 
-See [Bar JSON](/reference/bar-json) for the output and every flag.
+See [Bar JSON](/using/bar-json) for the output and every flag.
 
 ## Covers and climate
 

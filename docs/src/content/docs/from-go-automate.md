@@ -25,7 +25,7 @@ Drop `go-automate ha` from the front, and `bridge` from the bridge commands:
 | `go-automate ha cover watch <name>` | `ha-bridge cover watch <name>` |
 | `go-automate completion zsh` | `ha-bridge --completions zsh` |
 
-The domain commands, their aliases, arguments and flags are unchanged. `camera snapshot` and `setup` are new. See [Commands](/reference/commands) for the full list.
+The domain commands, their aliases, arguments and flags are unchanged. `camera snapshot` and `setup` are new. See [Commands](/commands) for the full list.
 
 ## Service and socket
 
@@ -33,9 +33,9 @@ The domain commands, their aliases, arguments and flags are unchanged. `camera s
 | --- | --- | --- |
 | User service | `go-automate-home-assistant-bridge.service` | `ha-bridge.service` |
 | Socket | `$XDG_RUNTIME_DIR/go-automate/home-assistant.sock` | `$XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock` |
-| Protocol | `get_entity` and `watch_entity` JSON requests | [Effect RPC](/reference/protocol) |
+| Protocol | `get_entity` and `watch_entity` JSON requests | [Effect RPC](/using/protocol) |
 
-Scripts that spoke Go Automate's socket protocol directly need moving to the [new protocol](/reference/protocol) or the [client library](/libraries).
+Scripts that spoke Go Automate's socket protocol directly need moving to the [new protocol](/using/protocol) or the [client library](/libraries).
 
 ## Config
 

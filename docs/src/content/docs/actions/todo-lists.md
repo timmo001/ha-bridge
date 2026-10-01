@@ -31,4 +31,4 @@ Items are matched by name or UID. Set at most one of `--due-date` and `--due-dat
 | `todo remove` | `todo.remove_item` |
 | `todo remove-completed` | `todo.remove_completed_items` |
 
-See [`ha-bridge todo`](/reference/commands/todo) for every argument and flag.
+See [`ha-bridge todo`](/commands/todo) for every argument and flag.

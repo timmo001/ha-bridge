@@ -50,4 +50,4 @@ ha-bridge cover tilt-position office_blind 40
 | `cover stop-tilt` | `cover.stop_cover_tilt` |
 | `cover tilt-position` | `cover.set_cover_tilt_position` |
 
-See [`ha-bridge cover`](/reference/commands/cover) for every argument and flag.
+See [`ha-bridge cover`](/commands/cover) for every argument and flag.

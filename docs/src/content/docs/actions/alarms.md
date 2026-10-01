@@ -25,4 +25,4 @@ ha-bridge alarm trigger house
 | `alarm arm-custom-bypass` | `alarm_control_panel.alarm_arm_custom_bypass` |
 | `alarm trigger` | `alarm_control_panel.alarm_trigger` |
 
-See [`ha-bridge alarm_control_panel`](/reference/commands/alarm-control-panel) for every argument and flag.
+See [`ha-bridge alarm_control_panel`](/commands/alarm-control-panel) for every argument and flag.

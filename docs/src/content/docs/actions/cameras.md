@@ -47,4 +47,4 @@ ha-bridge camera disable-motion-detection front_door
 | `camera enable-motion-detection` | `camera.enable_motion_detection` |
 | `camera disable-motion-detection` | `camera.disable_motion_detection` |
 
-See [`ha-bridge camera`](/reference/commands/camera) for every argument and flag.
+See [`ha-bridge camera`](/commands/camera) for every argument and flag.

@@ -19,4 +19,4 @@ ha-bridge counter set-value coffees 3
 | `counter reset` | `counter.reset` |
 | `counter set-value` | `counter.set_value` |
 
-See [`ha-bridge counter`](/reference/commands/counter) for every argument and flag.
+See [`ha-bridge counter`](/commands/counter) for every argument and flag.

@@ -35,4 +35,4 @@ ha-bridge fan direction desk reverse
 | `fan oscillate` | `fan.oscillate` |
 | `fan direction` | `fan.set_direction` |
 
-See [`ha-bridge fan`](/reference/commands/fan) for every argument and flag.
+See [`ha-bridge fan`](/commands/fan) for every argument and flag.

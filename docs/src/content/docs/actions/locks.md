@@ -17,4 +17,4 @@ ha-bridge lock open front_door
 | `lock unlock` | `lock.unlock` |
 | `lock open` | `lock.open` |
 
-See [`ha-bridge lock`](/reference/commands/lock) for every argument and flag.
+See [`ha-bridge lock`](/commands/lock) for every argument and flag.

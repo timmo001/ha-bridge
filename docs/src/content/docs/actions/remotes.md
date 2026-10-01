@@ -46,4 +46,4 @@ ha-bridge remote delete-command living_room power --device tv
 | `remote learn-command` | `remote.learn_command` |
 | `remote delete-command` | `remote.delete_command` |
 
-See [`ha-bridge remote`](/reference/commands/remote) for every argument and flag.
+See [`ha-bridge remote`](/commands/remote) for every argument and flag.

@@ -18,7 +18,7 @@ Most local apps want the bridge client: they start instantly, share the bridge's
 bun add @timmo001/effect-ha-bridge @timmo001/effect-ha effect
 ```
 
-`BridgeClient` has one method per [RPC](/reference/protocol#rpcs): `GetEntity`, `WatchEntity`, `CallAction`, `GetConfig` and `CameraSnapshot`. `resolveSocketPath` finds the socket the same way the CLI does, and `getCalendarEvents` reads calendar events through `CallAction`.
+`BridgeClient` has one method per [RPC](/using/protocol#rpcs): `GetEntity`, `WatchEntity`, `CallAction`, `GetConfig` and `CameraSnapshot`. `resolveSocketPath` finds the socket the same way the CLI does, and `getCalendarEvents` reads calendar events through `CallAction`.
 
 ```ts
 import { BunRuntime, BunServices } from "@effect/platform-bun";

@@ -11,7 +11,7 @@ The site lives in `docs/` and is its own Bun project with its own `bun.lock`. Co
 
 ## Keep the docs in step
 
-- After changing commands, aliases, arguments or flags in `src/index.ts`, run `mise run docs:gen`. It rewrites the pages in `docs/src/content/docs/reference/commands/` (one per top-level command) and the `docs/commands-sidebar.json` sidebar list from the CLI's own `--help` output. Never edit those by hand; the Docs workflow fails when it is out of date.
+- After changing commands, aliases, arguments or flags in `src/index.ts`, run `mise run docs:gen`. It rewrites the pages in `docs/src/content/docs/commands/` (one per top-level command) and the `docs/commands-sidebar.json` sidebar list from the CLI's own `--help` output. Never edit those by hand; the Docs workflow fails when it is out of date.
 - Hand-written pages describe behaviour, so check the source before documenting it rather than copying older docs. Go Automate's docs had claims that didn't match its code.
   - Bar JSON and watcher text: `src/cli/output.ts`.
   - Bridge protocol and RPCs: `packages/client/src/Rpcs.ts`. Confirm wire examples against a running bridge.

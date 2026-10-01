@@ -36,4 +36,4 @@ ha-bridge automation trigger hallway_motion --no-skip-condition
 | `automation trigger` | `automation.trigger` |
 | `automation reload` | `automation.reload` |
 
-See [`ha-bridge automation`](/reference/commands/automation) for every argument and flag.
+See [`ha-bridge automation`](/commands/automation) for every argument and flag.

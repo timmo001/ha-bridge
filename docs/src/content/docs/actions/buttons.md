@@ -22,4 +22,4 @@ ha-bridge input_button reload
 | `input_button press` | `input_button.press` |
 | `input_button reload` | `input_button.reload` |
 
-See [`ha-bridge button`](/reference/commands/button) and [`ha-bridge input_button`](/reference/commands/input-button) for every argument and flag.
+See [`ha-bridge button`](/commands/button) and [`ha-bridge input_button`](/commands/input-button) for every argument and flag.

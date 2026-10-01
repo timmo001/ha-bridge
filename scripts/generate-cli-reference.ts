@@ -5,7 +5,7 @@ import { Effect, FileSystem, Path } from "effect";
 import type { PlatformError } from "effect/PlatformError";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
-const outDir = "docs/src/content/docs/reference/commands";
+const outDir = "docs/src/content/docs/commands";
 
 // Imported by docs/blume.config.ts for the Commands sidebar group.
 const sidebarFile = "docs/commands-sidebar.json";
@@ -111,7 +111,7 @@ const program = Effect.gen(function* () {
     (command) =>
       Effect.gen(function* () {
         const lines: Array<string> = [
-          `Every \`ha-bridge ${command.name}\` command and its help, as \`--help\` prints it. Each also accepts the [global flags](/reference/commands#global-flags).`,
+          `Every \`ha-bridge ${command.name}\` command and its help, as \`--help\` prints it. Each also accepts the [global flags](/commands#global-flags).`,
           "",
         ];
 
@@ -142,7 +142,7 @@ const program = Effect.gen(function* () {
         "| --- | --- |",
         ...commands.map(
           (command) =>
-            `| [\`${command.name}\`](/reference/commands/${slug(command.name)}) | ${command.alias === undefined ? "None" : `\`${command.alias}\``} |`,
+            `| [\`${command.name}\`](/commands/${slug(command.name)}) | ${command.alias === undefined ? "None" : `\`${command.alias}\``} |`,
         ),
         "",
         "## Global flags",
@@ -158,10 +158,8 @@ const program = Effect.gen(function* () {
     sidebarFile,
     `${JSON.stringify(
       [
-        "/reference/commands",
-        ...commands.map(
-          (command) => `/reference/commands/${slug(command.name)}`,
-        ),
+        "/commands",
+        ...commands.map((command) => `/commands/${slug(command.name)}`),
       ],
       null,
       2,

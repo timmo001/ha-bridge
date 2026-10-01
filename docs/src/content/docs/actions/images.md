@@ -27,4 +27,4 @@ ha-bridge device_tracker see --dev-id phone --latitude 51.5072 --longitude -0.12
 | `image_processing scan` | `image_processing.scan` |
 | `device_tracker see` | `device_tracker.see` |
 
-See [`ha-bridge image`](/reference/commands/image), [`ha-bridge image_processing`](/reference/commands/image-processing) and [`ha-bridge device_tracker`](/reference/commands/device-tracker) for every argument and flag.
+See [`ha-bridge image`](/commands/image), [`ha-bridge image_processing`](/commands/image-processing) and [`ha-bridge device_tracker`](/commands/device-tracker) for every argument and flag.

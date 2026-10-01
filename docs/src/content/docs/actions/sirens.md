@@ -18,4 +18,4 @@ ha-bridge siren toggle alarm
 | `siren turn-off` | `siren.turn_off` |
 | `siren toggle` | `siren.toggle` |
 
-See [`ha-bridge siren`](/reference/commands/siren) for every argument and flag.
+See [`ha-bridge siren`](/commands/siren) for every argument and flag.

@@ -48,4 +48,4 @@ ha-bridge input_datetime set-datetime last_backup --timestamp 1790000000
 | `input_datetime set-datetime` | `input_datetime.set_datetime` |
 | `input_datetime reload` | `input_datetime.reload` |
 
-See [`ha-bridge number`](/reference/commands/number), [`ha-bridge text`](/reference/commands/text), [`ha-bridge date`](/reference/commands/date), [`ha-bridge time`](/reference/commands/time), [`ha-bridge datetime`](/reference/commands/datetime), [`ha-bridge input_text`](/reference/commands/input-text) and [`ha-bridge input_datetime`](/reference/commands/input-datetime) for every argument and flag.
+See [`ha-bridge number`](/commands/number), [`ha-bridge text`](/commands/text), [`ha-bridge date`](/commands/date), [`ha-bridge time`](/commands/time), [`ha-bridge datetime`](/commands/datetime), [`ha-bridge input_text`](/commands/input-text) and [`ha-bridge input_datetime`](/commands/input-datetime) for every argument and flag.

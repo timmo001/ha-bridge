@@ -74,24 +74,20 @@ export default defineConfig({
       },
       {
         label: "Using",
-        items: ["/using/watching", "/using/completions"],
+        items: [
+          "/using/watching",
+          "/using/bar-json",
+          "/using/completions",
+          "/using/protocol",
+        ],
       },
       "/libraries",
       {
-        label: "Reference",
+        label: "Commands",
+        root: "/commands",
+        items: commandPages.filter((page) => page !== "/commands"),
         display: "group",
         collapsed: true,
-        items: [
-          {
-            label: "Commands",
-            root: "/reference/commands",
-            items: commandPages.filter((page) => page !== "/reference/commands"),
-            display: "group",
-            collapsed: true,
-          },
-          "/reference/bar-json",
-          "/reference/protocol",
-        ],
       },
       {
         label: "Migrations",
@@ -102,6 +98,9 @@ export default defineConfig({
   redirects: [
     { from: "/migrating", to: "/from-go-automate" },
     { from: "/using/actions", to: "/actions" },
+    { from: "/reference/bar-json", to: "/using/bar-json" },
+    { from: "/reference/protocol", to: "/using/protocol" },
+    { from: "/reference/commands/:slug*", to: "/commands/:slug*" },
   ],
   theme: {
     accent: {

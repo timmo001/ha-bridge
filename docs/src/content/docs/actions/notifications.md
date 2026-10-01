@@ -44,4 +44,4 @@ ha-bridge tts clear-cache
 | `tts speak` | `tts.speak` |
 | `tts clear-cache` | `tts.clear_cache` |
 
-See [`ha-bridge notify`](/reference/commands/notify), [`ha-bridge persistent_notification`](/reference/commands/persistent-notification) and [`ha-bridge tts`](/reference/commands/tts) for every argument and flag.
+See [`ha-bridge notify`](/commands/notify), [`ha-bridge persistent_notification`](/commands/persistent-notification) and [`ha-bridge tts`](/commands/tts) for every argument and flag.

@@ -74,4 +74,4 @@ ha-bridge mp search kitchen "Abbey Road"
 | `join`, `unjoin` | `media_player.join`, `unjoin` |
 | `browse`, `search` | `media_player.browse_media`, `search_media` |
 
-See [`ha-bridge media_player`](/reference/commands/media-player) for every argument and flag.
+See [`ha-bridge media_player`](/commands/media-player) for every argument and flag.

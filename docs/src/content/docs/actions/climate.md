@@ -65,4 +65,4 @@ ha-bridge climate swing-horizontal-mode air_conditioner on
 | `climate swing-mode` | `climate.set_swing_mode` |
 | `climate swing-horizontal-mode` | `climate.set_swing_horizontal_mode` |
 
-See [`ha-bridge climate`](/reference/commands/climate) for every argument and flag.
+See [`ha-bridge climate`](/commands/climate) for every argument and flag.

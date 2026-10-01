@@ -54,4 +54,4 @@ ha-bridge light turn-on bedroom_lamp
 | [Images and device trackers](/actions/images) | `image`, `image_processing`, `device_tracker` | None | Save images, scan and report locations |
 | [Home Assistant](/actions/home-assistant) | `homeassistant`, `zone`, `person` | None | Any entity, restart, reload and location |
 
-[Commands](/reference/commands) lists every argument and flag. Any other action can be called from your own app with [`CallAction`](/libraries).
+[Commands](/commands) lists every argument and flag. Any other action can be called from your own app with [`CallAction`](/libraries).
