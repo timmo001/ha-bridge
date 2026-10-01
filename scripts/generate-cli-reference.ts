@@ -77,11 +77,19 @@ const program = Effect.gen(function* () {
       );
     });
 
-  const page = (title: string, description: string, body: Array<string>) =>
+  const page = (
+    title: string,
+    description: string,
+    body: Array<string>,
+    sidebarLabel?: string,
+  ) =>
     [
       "---",
       `title: ${title}`,
       `description: ${description}`,
+      ...(sidebarLabel === undefined
+        ? []
+        : ["sidebar:", `  label: ${sidebarLabel}`]),
       "---",
       "",
       "<!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->",
@@ -115,6 +123,7 @@ const program = Effect.gen(function* () {
             `ha-bridge ${command.name}`,
             `Arguments and flags for every ha-bridge ${command.name} command.`,
             lines,
+            command.name,
           ),
         );
       }),

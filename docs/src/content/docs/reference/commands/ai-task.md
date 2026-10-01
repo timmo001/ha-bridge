@@ -1,6 +1,8 @@
 ---
 title: ha-bridge ai_task
 description: Arguments and flags for every ha-bridge ai_task command.
+sidebar:
+  label: ai_task
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

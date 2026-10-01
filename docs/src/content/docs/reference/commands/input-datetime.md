@@ -1,6 +1,8 @@
 ---
 title: ha-bridge input_datetime
 description: Arguments and flags for every ha-bridge input_datetime command.
+sidebar:
+  label: input_datetime
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

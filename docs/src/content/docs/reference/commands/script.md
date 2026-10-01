@@ -1,6 +1,8 @@
 ---
 title: ha-bridge script
 description: Arguments and flags for every ha-bridge script command.
+sidebar:
+  label: script
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

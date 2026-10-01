@@ -1,6 +1,8 @@
 ---
 title: ha-bridge tts
 description: Arguments and flags for every ha-bridge tts command.
+sidebar:
+  label: tts
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

@@ -1,6 +1,8 @@
 ---
 title: ha-bridge image
 description: Arguments and flags for every ha-bridge image command.
+sidebar:
+  label: image
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

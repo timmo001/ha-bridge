@@ -1,6 +1,8 @@
 ---
 title: ha-bridge light
 description: Arguments and flags for every ha-bridge light command.
+sidebar:
+  label: light
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

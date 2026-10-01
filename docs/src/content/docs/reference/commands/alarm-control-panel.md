@@ -1,6 +1,8 @@
 ---
 title: ha-bridge alarm_control_panel
 description: Arguments and flags for every ha-bridge alarm_control_panel command.
+sidebar:
+  label: alarm_control_panel
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

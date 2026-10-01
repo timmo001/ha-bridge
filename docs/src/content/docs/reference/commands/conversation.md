@@ -1,6 +1,8 @@
 ---
 title: ha-bridge conversation
 description: Arguments and flags for every ha-bridge conversation command.
+sidebar:
+  label: conversation
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

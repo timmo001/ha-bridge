@@ -1,6 +1,8 @@
 ---
 title: ha-bridge siren
 description: Arguments and flags for every ha-bridge siren command.
+sidebar:
+  label: siren
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

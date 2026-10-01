@@ -1,6 +1,8 @@
 ---
 title: ha-bridge lawn_mower
 description: Arguments and flags for every ha-bridge lawn_mower command.
+sidebar:
+  label: lawn_mower
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

@@ -1,6 +1,8 @@
 ---
 title: ha-bridge todo
 description: Arguments and flags for every ha-bridge todo command.
+sidebar:
+  label: todo
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

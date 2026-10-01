@@ -1,6 +1,8 @@
 ---
 title: ha-bridge watch
 description: Arguments and flags for every ha-bridge watch command.
+sidebar:
+  label: watch
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

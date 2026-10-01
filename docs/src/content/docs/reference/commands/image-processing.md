@@ -1,6 +1,8 @@
 ---
 title: ha-bridge image_processing
 description: Arguments and flags for every ha-bridge image_processing command.
+sidebar:
+  label: image_processing
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

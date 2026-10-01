@@ -1,6 +1,8 @@
 ---
 title: ha-bridge media_player
 description: Arguments and flags for every ha-bridge media_player command.
+sidebar:
+  label: media_player
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

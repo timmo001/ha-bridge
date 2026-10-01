@@ -1,6 +1,8 @@
 ---
 title: ha-bridge person
 description: Arguments and flags for every ha-bridge person command.
+sidebar:
+  label: person
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

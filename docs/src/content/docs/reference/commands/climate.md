@@ -1,6 +1,8 @@
 ---
 title: ha-bridge climate
 description: Arguments and flags for every ha-bridge climate command.
+sidebar:
+  label: climate
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

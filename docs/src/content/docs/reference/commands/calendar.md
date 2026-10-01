@@ -1,6 +1,8 @@
 ---
 title: ha-bridge calendar
 description: Arguments and flags for every ha-bridge calendar command.
+sidebar:
+  label: calendar
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

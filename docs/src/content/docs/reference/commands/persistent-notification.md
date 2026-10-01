@@ -1,6 +1,8 @@
 ---
 title: ha-bridge persistent_notification
 description: Arguments and flags for every ha-bridge persistent_notification command.
+sidebar:
+  label: persistent_notification
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

@@ -1,6 +1,8 @@
 ---
 title: ha-bridge cover
 description: Arguments and flags for every ha-bridge cover command.
+sidebar:
+  label: cover
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

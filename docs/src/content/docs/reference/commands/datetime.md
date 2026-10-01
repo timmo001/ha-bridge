@@ -1,6 +1,8 @@
 ---
 title: ha-bridge datetime
 description: Arguments and flags for every ha-bridge datetime command.
+sidebar:
+  label: datetime
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

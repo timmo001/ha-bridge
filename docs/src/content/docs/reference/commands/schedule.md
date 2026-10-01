@@ -1,6 +1,8 @@
 ---
 title: ha-bridge schedule
 description: Arguments and flags for every ha-bridge schedule command.
+sidebar:
+  label: schedule
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

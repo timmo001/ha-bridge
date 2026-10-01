@@ -1,6 +1,8 @@
 ---
 title: ha-bridge date
 description: Arguments and flags for every ha-bridge date command.
+sidebar:
+  label: date
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

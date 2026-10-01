@@ -1,6 +1,8 @@
 ---
 title: ha-bridge input_text
 description: Arguments and flags for every ha-bridge input_text command.
+sidebar:
+  label: input_text
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

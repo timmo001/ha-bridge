@@ -1,6 +1,8 @@
 ---
 title: ha-bridge timer
 description: Arguments and flags for every ha-bridge timer command.
+sidebar:
+  label: timer
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

@@ -1,6 +1,8 @@
 ---
 title: ha-bridge input_number
 description: Arguments and flags for every ha-bridge input_number command.
+sidebar:
+  label: input_number
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

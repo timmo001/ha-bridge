@@ -1,6 +1,8 @@
 ---
 title: ha-bridge scene
 description: Arguments and flags for every ha-bridge scene command.
+sidebar:
+  label: scene
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

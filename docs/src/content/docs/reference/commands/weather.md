@@ -1,6 +1,8 @@
 ---
 title: ha-bridge weather
 description: Arguments and flags for every ha-bridge weather command.
+sidebar:
+  label: weather
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

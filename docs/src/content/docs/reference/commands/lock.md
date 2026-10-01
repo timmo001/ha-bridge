@@ -1,6 +1,8 @@
 ---
 title: ha-bridge lock
 description: Arguments and flags for every ha-bridge lock command.
+sidebar:
+  label: lock
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

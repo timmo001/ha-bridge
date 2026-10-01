@@ -1,6 +1,8 @@
 ---
 title: ha-bridge input_select
 description: Arguments and flags for every ha-bridge input_select command.
+sidebar:
+  label: input_select
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

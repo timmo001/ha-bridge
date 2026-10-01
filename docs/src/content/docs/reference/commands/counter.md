@@ -1,6 +1,8 @@
 ---
 title: ha-bridge counter
 description: Arguments and flags for every ha-bridge counter command.
+sidebar:
+  label: counter
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

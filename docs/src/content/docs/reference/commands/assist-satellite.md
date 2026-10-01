@@ -1,6 +1,8 @@
 ---
 title: ha-bridge assist_satellite
 description: Arguments and flags for every ha-bridge assist_satellite command.
+sidebar:
+  label: assist_satellite
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

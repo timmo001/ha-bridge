@@ -1,6 +1,8 @@
 ---
 title: ha-bridge group
 description: Arguments and flags for every ha-bridge group command.
+sidebar:
+  label: group
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

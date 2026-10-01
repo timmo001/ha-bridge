@@ -1,6 +1,8 @@
 ---
 title: ha-bridge time
 description: Arguments and flags for every ha-bridge time command.
+sidebar:
+  label: time
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

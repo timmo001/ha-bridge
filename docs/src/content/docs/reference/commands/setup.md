@@ -1,6 +1,8 @@
 ---
 title: ha-bridge setup
 description: Arguments and flags for every ha-bridge setup command.
+sidebar:
+  label: setup
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

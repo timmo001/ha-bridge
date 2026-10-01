@@ -1,6 +1,8 @@
 ---
 title: ha-bridge switch
 description: Arguments and flags for every ha-bridge switch command.
+sidebar:
+  label: switch
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

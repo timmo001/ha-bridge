@@ -1,6 +1,8 @@
 ---
 title: ha-bridge button
 description: Arguments and flags for every ha-bridge button command.
+sidebar:
+  label: button
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

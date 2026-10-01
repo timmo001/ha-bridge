@@ -1,6 +1,8 @@
 ---
 title: ha-bridge serve
 description: Arguments and flags for every ha-bridge serve command.
+sidebar:
+  label: serve
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

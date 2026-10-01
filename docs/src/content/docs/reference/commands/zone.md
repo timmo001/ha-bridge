@@ -1,6 +1,8 @@
 ---
 title: ha-bridge zone
 description: Arguments and flags for every ha-bridge zone command.
+sidebar:
+  label: zone
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

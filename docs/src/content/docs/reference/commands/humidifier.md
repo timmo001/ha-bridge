@@ -1,6 +1,8 @@
 ---
 title: ha-bridge humidifier
 description: Arguments and flags for every ha-bridge humidifier command.
+sidebar:
+  label: humidifier
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

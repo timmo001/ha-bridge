@@ -1,6 +1,8 @@
 ---
 title: ha-bridge homeassistant
 description: Arguments and flags for every ha-bridge homeassistant command.
+sidebar:
+  label: homeassistant
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

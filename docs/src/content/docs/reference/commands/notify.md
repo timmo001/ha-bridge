@@ -1,6 +1,8 @@
 ---
 title: ha-bridge notify
 description: Arguments and flags for every ha-bridge notify command.
+sidebar:
+  label: notify
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

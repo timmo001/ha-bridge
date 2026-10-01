@@ -1,6 +1,8 @@
 ---
 title: ha-bridge water_heater
 description: Arguments and flags for every ha-bridge water_heater command.
+sidebar:
+  label: water_heater
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

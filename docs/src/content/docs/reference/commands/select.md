@@ -1,6 +1,8 @@
 ---
 title: ha-bridge select
 description: Arguments and flags for every ha-bridge select command.
+sidebar:
+  label: select
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

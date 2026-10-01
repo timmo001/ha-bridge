@@ -1,6 +1,8 @@
 ---
 title: ha-bridge device_tracker
 description: Arguments and flags for every ha-bridge device_tracker command.
+sidebar:
+  label: device_tracker
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

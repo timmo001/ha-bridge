@@ -1,6 +1,8 @@
 ---
 title: ha-bridge camera
 description: Arguments and flags for every ha-bridge camera command.
+sidebar:
+  label: camera
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

@@ -1,6 +1,8 @@
 ---
 title: ha-bridge text
 description: Arguments and flags for every ha-bridge text command.
+sidebar:
+  label: text
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->
