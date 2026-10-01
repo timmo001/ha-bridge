@@ -15,7 +15,7 @@ depends = ["install"]
 run = "bun run dev"
 
 [tasks.build]
-description = "Compile the ha-bridge binary"
+description = "Compile a minified, bytecode-cached ha-bridge binary"
 depends = ["install"]
 run = "bun run build"
 
