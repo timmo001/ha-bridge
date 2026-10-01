@@ -90,7 +90,8 @@ jobs:
     with:
       bun-version: ${{ needs.tools.outputs.bun }}
       package-path: packages/client
-      check-command: (cd ../.. && bun run check && bun run test) && bun run build
+      # The JSR entry resolves @timmo001/effect-ha from the workspace, so build it too.
+      check-command: cd ../.. && bun run check && bun run test && bun run build:packages
 
   linux:
     name: Linux
