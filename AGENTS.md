@@ -21,7 +21,7 @@
 
 ## Docs
 
-- The docs site lives in `docs/`; follow `docs/AGENTS.md`. Run `mise run docs:gen` after changing commands in `src/index.ts`, and update the affected pages when behaviour changes.
+- Use the `ha-bridge-docs` skill (`.agents/skills/ha-bridge-docs`) when editing `docs/`, or when a change to commands, output, the protocol, packaging or the libraries needs the docs updating.
 
 ## Validation
 
