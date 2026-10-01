@@ -18,6 +18,11 @@ description = "Compile the ha-bridge binary"
 depends = ["install"]
 run = "bun run build"
 
+[tasks."build:client"]
+description = "Build the @timmo001/effect-ha-bridge package into packages/client/dist"
+depends = ["install"]
+run = "bun run build:client"
+
 [tasks.typecheck]
 description = "Type-check the source"
 depends = ["install"]

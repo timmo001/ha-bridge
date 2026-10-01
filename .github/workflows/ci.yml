@@ -36,6 +36,9 @@ jobs:
       - name: Build
         run: mise run build
 
+      - name: Build client package
+        run: mise run build:client
+
       - name: Smoke test CLI
         run: |
           ./dist/ha-bridge --help

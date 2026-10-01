@@ -6,6 +6,7 @@
       "name": "ha-bridge",
       "dependencies": {
         "@effect/platform-bun": "4.0.0",
+        "@timmo001/effect-ha-bridge": "workspace:*",
         "effect": "4.0.0",
       },
       "devDependencies": {
@@ -17,6 +18,16 @@
         "oxlint-tsgolint": "7.0.2003",
         "prettier": "3.9.9",
         "typescript": "7.0.2",
+      },
+    },
+    "packages/client": {
+      "name": "@timmo001/effect-ha-bridge",
+      "version": "0.1.0",
+      "dependencies": {
+        "@effect/platform-node-shared": "4.0.0",
+      },
+      "peerDependencies": {
+        "effect": "4.0.0",
       },
     },
   },
@@ -92,6 +103,8 @@
     "@oxlint/binding-win32-x64-msvc": ["@oxlint/binding-win32-x64-msvc@1.86.0", "", { "os": "win32", "cpu": "x64" }, "sha512-az4dzifCRzES1crwu6pDFXzJTIanrdxXFL9TbiJWrx9LKcuacbR83aPvxDA1LKLNswi/RoqitC7Afcflhu3zBQ=="],
 
     "@oxlint/plugins": ["@oxlint/plugins@1.86.0", "", {}, "sha512-JeAiaaRMyUiUEQHQ7zBsJn1aEdbLyt1HJsOs4XKIIlATNxcvWRrRxneZA+RF4G03cQobq3IhTqSfyLhOFv03qA=="],
+
+    "@timmo001/effect-ha-bridge": ["@timmo001/effect-ha-bridge@workspace:packages/client"],
 
     "@timmo001/oxlint-rules": ["@timmo001/oxlint-rules@0.5.0", "", { "peerDependencies": { "@oxlint/plugins": "1.86.0", "oxlint": "1.86.0" }, "bin": { "oxlint-rules": "dist/cli.js" } }, "sha512-5Tm1duCF2fzPRSwFGTOIDoR4qWXQIUtf0dYWt4ApoRbtJTPrPi4OZjdmhglaE/IoEaDSuUFp2Jx08Emmno/o1g=="],
 

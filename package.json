@@ -9,16 +9,18 @@
   "scripts": {
     "dev": "bun run --watch src/index.ts",
     "build": "bun build src/index.ts --compile --outfile dist/ha-bridge",
+    "build:client": "bun run --cwd packages/client build",
     "test": "bun test --pass-with-no-tests",
     "lint": "oxlint .",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write \"src/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\" \"packages/*/src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"packages/*/src/**/*.ts\"",
     "prepare": "effect-tsgo patch --typescript --force=false"
   },
   "dependencies": {
     "@effect/platform-bun": "4.0.0",
-    "effect": "4.0.0"
+    "effect": "4.0.0",
+    "@timmo001/effect-ha-bridge": "workspace:*"
   },
   "devDependencies": {
     "@effect/tsgo": "0.47.2",
@@ -29,5 +31,8 @@
     "oxlint-tsgolint": "7.0.2003",
     "prettier": "3.9.9",
     "typescript": "7.0.2"
-  }
+  },
+  "workspaces": [
+    "packages/*"
+  ]
 }
