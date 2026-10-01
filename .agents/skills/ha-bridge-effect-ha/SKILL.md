@@ -7,28 +7,45 @@ compatibility: Requires the Home Assistant core and frontend checkouts beside ha
 
 # effect-ha and the Home Assistant protocol
 
-`packages/effect-ha` owns its own Effect WebSocket connection (`src/Connection.ts`). Don't add `home-assistant-js-websocket` (HAWS) as a dependency.
+`packages/effect-ha` owns its own Effect WebSocket connection. Don't add `home-assistant-js-websocket` (HAWS) as a dependency; port from it only when something in ha-bridge needs the feature.
 
-## Research before changing the protocol
+## Layout
 
-Read Core and the frontend together; both checkouts must be fresh first.
+- `Connection.ts`: `connect` runs the auth handshake, then one reader fiber decodes frames and `dispatch` routes them. `request` assigns the id, parks a `Deferred` in `pending` and races it against `closed`. `HomeAssistantCommand` lists every command the package may send.
+- `Action.ts`: the `Action` schema (automation shape) and per-domain builders. `callAction` splits `action` into `domain` and `service` for `call_service`.
+- `Entity.ts`, `HomeAssistantConfig.ts`, `Calendar.ts`: schemas and decoders for what ha-bridge reads.
+- `Camera.ts`: REST, not WebSocket. `/api/camera_proxy/<entity_id>` with a bearer token.
+- `naming.ts`: display names from the registries, ported from the frontend's `compute_entity_name.ts` and `strip_prefix_from_entity_name.ts`. Keep it in step with those files.
 
-- Core decides what is accepted: `homeassistant/components/websocket_api/commands.py` and `messages.py`, each integration's `websocket_command` handlers, and its `services.py` and `services.yaml` for action fields and responses. REST endpoints live in the integration, such as `camera/__init__.py` for `camera_proxy`.
-- The frontend shows how a real client calls it: helpers in `src/data/` set message shapes and options such as `return_response`. Entity display names follow `src/common/entity/compute_entity_name.ts`, which `src/naming.ts` mirrors.
-- HAWS is the reference for connection features. Port from it only when something in ha-bridge needs the feature:
-  - `lib/messages.ts`: message shapes, including `supported_features` with `coalesce_messages`.
-  - `lib/connection.ts`: ping keepalive, reconnecting and resubscribing afterwards.
-  - `lib/entities.ts`: `subscribe_entities` and its compressed state diffs.
-  - `lib/socket.ts`: the auth handshake.
+The bridge's `src/homeassistant/HomeAssistant.ts` drives the session: it subscribes to `state_changed` before calling `get_states` so no change is lost, caches every state, fetches the registries for naming on a best-effort basis and reconnects after 5 seconds.
 
-## Naming
+## Wire basics
 
-- Wire fields stay as Home Assistant expects, so `call_service`, `domain`, `service` and `service_data` remain inside `Connection.ts` while public names say action. Avoid `hass` even where Core or the frontend still use it.
-- Keep Home Assistant's snake_case for wire and action data (`entity_id`, `return_response`); use camelCase for this package's own API.
+- Handshake: Home Assistant sends `auth_required`, the client sends `auth` with `access_token`, and Home Assistant answers `auth_ok` or `auth_invalid`. Both carry `ha_version`.
+- Ids must strictly increase within a connection, or Core answers `id_reuse`. A reconnect starts again from 1.
+- Results are `{ id, type: "result", success, result }` or `{ ..., success: false, error: { code, message } }`. `HomeAssistantError` keeps only the message.
+- Events are `{ id, type: "event", event }`, where `id` is the id of the subscribing request.
+- `call_service` succeeds with `{ context, response? }`; `response` is present only when `return_response` was sent.
+- `state_changed` subscriptions, `config/entity_registry/list_for_display` and `config/device_registry/list` work for non-admin users. Other events and most registry commands need an admin token.
+- Core drops a client whose outgoing queue reaches 4096 messages, so the reader must keep up. Keep `onState` cheap.
+
+## Traps in the current code
+
+- `dispatch` ignores the event `id` and only handles `state_changed`. A second subscription needs events routed by subscription id.
+- Frames that fail to decode are logged at debug level and dropped. A new reply type, such as `pong`, must be added to the decoded union, or the request waits until the connection closes.
+- Don't send `supported_features` with `coalesce_messages` until the reader splits JSON arrays; Core then batches several messages into one frame.
+- `list_for_display` uses compact keys (`ei`, `di`, `en`). `config/device_registry/list` returns full devices mixed with stripped child devices that have `parent_device_id` but no `connections`; see the frontend's `src/data/ws-device_registry.ts` before relying on fields beyond `id` and the names.
+
+## Where to look
+
+- Core, `homeassistant/components/websocket_api/`: `auth.py` (handshake), `messages.py` (result, error and event shapes), `connection.py` (id rules, supported features), `const.py` (error codes, queue limits), `commands.py` (`get_states`, `subscribe_events`, `call_service`, `get_config`, `ping`, `supported_features`, `subscribe_entities`).
+- Core, registries: `components/config/entity_registry.py` and `device_registry.py`.
+- HAWS, `lib/`: `socket.ts` (handshake), `messages.ts` (message builders), `connection.ts` (ping keepalive, reconnect and resubscribe), `entities.ts` (`subscribe_entities` and its compressed diffs).
 
 ## Making the change
 
-- Add new WebSocket commands to the `HomeAssistantCommand` union and decode every reply with a `Schema`. Return failures as `HomeAssistantError` with a short context prefix, as `cameraSnapshot` and `Calendar.eventsFrom` do.
-- Only decode the fields ha-bridge uses, with `Schema.optionalKey` where Home Assistant omits them, so new Home Assistant releases don't break decoding.
-- Export new modules from `src/index.ts`. This is a published package with its own README; update `packages/effect-ha/README.md` when the public API changes.
-- Run `mise run build:packages` as well as the root checks, since the published `dist` is built with `tsconfig.build.json` rather than the root config.
+- Wire fields stay as Home Assistant sends them (`call_service`, `service_data`, `entity_id`) inside `Connection.ts` and the schemas; the package's own API uses camelCase and says action.
+- Add the command to `HomeAssistantCommand` and decode its result with a `Schema`. Decode only the fields ha-bridge uses, with `Schema.optionalKey` where Home Assistant may omit them.
+- Fail with `HomeAssistantError` and a short context prefix, as `cameraSnapshot` and `Calendar.eventsFrom` do.
+- Export new modules from `src/index.ts` and update `packages/effect-ha/README.md` when the public API changes.
+- Run `mise run build:packages` as well as the root checks; the published `dist` builds with `tsconfig.build.json`, not the root config.
