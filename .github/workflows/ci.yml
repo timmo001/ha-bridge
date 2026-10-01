@@ -18,28 +18,23 @@ permissions:
 
 jobs:
   build:
-    name: Build
+    uses: timmo001/workflows/.github/workflows/build-bun-cli.yml@da1f8d52a56ce02034b676a8c91275e822934a68 # 20261001.0
+    with:
+      smoke-test: |-
+        ./dist/ha-bridge --help
+        ./dist/ha-bridge --version
+
+  packages:
+    name: Build packages
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Set up mise
         uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566
 
-      - name: Check
-        run: mise run check
-
-      - name: Test
-        run: mise run test
-
-      - name: Build
-        run: mise run build
-
       - name: Build packages
         run: mise run build:packages
-
-      - name: Smoke test CLI
-        run: |
-          ./dist/ha-bridge --help
-          ./dist/ha-bridge --version
