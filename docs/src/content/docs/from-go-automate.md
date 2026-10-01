@@ -5,6 +5,14 @@ description: What changes when you move from Go Automate to ha-bridge.
 
 Home Assistant Bridge replaces [Go Automate](https://github.com/timmo001/go-automate). The commands do the same things, but every command now goes through the bridge, so the bridge service must be running for actions as well as watchers.
 
+## What happened to Go Automate
+
+Go Automate was a Go CLI for triggering Home Assistant from key bindings, which later grew a socket bridge so status bars could share one connection for watching entities. Actions still opened their own connection each time, and anything else that needed Home Assistant called it directly with its own copy of the token.
+
+Home Assistant Bridge is a rewrite in TypeScript with Effect, built around the bridge. One service owns the connection, and actions, reads and watches all go through its socket. Other apps can use the same connection through the [client library](/libraries/) instead of shelling out.
+
+Go Automate is archived and no longer maintained, and its docs site now redirects here.
+
 ## Commands
 
 Drop `go-automate ha` from the front, and `bridge` from the bridge commands:
