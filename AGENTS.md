@@ -15,13 +15,7 @@
 - Every operation goes through the bridge socket. CLI commands are thin socket clients; they never open their own Home Assistant connection.
 - Pin dependencies to exact versions (`bun add -E`).
 - Run project tasks through mise. Scripts complex enough to need logic are written in Effect and exposed as mise tasks.
-- Install only published packages; never install a local build over the installed one.
-- Base protocol and client changes on how Home Assistant works: read `core` (server) and `frontend` (client) together, as the workspace `AGENTS.md` describes. Public names follow current Home Assistant terms (actions, not services), even where the wire protocol still uses older names such as `call_service`. Never use `hass` in names; use `ha` or `HomeAssistant`, even where Core or the frontend still do. Wire field names stay as Home Assistant expects.
-- `packages/effect-ha` owns its own Effect WebSocket connection; do not depend on `home-assistant-js-websocket`. Use that library (`home-assistant/home-assistant-js-websocket`, which the frontend uses) as the reference when a protocol feature becomes needed, such as `subscribe_entities` diffs, `coalesce_messages`, ping keepalive, or resubscribing after a reconnect. Add features only when something uses them.
-
-## Docs
-
-- Use the `ha-bridge-docs` skill (`.agents/skills/ha-bridge-docs`) when editing `docs/`, or when a change to commands, output, the protocol, packaging or the libraries needs the docs updating.
+- Public names follow current Home Assistant terms (actions, not services). Never use `hass` in names; use `ha` or `HomeAssistant`.
 
 ## Validation
 
