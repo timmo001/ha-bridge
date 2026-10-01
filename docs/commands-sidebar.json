@@ -1,0 +1,14 @@
+[
+  "/reference/commands",
+  "/reference/commands/serve",
+  "/reference/commands/setup",
+  "/reference/commands/watch",
+  "/reference/commands/assist-satellite",
+  "/reference/commands/input-boolean",
+  "/reference/commands/input-number",
+  "/reference/commands/light",
+  "/reference/commands/switch",
+  "/reference/commands/cover",
+  "/reference/commands/climate",
+  "/reference/commands/camera"
+]

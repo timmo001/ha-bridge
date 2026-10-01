@@ -1,5 +1,6 @@
 import { defineConfig } from "blume";
 import { cloudflare } from "blume/deploy";
+import commandPages from "./commands-sidebar.json" with { type: "json" };
 
 export default defineConfig({
   title: "Home Assistant Bridge",
@@ -26,13 +27,27 @@ export default defineConfig({
       "/configuration",
       "/running",
       {
+        label: "Actions",
+        items: [
+          "/actions",
+          "/actions/lights",
+          "/actions/switches",
+          "/actions/input-booleans",
+          "/actions/input-numbers",
+          "/actions/covers",
+          "/actions/climate",
+          "/actions/assist-satellites",
+          "/actions/cameras",
+        ],
+      },
+      {
         label: "Using",
-        items: ["/using/actions", "/using/watching", "/using/completions"],
+        items: ["/using/watching", "/using/completions"],
       },
       {
         label: "Reference",
         items: [
-          "/reference/commands",
+          { label: "Commands", items: commandPages, collapsed: true },
           "/reference/bar-json",
           "/reference/protocol",
         ],
@@ -41,7 +56,10 @@ export default defineConfig({
       "/from-go-automate",
     ],
   },
-  redirects: [{ from: "/migrating", to: "/from-go-automate" }],
+  redirects: [
+    { from: "/migrating", to: "/from-go-automate" },
+    { from: "/using/actions", to: "/actions" },
+  ],
   theme: {
     accent: {
       light: "#0277bd",

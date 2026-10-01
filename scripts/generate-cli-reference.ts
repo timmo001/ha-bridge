@@ -5,7 +5,10 @@ import { Effect, FileSystem, Path } from "effect";
 import type { PlatformError } from "effect/PlatformError";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
-const outFile = "docs/src/content/docs/reference/commands.md";
+const outDir = "docs/src/content/docs/reference/commands";
+
+// Imported by docs/blume.config.ts for the Commands sidebar group.
+const sidebarFile = "docs/commands-sidebar.json";
 
 interface Subcommand {
   readonly name: string;
@@ -48,19 +51,8 @@ const program = Effect.gen(function* () {
       ChildProcess.make("bun", ["src/index.ts", ...commandPath, "--help"]),
     );
 
-  const lines: Array<string> = [
-    "---",
-    "title: Commands",
-    "description: Every Home Assistant Bridge command, alias, argument and flag, generated from the CLI's help.",
-    "---",
-    "",
-    "<!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->",
-    "",
-    "Every command and its help, as `ha-bridge <command> --help` prints it. Each command also accepts the global flags listed under [`ha-bridge`](#ha-bridge).",
-    "",
-  ];
-
   const render = (
+    lines: Array<string>,
     commandPath: ReadonlyArray<string>,
     alias: string | undefined,
   ): Effect.Effect<void, PlatformError> =>
@@ -75,26 +67,99 @@ const program = Effect.gen(function* () {
         lines.push(`Alias: \`${["ha-bridge", ...aliasPath].join(" ")}\``, "");
       }
 
-      lines.push(
-        "```text",
-        commandPath.length === 0 ? help.trimEnd() : withoutGlobalFlags(help),
-        "```",
-        "",
-      );
+      lines.push("```text", withoutGlobalFlags(help), "```", "");
 
       yield* Effect.forEach(
         subcommandsOf(help),
         (subcommand) =>
-          render([...commandPath, subcommand.name], subcommand.alias),
+          render(lines, [...commandPath, subcommand.name], subcommand.alias),
         { discard: true },
       );
     });
 
-  yield* render([], undefined);
+  const page = (title: string, description: string, body: Array<string>) =>
+    [
+      "---",
+      `title: ${title}`,
+      `description: ${description}`,
+      "---",
+      "",
+      "<!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->",
+      "",
+      ...body,
+    ]
+      .join("\n")
+      .trimEnd() + "\n";
 
-  yield* fs.makeDirectory(path.dirname(outFile), { recursive: true });
-  yield* fs.writeFileString(outFile, `${lines.join("\n").trimEnd()}\n`);
-  yield* Effect.log(`Wrote ${outFile}`);
+  const rootHelp = yield* helpFor([]);
+  const commands = subcommandsOf(rootHelp);
+  const slug = (name: string) => name.replaceAll("_", "-");
+
+  yield* fs.remove(outDir, { recursive: true, force: true });
+  yield* fs.makeDirectory(outDir, { recursive: true });
+
+  yield* Effect.forEach(
+    commands,
+    (command) =>
+      Effect.gen(function* () {
+        const lines: Array<string> = [
+          `Every \`ha-bridge ${command.name}\` command and its help, as \`--help\` prints it. Each also accepts the [global flags](/reference/commands/#global-flags).`,
+          "",
+        ];
+
+        yield* render(lines, [command.name], command.alias);
+
+        yield* fs.writeFileString(
+          path.join(outDir, `${slug(command.name)}.md`),
+          page(
+            `ha-bridge ${command.name}`,
+            `Arguments and flags for every ha-bridge ${command.name} command.`,
+            lines,
+          ),
+        );
+      }),
+    { discard: true },
+  );
+
+  yield* fs.writeFileString(
+    path.join(outDir, "index.md"),
+    page(
+      "Commands",
+      "Every Home Assistant Bridge command, alias, argument and flag, generated from the CLI's help.",
+      [
+        "Each command has its own page with its help, as `ha-bridge <command> --help` prints it.",
+        "",
+        "| Command | Alias |",
+        "| --- | --- |",
+        ...commands.map(
+          (command) =>
+            `| [\`${command.name}\`](/reference/commands/${slug(command.name)}/) | ${command.alias === undefined ? "None" : `\`${command.alias}\``} |`,
+        ),
+        "",
+        "## Global flags",
+        "",
+        "```text",
+        rootHelp.trimEnd(),
+        "```",
+      ],
+    ),
+  );
+
+  yield* fs.writeFileString(
+    sidebarFile,
+    `${JSON.stringify(
+      [
+        "/reference/commands",
+        ...commands.map(
+          (command) => `/reference/commands/${slug(command.name)}`,
+        ),
+      ],
+      null,
+      2,
+    )}\n`,
+  );
+
+  yield* Effect.log(`Wrote ${commands.length + 1} pages to ${outDir}`);
 });
 
 program.pipe(Effect.provide(BunServices.layer), BunRuntime.runMain);
