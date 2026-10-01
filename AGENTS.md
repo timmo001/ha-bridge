@@ -16,6 +16,7 @@
 - Pin dependencies to exact versions (`bun add -E`).
 - Run project tasks through mise. Scripts complex enough to need logic are written in Effect and exposed as mise tasks.
 - Install only published packages; never install a local build over the installed one.
+- Base protocol and client changes on how Home Assistant works: read `core` (server) and `frontend` (client) together, as the workspace `AGENTS.md` describes. Public names follow current Home Assistant terms (actions, not services), even where the wire protocol still uses older names such as `call_service`. Never use `hass` in names; use `ha` or `HomeAssistant`, even where Core or the frontend still do. Wire field names stay as Home Assistant expects.
 
 ## Validation
 
