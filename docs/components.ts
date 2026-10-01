@@ -1,8 +1,8 @@
 import { defineComponents } from "blume";
-import Logo from "./components/Logo.astro";
+import HomeBanner from "./components/HomeBanner.astro";
 
 export default defineComponents({
   layout: {
-    Logo,
+    PageHeader: HomeBanner,
   },
 });
