@@ -3,9 +3,9 @@ title: Bridge protocol
 description: The RPCs the bridge serves on its Unix socket, and their wire format.
 ---
 
-The bridge serves [Effect](https://effect.website) RPCs as newline-delimited JSON on a Unix socket. From TypeScript, use [`@timmo001/effect-ha-bridge`](/libraries/), which handles the framing for you. This page is for other languages and for debugging.
+The bridge serves [Effect](https://effect.website) RPCs as newline-delimited JSON on a Unix socket. From TypeScript, use [`@timmo001/effect-ha-bridge`](/libraries), which handles the framing for you. This page is for other languages and for debugging.
 
-The socket is at the [socket path](/configuration/#socket-path), in a directory only you can open (`0700`), and is itself only accessible by you (`0600`).
+The socket is at the [socket path](/configuration#socket-path), in a directory only you can open (`0700`), and is itself only accessible by you (`0600`).
 
 ## RPCs
 
@@ -17,7 +17,7 @@ The socket is at the [socket path](/configuration/#socket-path), in a directory 
 | `GetConfig` | `null` | Home Assistant's config, such as `time_zone`, `location_name` and `version` |
 | `CameraSnapshot` | `{ "entityId": "camera.<name>" }` | `{ "contentType": string, "data": string }`, with the image bytes base64-encoded in `data` |
 
-An entity update is `{ "state": EntityState, "name": string }`, where `state` is the state object Home Assistant sends (`entity_id`, `state`, `attributes` and timestamps) and `name` is the display name described in [Bar JSON](/reference/bar-json/#output).
+An entity update is `{ "state": EntityState, "name": string }`, where `state` is the state object Home Assistant sends (`entity_id`, `state`, `attributes` and timestamps) and `name` is the display name described in [Bar JSON](/reference/bar-json#output).
 
 `CallAction`, `GetConfig` and `CameraSnapshot` fail with `HomeAssistantError` (`{ "_tag": "HomeAssistantError", "message": string }`) when Home Assistant rejects the request or the bridge isn't connected to it. `CallAction` takes the same `action`, `data` and `target` keys as actions in Home Assistant automations.
 

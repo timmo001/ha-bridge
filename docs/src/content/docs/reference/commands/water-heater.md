@@ -7,7 +7,7 @@ sidebar:
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->
 
-Every `ha-bridge water_heater` command and its help, as `--help` prints it. Each also accepts the [global flags](/reference/commands/#global-flags).
+Every `ha-bridge water_heater` command and its help, as `--help` prints it. Each also accepts the [global flags](/reference/commands#global-flags).
 
 ## `ha-bridge water_heater`
 

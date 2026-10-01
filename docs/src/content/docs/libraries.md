@@ -18,7 +18,7 @@ Most local apps want the bridge client: they start instantly, share the bridge's
 bun add @timmo001/effect-ha-bridge @timmo001/effect-ha effect
 ```
 
-`BridgeClient` has one method per [RPC](/reference/protocol/#rpcs): `GetEntity`, `WatchEntity`, `CallAction`, `GetConfig` and `CameraSnapshot`. `resolveSocketPath` finds the socket the same way the CLI does, and `getCalendarEvents` reads calendar events through `CallAction`.
+`BridgeClient` has one method per [RPC](/reference/protocol#rpcs): `GetEntity`, `WatchEntity`, `CallAction`, `GetConfig` and `CameraSnapshot`. `resolveSocketPath` finds the socket the same way the CLI does, and `getCalendarEvents` reads calendar events through `CallAction`.
 
 ```ts
 import { BunRuntime, BunServices } from "@effect/platform-bun";
@@ -46,6 +46,6 @@ See the [client README](https://github.com/timmo001/ha-bridge/tree/main/packages
 bun add @timmo001/effect-ha effect
 ```
 
-`connect` opens and authenticates a WebSocket session with `callAction`, `getConfig` and raw `request`. The library also has typed action builders for each domain on the [Actions](/actions/) pages (such as `Light`, `Cover`, `Climate` and `Lock`, plus `Calendar`) with schemas for their action data, the `EntityState` schema, frontend-style entity naming and `cameraSnapshot`.
+`connect` opens and authenticates a WebSocket session with `callAction`, `getConfig` and raw `request`. The library also has typed action builders for each domain on the [Actions](/actions) pages (such as `Light`, `Cover`, `Climate` and `Lock`, plus `Calendar`) with schemas for their action data, the `EntityState` schema, frontend-style entity naming and `cameraSnapshot`.
 
 See the [`effect-ha` README](https://github.com/timmo001/ha-bridge/tree/main/packages/effect-ha#readme) for details.

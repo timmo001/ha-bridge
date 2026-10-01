@@ -25,11 +25,11 @@ ha-bridge watch entity input_boolean.guest_mode \
   --class-off inactive
 ```
 
-See [Bar JSON](/reference/bar-json/) for the output and every flag.
+See [Bar JSON](/reference/bar-json) for the output and every flag.
 
 ## Covers and climate
 
-`cover watch` and `climate watch` take the entity name without its domain, like the [action commands](/actions/), and always print bar JSON with a summary of the entity:
+`cover watch` and `climate watch` take the entity name without its domain, like the [action commands](/actions), and always print bar JSON with a summary of the entity:
 
 ```bash
 ha-bridge cover watch office_blind

@@ -111,7 +111,7 @@ const program = Effect.gen(function* () {
     (command) =>
       Effect.gen(function* () {
         const lines: Array<string> = [
-          `Every \`ha-bridge ${command.name}\` command and its help, as \`--help\` prints it. Each also accepts the [global flags](/reference/commands/#global-flags).`,
+          `Every \`ha-bridge ${command.name}\` command and its help, as \`--help\` prints it. Each also accepts the [global flags](/reference/commands#global-flags).`,
           "",
         ];
 
@@ -142,7 +142,7 @@ const program = Effect.gen(function* () {
         "| --- | --- |",
         ...commands.map(
           (command) =>
-            `| [\`${command.name}\`](/reference/commands/${slug(command.name)}/) | ${command.alias === undefined ? "None" : `\`${command.alias}\``} |`,
+            `| [\`${command.name}\`](/reference/commands/${slug(command.name)}) | ${command.alias === undefined ? "None" : `\`${command.alias}\``} |`,
         ),
         "",
         "## Global flags",

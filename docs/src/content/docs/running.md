@@ -23,7 +23,7 @@ journalctl --user -u ha-bridge.service -f
 
 A healthy start logs `Bridge listening`, `Cached entity naming` and `Bridge subscribed to Home Assistant`.
 
-The service restarts 5 seconds after it fails, for example when it starts before you've run [setup](/configuration/).
+The service restarts 5 seconds after it fails, for example when it starts before you've run [setup](/configuration).
 
 User services only run while you're logged in. To keep the bridge running after you log out, enable lingering:
 
