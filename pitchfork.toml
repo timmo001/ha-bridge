@@ -1,0 +1,8 @@
+# Keeps the docs dev server running in the background, outside the invoking
+# shell or agent. Manage it with the serve:docs:* mise tasks.
+
+[daemons.docs]
+run = "exec mise run docs:dev"
+ready_http = "http://localhost:4321/"
+health_http = "http://localhost:4321/"
+retry = true
