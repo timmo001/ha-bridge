@@ -69,21 +69,27 @@ export default defineConfig({
         label: "Using",
         items: ["/using/watching", "/using/completions"],
       },
+      "/libraries",
       {
         label: "Reference",
+        display: "group",
+        collapsed: true,
         items: [
           {
             label: "Commands",
             root: "/reference/commands",
             items: commandPages.filter((page) => page !== "/reference/commands"),
+            display: "group",
             collapsed: true,
           },
           "/reference/bar-json",
           "/reference/protocol",
         ],
       },
-      "/libraries",
-      "/from-go-automate",
+      {
+        label: "Migrations",
+        items: ["/from-go-automate"],
+      },
     ],
   },
   redirects: [
