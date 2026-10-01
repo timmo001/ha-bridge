@@ -85,6 +85,26 @@ const exclusive = <T extends object>(
     );
   });
 
+// Fails unless at least one of `keys` is set, like Core's `AtLeastOne`.
+const atLeastOne = <T extends object>(keys: ReadonlyArray<keyof T & string>) =>
+  Schema.makeFilter<T>(
+    (input) =>
+      keys.some((key) => Object.hasOwn(input, key)) ||
+      `set at least one of ${keys.join(", ")}`,
+  );
+
+// Fails unless all or none of `keys` are set, like Core's `Inclusive` groups.
+const inclusive = <T extends object>(keys: ReadonlyArray<keyof T & string>) =>
+  Schema.makeFilter<T>((input) => {
+    const set = keys.filter((key) => Object.hasOwn(input, key));
+
+    return (
+      set.length === 0 ||
+      set.length === keys.length ||
+      `set ${keys.join(" and ")} together`
+    );
+  });
+
 const between = (minimum: number, maximum: number) =>
   Schema.Finite.check(Schema.isBetween({ minimum, maximum }));
 
@@ -206,9 +226,77 @@ export const Cover = {
     }),
 };
 
+export const HvacMode = Schema.Literals([
+  "off",
+  "heat",
+  "cool",
+  "heat_cool",
+  "auto",
+  "dry",
+  "fan_only",
+]);
+
+export type HvacMode = typeof HvacMode.Type;
+
+// `climate.set_temperature` data, in the instance's temperature unit. Set
+// `temperature`, or `target_temp_low` and `target_temp_high` together, or all
+// three. Core checks each value against the entity's `min_temp` and `max_temp`.
+const ClimateSetTemperatureFields = Schema.Struct({
+  temperature: Schema.optionalKey(Schema.Finite),
+  target_temp_high: Schema.optionalKey(Schema.Finite),
+  target_temp_low: Schema.optionalKey(Schema.Finite),
+  hvac_mode: Schema.optionalKey(HvacMode),
+});
+
+type ClimateSetTemperatureFields = typeof ClimateSetTemperatureFields.Type;
+
+export const ClimateSetTemperatureData = ClimateSetTemperatureFields.check(
+  atLeastOne<ClimateSetTemperatureFields>([
+    "temperature",
+    "target_temp_high",
+    "target_temp_low",
+  ]),
+  inclusive<ClimateSetTemperatureFields>([
+    "target_temp_low",
+    "target_temp_high",
+  ]),
+  Schema.makeFilter<ClimateSetTemperatureFields>(
+    ({ target_temp_low: low, target_temp_high: high }) =>
+      low === undefined ||
+      high === undefined ||
+      low <= high ||
+      "target_temp_low must not be higher than target_temp_high",
+  ),
+);
+
+export type ClimateSetTemperatureData = typeof ClimateSetTemperatureData.Type;
+
+// Mode names other than `hvac_mode` come from the entity's attributes, such as
+// `preset_modes` and `fan_modes`. Core checks `humidity` against the entity's
+// `min_humidity` and `max_humidity`.
 export const Climate = {
+  ...switchable("climate"),
+  setHvacMode: (entityId: EntityId<"climate">, hvacMode: HvacMode) =>
+    onEntity("climate.set_hvac_mode", entityId, { hvac_mode: hvacMode }),
+  setTemperature: (
+    entityId: EntityId<"climate">,
+    data: ClimateSetTemperatureData,
+  ) => onEntity("climate.set_temperature", entityId, data),
+  setHumidity: (entityId: EntityId<"climate">, humidity: number) =>
+    onEntity("climate.set_humidity", entityId, { humidity }),
+  setPresetMode: (entityId: EntityId<"climate">, presetMode: string) =>
+    onEntity("climate.set_preset_mode", entityId, { preset_mode: presetMode }),
   setFanMode: (entityId: EntityId<"climate">, fanMode: string) =>
     onEntity("climate.set_fan_mode", entityId, { fan_mode: fanMode }),
+  setSwingMode: (entityId: EntityId<"climate">, swingMode: string) =>
+    onEntity("climate.set_swing_mode", entityId, { swing_mode: swingMode }),
+  setSwingHorizontalMode: (
+    entityId: EntityId<"climate">,
+    swingHorizontalMode: string,
+  ) =>
+    onEntity("climate.set_swing_horizontal_mode", entityId, {
+      swing_horizontal_mode: swingHorizontalMode,
+    }),
 };
 
 export const AssistSatellite = {

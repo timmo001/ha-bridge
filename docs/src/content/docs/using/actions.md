@@ -101,11 +101,24 @@ ha-bridge cover open curtain --speed fast
 
 ## Climate
 
-`climate` (`cl`) sets a fan mode. Use one of the modes the entity lists in its `fan_modes` attribute:
+`climate` (`cl`) turns a climate entity on or off and sets its HVAC mode, target temperature, humidity and other modes:
 
 ```bash
+ha-bridge climate turn-on air_conditioner
+ha-bridge climate turn-off air_conditioner
+ha-bridge climate toggle air_conditioner
+ha-bridge climate hvac-mode air_conditioner cool
+ha-bridge climate temperature air_conditioner 21.5
+ha-bridge climate temperature air_conditioner 21.5 --hvac-mode heat
+ha-bridge climate temperature thermostat --target-temp-low 18 --target-temp-high 23
+ha-bridge climate humidity dehumidifier 45
+ha-bridge climate preset-mode air_conditioner away
 ha-bridge climate fan-mode air_conditioner auto
+ha-bridge climate swing-mode air_conditioner on
+ha-bridge climate swing-horizontal-mode air_conditioner on
 ```
+
+`hvac-mode` takes `off`, `heat`, `cool`, `heat_cool`, `auto`, `dry` or `fan_only`. Temperatures are in your Home Assistant unit. For a range, set `--target-temp-low` and `--target-temp-high` together. The other modes come from the entity's attributes: `preset_modes`, `fan_modes`, `swing_modes` and `swing_horizontal_modes`.
 
 ## Assist satellites
 
@@ -138,7 +151,9 @@ The image is written to a temporary file first and then renamed, so anything rea
 | `cover open`, `close`, `toggle`, `stop` | `cover.open_cover`, `close_cover`, `toggle`, `stop_cover` | `cover.<name>` |
 | `cover open-tilt`, `close-tilt`, `toggle-tilt`, `stop-tilt` | `cover.open_cover_tilt`, `close_cover_tilt`, `toggle_cover_tilt`, `stop_cover_tilt` | `cover.<name>` |
 | `cover position`, `tilt-position` | `cover.set_cover_position`, `set_cover_tilt_position` | `cover.<name>` |
-| `climate fan-mode` | `climate.set_fan_mode` | `climate.<name>` |
+| `climate turn-on`, `turn-off`, `toggle` | `climate.turn_on`, `turn_off`, `toggle` | `climate.<name>` |
+| `climate hvac-mode`, `temperature`, `humidity` | `climate.set_hvac_mode`, `set_temperature`, `set_humidity` | `climate.<name>` |
+| `climate preset-mode`, `fan-mode`, `swing-mode`, `swing-horizontal-mode` | `climate.set_preset_mode`, `set_fan_mode`, `set_swing_mode`, `set_swing_horizontal_mode` | `climate.<name>` |
 | `assist_satellite announce` | `assist_satellite.announce` | `area_id` |
 | `camera snapshot` | Camera proxy image | `camera.<name>` |
 

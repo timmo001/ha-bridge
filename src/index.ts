@@ -18,7 +18,9 @@ import packageJson from "../package.json" with { type: "json" };
 import {
   AssistSatellite,
   Climate,
+  ClimateSetTemperatureData,
   Cover,
+  HvacMode,
   InputBoolean,
   InputNumber,
   Light,
@@ -162,6 +164,16 @@ const reloadCommand = (domain: string, toAction: () => Action) =>
 
 const optionalFlag = <A>(flag: Flag.Flag<A>, description: string) =>
   flag.pipe(Flag.withDescription(description), Flag.optional);
+
+// Leaves unset options out, so schemas see missing keys rather than undefined.
+const setFields = (
+  fields: Readonly<Record<string, Option.Option<Schema.Json>>>,
+) =>
+  Object.fromEntries(
+    Object.entries(fields).flatMap(([key, value]) =>
+      Option.isSome(value) ? [[key, value.value]] : [],
+    ),
+  );
 
 // Reports a failed effect-ha schema check on data built from flags.
 const decodeData = <A>(
@@ -465,27 +477,124 @@ const cover = domainCommand("cover", "c", "Cover actions", [
   ).pipe(Command.withDescription("Set the tilt position")),
 ]);
 
-const climate = domainCommand("climate", "cl", "Climate actions", [
-  stateWatchCommand("climate", climateStateText),
+const climateName = nameArgument("Entity name without the climate. prefix");
+
+// Sets a mode the entity lists in an attribute, such as `fan_modes`.
+const climateModeCommand = (
+  name: string,
+  label: string,
+  example: string,
+  toAction: (entityId: EntityId<"climate">, mode: string) => Action,
+) =>
   Command.make(
-    "fan-mode",
+    name,
     {
-      name: nameArgument("Entity name without the climate. prefix"),
+      name: climateName,
       mode: Argument.String("mode").pipe(
-        Argument.withDescription("Fan mode, for example 1 or auto"),
+        Argument.withDescription(`${label}, for example ${example}`),
       ),
     },
     (input) =>
       Effect.gen(function* () {
         if (input.mode === "") {
-          return yield* failWith("climate fan mode is required");
+          return yield* failWith(`climate ${label.toLowerCase()} is required`);
         }
 
+        yield* callAction(toAction(`climate.${input.name}`, input.mode));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription(`Set the ${label.toLowerCase()}`));
+
+const decodeClimateSetTemperature = Schema.decodeUnknownEffect(
+  ClimateSetTemperatureData,
+);
+
+const climate = domainCommand("climate", "cl", "Climate actions", [
+  stateWatchCommand("climate", climateStateText),
+  ...toggleCommands("climate", Climate),
+  Command.make(
+    "hvac-mode",
+    {
+      name: climateName,
+      mode: Argument.Literals("mode", HvacMode.literals).pipe(
+        Argument.withDescription("HVAC mode"),
+      ),
+    },
+    (input) =>
+      callAction(Climate.setHvacMode(`climate.${input.name}`, input.mode)).pipe(
+        withBridge,
+      ),
+  ).pipe(Command.withDescription("Set the HVAC mode")),
+  Command.make(
+    "temperature",
+    {
+      name: climateName,
+      temperature: Argument.Finite("temperature").pipe(
+        Argument.withDescription("Target temperature"),
+        Argument.optional,
+      ),
+      targetTempLow: optionalFlag(
+        Flag.Finite("target-temp-low"),
+        "Lower target temperature, set with --target-temp-high",
+      ),
+      targetTempHigh: optionalFlag(
+        Flag.Finite("target-temp-high"),
+        "Upper target temperature, set with --target-temp-low",
+      ),
+      hvacMode: optionalFlag(
+        Flag.Literals("hvac-mode", HvacMode.literals),
+        "HVAC mode to switch to",
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const data = yield* decodeData(
+          "climate temperature",
+          decodeClimateSetTemperature(
+            setFields({
+              temperature: input.temperature,
+              target_temp_low: input.targetTempLow,
+              target_temp_high: input.targetTempHigh,
+              hvac_mode: input.hvacMode,
+            }),
+          ),
+        );
+
         yield* callAction(
-          Climate.setFanMode(`climate.${input.name}`, input.mode),
+          Climate.setTemperature(`climate.${input.name}`, data),
         );
       }).pipe(withBridge),
-  ).pipe(Command.withDescription("Set the fan mode")),
+  ).pipe(
+    Command.withDescription(
+      "Set the target temperature, or a range with --target-temp-low and --target-temp-high",
+    ),
+  ),
+  Command.make(
+    "humidity",
+    {
+      name: climateName,
+      humidity: Argument.Int("humidity").pipe(
+        Argument.withDescription("Target humidity in percent"),
+      ),
+    },
+    (input) =>
+      callAction(
+        Climate.setHumidity(`climate.${input.name}`, input.humidity),
+      ).pipe(withBridge),
+  ).pipe(Command.withDescription("Set the target humidity")),
+  climateModeCommand(
+    "preset-mode",
+    "Preset mode",
+    "away",
+    Climate.setPresetMode,
+  ),
+  climateModeCommand("fan-mode", "Fan mode", "1 or auto", Climate.setFanMode),
+  climateModeCommand("swing-mode", "Swing mode", "on", Climate.setSwingMode),
+  climateModeCommand(
+    "swing-horizontal-mode",
+    "Horizontal swing mode",
+    "on",
+    Climate.setSwingHorizontalMode,
+  ),
 ]);
 
 const camera = Command.make("camera").pipe(
