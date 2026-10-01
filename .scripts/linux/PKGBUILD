@@ -7,7 +7,6 @@ pkgdesc="One shared Home Assistant connection for your machine, served to local 
 arch=('x86_64' 'aarch64')
 url="https://github.com/timmo001/ha-bridge"
 license=('Apache-2.0')
-keywords=('home-assistant' 'automation' 'cli' 'websocket')
 install=ha-bridge.install
 makedepends=('git' 'bun')
 depends=('glibc')
