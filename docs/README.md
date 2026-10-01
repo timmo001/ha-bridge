@@ -1,6 +1,6 @@
-# ha-bridge docs
+# Home Assistant Bridge docs
 
-The [ha-bridge](https://github.com/timmo001/ha-bridge) documentation site, built with Blume and Astro. It's available at <https://ha-bridge.timmo.dev>.
+The [Home Assistant Bridge](https://github.com/timmo001/ha-bridge) documentation site, built with Blume and Astro. It's available at <https://ha-bridge.timmo.dev>.
 
 ## Commands
 

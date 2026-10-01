@@ -3,13 +3,13 @@ title: Migrating from Go Automate
 description: What changes when you move from Go Automate to ha-bridge.
 ---
 
-ha-bridge replaces [Go Automate](https://github.com/timmo001/go-automate). The commands do the same things, but every command now goes through the bridge, so the bridge service must be running for actions as well as watchers.
+Home Assistant Bridge replaces [Go Automate](https://github.com/timmo001/go-automate). The commands do the same things, but every command now goes through the bridge, so the bridge service must be running for actions as well as watchers.
 
 ## Commands
 
 Drop `go-automate ha` from the front, and `bridge` from the bridge commands:
 
-| Go Automate | ha-bridge |
+| Go Automate | Home Assistant Bridge |
 | --- | --- |
 | `go-automate ha bridge serve` | `ha-bridge serve` |
 | `go-automate ha bridge watch entity <entity_id>` | `ha-bridge watch entity <entity_id>` |
@@ -21,7 +21,7 @@ The domain commands, their aliases, arguments and flags are unchanged. `camera s
 
 ## Service and socket
 
-| | Go Automate | ha-bridge |
+| | Go Automate | Home Assistant Bridge |
 | --- | --- | --- |
 | User service | `go-automate-home-assistant-bridge.service` | `ha-bridge.service` |
 | Socket | `$XDG_RUNTIME_DIR/go-automate/home-assistant.sock` | `$XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock` |
@@ -33,7 +33,7 @@ Scripts that spoke Go Automate's socket protocol directly need moving to the [ne
 
 You don't need to set anything up again. When `~/.config/ha-bridge/config.yml` doesn't exist, the bridge reads `~/.config/go-automate/config.yml` and copies it across.
 
-Go Automate asked for your URL and token the first time it ran. ha-bridge doesn't prompt on its own; run `ha-bridge setup` instead.
+Go Automate asked for your URL and token the first time it ran. Home Assistant Bridge doesn't prompt on its own; run `ha-bridge setup` instead.
 
 ## Output
 
@@ -50,6 +50,6 @@ Bar JSON has the same fields and key order, with two small differences:
    systemctl --user disable --now go-automate-home-assistant-bridge.service
    ```
 
-2. [Install](/install/) ha-bridge, then make sure `ha-bridge.service` is running.
+2. [Install](/install/) Home Assistant Bridge, then make sure `ha-bridge.service` is running.
 3. Update your key bindings, bar modules and scripts to the new commands.
 4. Remove Go Automate.

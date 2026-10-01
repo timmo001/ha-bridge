@@ -1,6 +1,6 @@
 ---
 title: Shell completions
-description: Tab completion for ha-bridge commands, aliases and flags in bash, zsh and fish.
+description: Tab completion for Home Assistant Bridge commands, aliases and flags in bash, zsh and fish.
 ---
 
 Every package installs completions for bash, zsh and fish, so Tab completes commands, aliases and flags in a new shell.

@@ -3,7 +3,7 @@ title: Libraries
 description: Use the bridge, or Home Assistant directly, from your own Effect app.
 ---
 
-ha-bridge is built from two Effect v4 libraries, published to npm and JSR. Both work under Bun and Node.
+Home Assistant Bridge is built from two Effect v4 libraries, published to npm and JSR. Both work under Bun and Node.
 
 | Package | Use it to |
 | --- | --- |

@@ -1,6 +1,6 @@
 ---
 title: Configuration
-description: Point ha-bridge at your Home Assistant URL and a long-lived access token.
+description: Point Home Assistant Bridge at your Home Assistant URL and a long-lived access token.
 ---
 
 The bridge needs your Home Assistant URL and a long-lived access token. Only `ha-bridge serve` reads them; every other command talks to the bridge socket.

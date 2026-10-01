@@ -2,12 +2,12 @@ import { defineConfig } from "blume";
 import { cloudflare } from "blume/deploy";
 
 export default defineConfig({
-  title: "ha-bridge",
+  title: "Home Assistant Bridge",
   description:
     "One shared Home Assistant connection for your machine, served to local apps over a single socket.",
   logo: {
     image: "/favicon.svg",
-    text: "ha-bridge",
+    text: "Home Assistant Bridge",
   },
   content: {
     root: "src/content/docs",

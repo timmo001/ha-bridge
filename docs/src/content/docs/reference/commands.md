@@ -1,6 +1,6 @@
 ---
 title: Commands
-description: Every ha-bridge command, alias, argument and flag, generated from the CLI's help.
+description: Every Home Assistant Bridge command, alias, argument and flag, generated from the CLI's help.
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->

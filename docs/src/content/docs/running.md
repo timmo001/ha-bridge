@@ -1,6 +1,6 @@
 ---
 title: Running the bridge
-description: Run ha-bridge as a systemd user service, read its logs and keep it running.
+description: Run Home Assistant Bridge as a systemd user service, read its logs and keep it running.
 ---
 
 `ha-bridge serve` holds the Home Assistant connection. Every other command needs it running, so it normally runs as a systemd user service.
