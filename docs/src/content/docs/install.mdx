@@ -1,0 +1,78 @@
+---
+title: Install
+description: Install ha-bridge from the timmo pacman repository, a Debian or RPM package, or a release archive.
+---
+
+ha-bridge is a single Linux binary for x86_64 and aarch64. Every package includes the binary, the `ha-bridge.service` [user service](/running/) and shell completions for bash, zsh and fish.
+
+## Arch Linux
+
+Packages are published to the unofficial `timmo` pacman repository. Add it before the other repository sections in `/etc/pacman.conf`:
+
+```ini
+[timmo]
+SigLevel = PackageRequired DatabaseOptional TrustedOnly
+Server = https://packages.timmo.dev/$arch
+```
+
+Then install one of the two packages:
+
+| Package | Built from |
+| --- | --- |
+| `ha-bridge-bin` | The latest release |
+| `ha-bridge-git` | Every push to `main` |
+
+```bash
+sudo pacman -Syu ha-bridge-bin
+```
+
+The packages conflict with each other, so installing one replaces the other.
+
+The install hook enables `ha-bridge.service` for every user's future logins. If you install with `sudo` from a running desktop session, it also starts the service for you. On upgrade it restarts the service only if it was already running, so a service you stopped stays stopped.
+
+## Debian, Ubuntu and Fedora
+
+Each [GitHub release](https://github.com/timmo001/ha-bridge/releases) has `.deb` and `.rpm` packages:
+
+```bash
+# Debian and Ubuntu
+sudo apt install ./ha-bridge_<version>_amd64.deb
+
+# Fedora
+sudo dnf install ./ha-bridge-<version>-1.x86_64.rpm
+```
+
+These install the user service but don't enable it. See [Running the bridge](/running/).
+
+## Release archive
+
+Each release also has a `ha-bridge-<version>-linux-<arch>.tar.gz` archive with just the binary. Put it somewhere on your `PATH`:
+
+```bash
+tar -xzf ha-bridge-<version>-linux-x86_64.tar.gz
+install -Dm755 ha-bridge ~/.local/bin/ha-bridge
+```
+
+Release assets come with a `SHA256SUMS` file and a Sigstore bundle. To check an asset was built by this repository's release workflow:
+
+```bash
+gh attestation verify ha-bridge-<version>-linux-x86_64.tar.gz --repo timmo001/ha-bridge
+```
+
+## Build from source
+
+You need [mise](https://mise.jdx.dev), which installs the pinned Bun and Node versions:
+
+```bash
+git clone https://github.com/timmo001/ha-bridge.git
+cd ha-bridge
+mise install
+mise run build
+```
+
+The binary is written to `dist/ha-bridge`.
+
+## Next steps
+
+- [Configure](/configuration/) your Home Assistant URL and token.
+- [Run the bridge](/running/) as a user service.

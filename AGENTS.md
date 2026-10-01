@@ -19,6 +19,10 @@
 - Base protocol and client changes on how Home Assistant works: read `core` (server) and `frontend` (client) together, as the workspace `AGENTS.md` describes. Public names follow current Home Assistant terms (actions, not services), even where the wire protocol still uses older names such as `call_service`. Never use `hass` in names; use `ha` or `HomeAssistant`, even where Core or the frontend still do. Wire field names stay as Home Assistant expects.
 - `packages/effect-ha` owns its own Effect WebSocket connection; do not depend on `home-assistant-js-websocket`. Use that library (`home-assistant/home-assistant-js-websocket`, which the frontend uses) as the reference when a protocol feature becomes needed, such as `subscribe_entities` diffs, `coalesce_messages`, ping keepalive, or resubscribing after a reconnect. Add features only when something uses them.
 
+## Docs
+
+- The docs site lives in `docs/`; follow `docs/AGENTS.md`. Run `mise run docs:gen` after changing commands in `src/index.ts`, and update the affected pages when behaviour changes.
+
 ## Validation
 
 Run these after source changes:

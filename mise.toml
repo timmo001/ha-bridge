@@ -59,3 +59,30 @@ run = "bun run format:check"
 [tasks.check]
 description = "Lint, type-check, and verify formatting"
 depends = ["lint", "typecheck", "format:check"]
+
+[tasks."docs:gen"]
+description = "Regenerate the docs command reference from the CLI's help"
+depends = ["install"]
+run = "bun scripts/generate-cli-reference.ts"
+
+[tasks."docs:install"]
+description = "Install docs dependencies"
+dir = "docs"
+run = "bun install"
+
+[tasks."docs:dev"]
+description = "Run the docs dev server"
+depends = ["docs:install"]
+dir = "docs"
+run = "bun run dev"
+
+[tasks."docs:build"]
+description = "Build the docs site"
+depends = ["docs:install"]
+dir = "docs"
+run = "bun run build"
+
+[tasks."docs:preview"]
+description = "Preview the built docs site"
+dir = "docs"
+run = "bun run preview"

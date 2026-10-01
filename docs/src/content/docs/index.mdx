@@ -1,0 +1,44 @@
+---
+title: Overview
+description: One shared Home Assistant connection for your machine, served to local apps over a single socket.
+---
+
+# ha-bridge
+
+ha-bridge keeps one [Home Assistant](https://www.home-assistant.io) WebSocket connection open per machine and serves it to local apps over a single Unix socket. Status bars, keyboard shortcuts, scripts and your own apps all share that one connection, instead of each opening their own.
+
+```bash
+# Toggle light.desk
+ha-bridge light toggle desk
+
+# Print sensor.office_temperature now and on every change, as JSON for a status bar
+ha-bridge watch entity sensor.office_temperature --bar-json
+```
+
+## How it fits together
+
+- `ha-bridge serve` runs as a systemd user service. It connects to Home Assistant, caches every entity's state and keeps it current.
+- Every other command is a small client. It connects to the bridge socket, makes one request and exits, or streams updates for watchers.
+- Apps written with [Effect](https://effect.website) can talk to the socket directly with [`@timmo001/effect-ha-bridge`](/libraries/).
+
+## Get started
+
+| Page | Why |
+| --- | --- |
+| [Install](/install/) | Install the Arch package or a release build |
+| [Configuration](/configuration/) | Set your Home Assistant URL and access token |
+| [Running the bridge](/running/) | The user service, logs and upgrades |
+| [Actions](/using/actions/) | Control lights, switches, covers, climate, helpers and satellites |
+| [Watching entities](/using/watching/) | Stream entity state into scripts and status bars |
+| [Commands](/reference/commands/) | Every command, alias and flag |
+| [Libraries](/libraries/) | Use the bridge or Home Assistant from your own Effect app |
+| [Migrating from Go Automate](/migrating/) | Command, service and config changes |
+
+## Machine-readable docs
+
+| URL | Use |
+| --- | --- |
+| https://ha-bridge.timmo.dev/llms.txt | Compact page index |
+| https://ha-bridge.timmo.dev/llms-full.txt | Full docs bundle |
+| https://ha-bridge.timmo.dev/mcp | Hosted MCP (search, page and navigation) |
+| `/{route}.md` | One page as Markdown |
