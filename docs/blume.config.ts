@@ -7,7 +7,11 @@ export default defineConfig({
   description:
     "One shared Home Assistant connection for your machine, served to local apps over a single socket.",
   logo: {
-    image: "/favicon.svg",
+    image: {
+      alt: "Home Assistant Bridge",
+      dark: "/logo-dark.svg",
+      light: "/logo-light.svg",
+    },
     text: "Home Assistant Bridge",
   },
   content: {
@@ -23,10 +27,6 @@ export default defineConfig({
     dir: "docs",
   },
   navigation: {
-    actions: [
-      { label: "GitHub", href: "https://github.com/timmo001/ha-bridge" },
-      { label: "Issues", href: "https://github.com/timmo001/ha-bridge/issues" },
-    ],
     repo: true,
     sidebar: [
       "/",
