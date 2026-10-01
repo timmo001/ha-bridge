@@ -23,10 +23,6 @@ export default defineConfig({
     dir: "docs",
   },
   navigation: {
-    actions: [
-      { label: "GitHub", href: "https://github.com/timmo001/ha-bridge" },
-      { label: "Issues", href: "https://github.com/timmo001/ha-bridge/issues" },
-    ],
     repo: true,
     sidebar: [
       "/",
