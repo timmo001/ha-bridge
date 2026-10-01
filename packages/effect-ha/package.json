@@ -31,7 +31,8 @@
   "files": [
     "src",
     "dist",
-    "README.md"
+    "README.md",
+    "!src/**/*.test.ts"
   ],
   "sideEffects": false,
   "publishConfig": {

@@ -1,0 +1,88 @@
+---
+name: Release
+
+# yamllint disable-line rule:truthy
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+
+jobs:
+  tools:
+    name: Resolve release tools
+    runs-on: ubuntu-latest
+    outputs:
+      bun: ${{ steps.versions.outputs.bun }}
+      node: ${{ steps.versions.outputs.node }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Set up mise
+        uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566
+
+      - name: Read tool versions
+        id: versions
+        run: |
+          printf 'bun=%s\n' "$(mise current bun)" >> "$GITHUB_OUTPUT"
+          printf 'node=%s\n' "$(mise current node)" >> "$GITHUB_OUTPUT"
+
+  effect-ha-npm:
+    name: effect-ha npm
+    needs: tools
+    permissions:
+      contents: read
+      id-token: write
+    uses: timmo001/workflows/.github/workflows/publish-npm-package.yml@da1f8d52a56ce02034b676a8c91275e822934a68 # 20261001.0
+    with:
+      bun-version: ${{ needs.tools.outputs.bun }}
+      node-version: ${{ needs.tools.outputs.node }}
+      package-path: packages/effect-ha
+      check-command: cd ../.. && bun run check && bun run test
+
+  effect-ha-jsr:
+    name: effect-ha JSR
+    needs: tools
+    permissions:
+      contents: read
+      id-token: write
+    uses: timmo001/workflows/.github/workflows/publish-jsr-package.yml@da1f8d52a56ce02034b676a8c91275e822934a68 # 20261001.0
+    with:
+      bun-version: ${{ needs.tools.outputs.bun }}
+      package-path: packages/effect-ha
+      check-command: (cd ../.. && bun run check && bun run test) && bun run build
+
+  # The client pins @timmo001/effect-ha to this release, so publish it once effect-ha is out.
+  client-npm:
+    name: effect-ha-bridge npm
+    needs:
+      - tools
+      - effect-ha-npm
+    permissions:
+      contents: read
+      id-token: write
+    uses: timmo001/workflows/.github/workflows/publish-npm-package.yml@da1f8d52a56ce02034b676a8c91275e822934a68 # 20261001.0
+    with:
+      bun-version: ${{ needs.tools.outputs.bun }}
+      node-version: ${{ needs.tools.outputs.node }}
+      package-path: packages/client
+      check-command: cd ../.. && bun run check && bun run test
+
+  client-jsr:
+    name: effect-ha-bridge JSR
+    needs:
+      - tools
+      - effect-ha-jsr
+    permissions:
+      contents: read
+      id-token: write
+    uses: timmo001/workflows/.github/workflows/publish-jsr-package.yml@da1f8d52a56ce02034b676a8c91275e822934a68 # 20261001.0
+    with:
+      bun-version: ${{ needs.tools.outputs.bun }}
+      package-path: packages/client
+      check-command: (cd ../.. && bun run check && bun run test) && bun run build
