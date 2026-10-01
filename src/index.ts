@@ -149,6 +149,11 @@ const toggleCommands = <const Domain extends string>(
   ),
 ];
 
+const reloadCommand = (domain: string, toAction: () => Action) =>
+  Command.make("reload", {}, () =>
+    callAction(toAction()).pipe(withBridge),
+  ).pipe(Command.withDescription(`Reload ${domain} helpers from YAML`));
+
 const parsePercent = (value: string) => {
   const position = /^[+-]?\d+$/.test(value) ? Number(value) : Number.NaN;
 
@@ -253,6 +258,7 @@ const inputNumber = domainCommand(
           );
         }).pipe(withBridge),
     ).pipe(Command.withDescription("Set the value")),
+    reloadCommand("input_number", InputNumber.reload),
   ],
 );
 
@@ -447,12 +453,10 @@ haBridge.pipe(
     setup,
     watch,
     assistSatellite,
-    domainCommand(
-      "input_boolean",
-      "ib",
-      "Input boolean actions",
-      toggleCommands("input_boolean", InputBoolean),
-    ),
+    domainCommand("input_boolean", "ib", "Input boolean actions", [
+      ...toggleCommands("input_boolean", InputBoolean),
+      reloadCommand("input_boolean", InputBoolean.reload),
+    ]),
     inputNumber,
     domainCommand(
       "light",

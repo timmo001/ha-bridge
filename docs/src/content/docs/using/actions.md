@@ -41,6 +41,13 @@ ha-bridge input_number decrement target_temperature
 ha-bridge input_number set-value target_temperature 23.5
 ```
 
+`input_boolean reload` and `input_number reload` reload those helpers from YAML. They act on the whole domain, so they take no name:
+
+```bash
+ha-bridge input_boolean reload
+ha-bridge input_number reload
+```
+
 ## Covers
 
 `cover` (`c`) sets a position or tilt position from 0 to 100, or closes the cover:
@@ -84,7 +91,9 @@ The image is written to a temporary file first and then renamed, so anything rea
 | `light turn-on`, `turn-off`, `toggle` | `light.turn_on`, `turn_off`, `toggle` | `light.<name>` |
 | `switch turn-on`, `turn-off`, `toggle` | `switch.turn_on`, `turn_off`, `toggle` | `switch.<name>` |
 | `input_boolean turn-on`, `turn-off`, `toggle` | `input_boolean.turn_on`, `turn_off`, `toggle` | `input_boolean.<name>` |
+| `input_boolean reload` | `input_boolean.reload` | None |
 | `input_number increment`, `decrement`, `set-value` | `input_number.increment`, `decrement`, `set_value` | `input_number.<name>` |
+| `input_number reload` | `input_number.reload` | None |
 | `cover position`, `tilt-position`, `close` | `cover.set_cover_position`, `set_cover_tilt_position`, `close_cover` | `cover.<name>` |
 | `climate fan-mode` | `climate.set_fan_mode` | `climate.<name>` |
 | `assist_satellite announce` | `assist_satellite.announce` | `area_id` |

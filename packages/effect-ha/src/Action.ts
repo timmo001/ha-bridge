@@ -44,13 +44,22 @@ const switchable = <const Domain extends string>(domain: Domain) => ({
     onEntity(`${domain}.toggle`, entityId),
 });
 
-export const InputBoolean = switchable("input_boolean");
+// Reloads a helper domain's YAML configuration.
+const reload = (domain: string) => (): Action => ({
+  action: `${domain}.reload`,
+});
+
+export const InputBoolean = {
+  ...switchable("input_boolean"),
+  reload: reload("input_boolean"),
+};
 
 export const Light = switchable("light");
 
 export const Switch = switchable("switch");
 
 export const InputNumber = {
+  reload: reload("input_number"),
   setValue: (entityId: EntityId<"input_number">, value: number) =>
     onEntity("input_number.set_value", entityId, { value }),
   increment: (entityId: EntityId<"input_number">) =>

@@ -210,6 +210,19 @@ FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
+## `ha-bridge input_boolean reload`
+
+```text
+DESCRIPTION
+  Reload input_boolean helpers from YAML
+
+USAGE
+  ha-bridge input_boolean reload [flags]
+
+FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```
+
 ## `ha-bridge input_number`
 
 Alias: `ha-bridge in`
@@ -269,6 +282,19 @@ USAGE
 ARGUMENTS
   name string     Entity name without the input_number. prefix
   value string    New value
+
+FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```
+
+## `ha-bridge input_number reload`
+
+```text
+DESCRIPTION
+  Reload input_number helpers from YAML
+
+USAGE
+  ha-bridge input_number reload [flags]
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
