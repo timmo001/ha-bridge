@@ -31,6 +31,34 @@ ha-bridge s on desk_fan
 ha-bridge ib off guest_mode
 ```
 
+### Light options
+
+`light turn-on` and `light toggle` take the same options as Home Assistant's `light.turn_on`. Pass colours as comma-separated numbers:
+
+```bash
+ha-bridge light turn-on desk_lamp --brightness-pct 60 --color-temp-kelvin 3000
+ha-bridge light turn-on desk_lamp --rgb-color 255,100,100 --transition 2
+ha-bridge light turn-on desk_lamp --brightness-step-pct -10
+ha-bridge light turn-on desk_lamp --effect rainbow
+```
+
+| Flag | Value |
+| --- | --- |
+| `--transition` | Seconds |
+| `--brightness`, `--brightness-pct` | 0 to 255, or 0 to 100 percent |
+| `--brightness-step`, `--brightness-step-pct` | -255 to 255, or -100 to 100 percent |
+| `--color-temp-kelvin` | Kelvin |
+| `--hs-color` | Hue 0 to 360 and saturation 0 to 100, such as `300,70` |
+| `--rgb-color`, `--rgbw-color`, `--rgbww-color` | 3, 4 or 5 values from 0 to 255 |
+| `--xy-color` | Two values from 0 to 1, such as `0.52,0.43` |
+| `--color-name` | A colour name, such as `red` |
+| `--white` | `true`, or a white brightness from 0 to 255 |
+| `--profile` | A light profile, such as `relax` |
+| `--effect` | One of the light's `effect_list` |
+| `--flash` | `short` or `long` |
+
+Use at most one brightness flag and one colour flag (`--color-temp-kelvin`, the colour flags, `--white` and `--profile`). `light turn-off` takes `--transition` and `--flash`.
+
 ## Input numbers
 
 `input_number` (`in`) raises or lowers a helper by its step, or sets a value:

@@ -9,6 +9,7 @@ import {
   Logger,
   Option,
   Predicate,
+  Schema,
   Stream,
 } from "effect";
 import { Argument, CliError, Command, Flag } from "effect/cli";
@@ -21,6 +22,8 @@ import {
   InputBoolean,
   InputNumber,
   Light,
+  LightTurnOffData,
+  LightTurnOnData,
   Switch,
   type Action,
   type CoverMoveOptions,
@@ -43,6 +46,7 @@ import {
   invalidInputNumberMessage,
   parseInputNumberValue,
 } from "./homeassistant/inputNumber.js";
+import { lightData } from "./homeassistant/light.js";
 
 const haBridge = Command.make("ha-bridge").pipe(
   Command.withSharedFlags({
@@ -156,6 +160,21 @@ const reloadCommand = (domain: string, toAction: () => Action) =>
     callAction(toAction()).pipe(withBridge),
   ).pipe(Command.withDescription(`Reload ${domain} helpers from YAML`));
 
+const optionalFlag = <A>(flag: Flag.Flag<A>, description: string) =>
+  flag.pipe(Flag.withDescription(description), Flag.optional);
+
+// Reports a failed effect-ha schema check on data built from flags.
+const decodeData = <A>(
+  label: string,
+  decoded: Effect.Effect<A, Schema.SchemaError>,
+) =>
+  decoded.pipe(
+    Effect.mapError(
+      (error) =>
+        new CommandError({ message: `invalid ${label}: ${error.message}` }),
+    ),
+  );
+
 const parsePercent = (value: string) => {
   const position = /^[+-]?\d+$/.test(value) ? Number(value) : Number.NaN;
 
@@ -263,6 +282,122 @@ const inputNumber = domainCommand(
     reloadCommand("input_number", InputNumber.reload),
   ],
 );
+
+const lightName = nameArgument("Entity name without the light. prefix");
+
+const lightOffFlags = {
+  transition: optionalFlag(
+    Flag.String("transition"),
+    "Transition time in seconds",
+  ),
+  flash: optionalFlag(
+    Flag.Literals("flash", ["short", "long"]),
+    "Flash the light",
+  ),
+};
+
+const lightOnFlags = {
+  ...lightOffFlags,
+  brightness: optionalFlag(
+    Flag.String("brightness"),
+    "Brightness from 0 to 255",
+  ),
+  brightness_pct: optionalFlag(
+    Flag.String("brightness-pct"),
+    "Brightness from 0 to 100 percent",
+  ),
+  brightness_step: optionalFlag(
+    Flag.String("brightness-step"),
+    "Change the brightness by -255 to 255",
+  ),
+  brightness_step_pct: optionalFlag(
+    Flag.String("brightness-step-pct"),
+    "Change the brightness by -100 to 100 percent",
+  ),
+  profile: optionalFlag(
+    Flag.String("profile"),
+    "Light profile, for example relax",
+  ),
+  color_name: optionalFlag(
+    Flag.String("color-name"),
+    "Colour name, for example red",
+  ),
+  color_temp_kelvin: optionalFlag(
+    Flag.String("color-temp-kelvin"),
+    "Colour temperature in kelvin",
+  ),
+  hs_color: optionalFlag(
+    Flag.String("hs-color"),
+    "Hue and saturation, for example 300,70",
+  ),
+  rgb_color: optionalFlag(
+    Flag.String("rgb-color"),
+    "Red, green and blue, for example 255,100,100",
+  ),
+  rgbw_color: optionalFlag(
+    Flag.String("rgbw-color"),
+    "Red, green, blue and white, for example 255,100,100,50",
+  ),
+  rgbww_color: optionalFlag(
+    Flag.String("rgbww-color"),
+    "Red, green, blue, cold and warm white, for example 255,100,100,50,70",
+  ),
+  xy_color: optionalFlag(
+    Flag.String("xy-color"),
+    "XY colour, for example 0.52,0.43",
+  ),
+  white: optionalFlag(
+    Flag.String("white"),
+    "true for white mode, or a white brightness from 0 to 255",
+  ),
+  effect: optionalFlag(
+    Flag.String("effect"),
+    "Effect from the light's effect_list",
+  ),
+};
+
+const decodeLightTurnOn = Schema.decodeUnknownEffect(LightTurnOnData);
+
+const decodeLightTurnOff = Schema.decodeUnknownEffect(LightTurnOffData);
+
+const lightOnCommand = (
+  name: string,
+  toAction: (entityId: EntityId<"light">, data: LightTurnOnData) => Action,
+  description: string,
+) =>
+  Command.make(
+    name,
+    { name: lightName, ...lightOnFlags },
+    ({ name, ...flags }) =>
+      Effect.gen(function* () {
+        const data = yield* decodeData(
+          "light options",
+          decodeLightTurnOn(lightData(flags)),
+        );
+
+        yield* callAction(toAction(`light.${name}`, data));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription(description));
+
+const light = domainCommand("light", "l", "Light actions", [
+  lightOnCommand("turn-on", Light.turnOn, "Turn on").pipe(
+    Command.withAlias("on"),
+  ),
+  Command.make(
+    "turn-off",
+    { name: lightName, ...lightOffFlags },
+    ({ name, ...flags }) =>
+      Effect.gen(function* () {
+        const data = yield* decodeData(
+          "light options",
+          decodeLightTurnOff(lightData(flags)),
+        );
+
+        yield* callAction(Light.turnOff(`light.${name}`, data));
+      }).pipe(withBridge),
+  ).pipe(Command.withAlias("off"), Command.withDescription("Turn off")),
+  lightOnCommand("toggle", Light.toggle, "Toggle").pipe(Command.withAlias("t")),
+]);
 
 const coverName = nameArgument("Entity name without the cover. prefix");
 
@@ -501,12 +636,7 @@ haBridge.pipe(
       reloadCommand("input_boolean", InputBoolean.reload),
     ]),
     inputNumber,
-    domainCommand(
-      "light",
-      "l",
-      "Light actions",
-      toggleCommands("light", Light),
-    ),
+    light,
     domainCommand(
       "switch",
       "s",

@@ -72,7 +72,92 @@ export const InputBoolean = {
   reload: reload("input_boolean"),
 };
 
-export const Light = switchable("light");
+// Fails when more than one of `keys` is set, like Core's `Exclusive` groups.
+const exclusive = <T extends object>(
+  group: string,
+  keys: ReadonlyArray<keyof T & string>,
+) =>
+  Schema.makeFilter<T>((input) => {
+    const set = keys.filter((key) => Object.hasOwn(input, key));
+
+    return (
+      set.length <= 1 || `set only one ${group} field, not ${set.join(", ")}`
+    );
+  });
+
+const between = (minimum: number, maximum: number) =>
+  Schema.Finite.check(Schema.isBetween({ minimum, maximum }));
+
+const Byte = Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 255 }));
+
+const LightFlash = Schema.Literals(["short", "long"]);
+
+// `light.turn_off` data. Core clamps `transition` to 0-6553 seconds.
+export const LightTurnOffData = Schema.Struct({
+  transition: Schema.optionalKey(Schema.Finite),
+  flash: Schema.optionalKey(LightFlash),
+});
+
+export type LightTurnOffData = typeof LightTurnOffData.Type;
+
+// `light.turn_on` and `light.toggle` data. Set at most one brightness field
+// and one colour field. Core clamps `brightness` to 0-255, `brightness_step`
+// to -255-255 and `brightness_step_pct` to -100-100.
+const LightTurnOnFields = Schema.Struct({
+  transition: Schema.optionalKey(Schema.Finite),
+  brightness: Schema.optionalKey(Schema.Int),
+  brightness_pct: Schema.optionalKey(between(0, 100)),
+  brightness_step: Schema.optionalKey(Schema.Int),
+  brightness_step_pct: Schema.optionalKey(Schema.Finite),
+  profile: Schema.optionalKey(Schema.String),
+  color_name: Schema.optionalKey(Schema.String),
+  color_temp_kelvin: Schema.optionalKey(
+    Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  ),
+  hs_color: Schema.optionalKey(
+    Schema.Tuple([between(0, 360), between(0, 100)]),
+  ),
+  rgb_color: Schema.optionalKey(Schema.Tuple([Byte, Byte, Byte])),
+  rgbw_color: Schema.optionalKey(Schema.Tuple([Byte, Byte, Byte, Byte])),
+  rgbww_color: Schema.optionalKey(Schema.Tuple([Byte, Byte, Byte, Byte, Byte])),
+  xy_color: Schema.optionalKey(Schema.Tuple([between(0, 1), between(0, 1)])),
+  white: Schema.optionalKey(Schema.Union([Schema.Literal(true), Byte])),
+  flash: Schema.optionalKey(LightFlash),
+  effect: Schema.optionalKey(Schema.String),
+});
+
+type LightTurnOnFields = typeof LightTurnOnFields.Type;
+
+export const LightTurnOnData = LightTurnOnFields.check(
+  exclusive<LightTurnOnFields>("brightness", [
+    "brightness",
+    "brightness_pct",
+    "brightness_step",
+    "brightness_step_pct",
+  ]),
+  exclusive<LightTurnOnFields>("colour", [
+    "profile",
+    "color_name",
+    "color_temp_kelvin",
+    "hs_color",
+    "rgb_color",
+    "rgbw_color",
+    "rgbww_color",
+    "xy_color",
+    "white",
+  ]),
+);
+
+export type LightTurnOnData = typeof LightTurnOnData.Type;
+
+export const Light = {
+  turnOn: (entityId: EntityId<"light">, data?: LightTurnOnData) =>
+    onEntity("light.turn_on", entityId, data),
+  turnOff: (entityId: EntityId<"light">, data?: LightTurnOffData) =>
+    onEntity("light.turn_off", entityId, data),
+  toggle: (entityId: EntityId<"light">, data?: LightTurnOnData) =>
+    onEntity("light.toggle", entityId, data),
+};
 
 export const Switch = switchable("switch");
 

@@ -60,6 +60,7 @@ Builders return a plain `Action` (`{ action, data?, target?, return_response? }`
 import { Climate, Cover, InputNumber, Light } from "@timmo001/effect-ha";
 
 Light.turnOn("light.office");
+Light.turnOn("light.office", { brightness_pct: 60, color_temp_kelvin: 3000 });
 InputNumber.increment("input_number.desk_height");
 Cover.setPosition("cover.office_blind", 40);
 Climate.setFanMode("climate.office", "high");
@@ -68,6 +69,18 @@ const restart = { action: "homeassistant.restart" };
 ```
 
 Entity IDs are typed by domain, so `Light.turnOn("switch.fan")` is a type error.
+
+Action data follows Home Assistant's own action schemas. Where Core checks more than types can say, such as ranges or fields that can't be set together, the package exports the schema too, so you can check data before sending it:
+
+```ts
+import { LightTurnOnData } from "@timmo001/effect-ha";
+import { Schema } from "effect";
+
+const data = yield* Schema.decodeUnknownEffect(LightTurnOnData)({
+  brightness_pct: 60,
+  rgb_color: [255, 100, 100],
+});
+```
 
 ## Calendar events
 
