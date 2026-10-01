@@ -1,0 +1,33 @@
+{
+  "name": "ha-bridge",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "ha-bridge": "./dist/ha-bridge"
+  },
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "build": "bun build src/index.ts --compile --outfile dist/ha-bridge",
+    "test": "bun test --pass-with-no-tests",
+    "lint": "oxlint .",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "prepare": "effect-tsgo patch --typescript --force=false"
+  },
+  "dependencies": {
+    "@effect/platform-bun": "4.0.0",
+    "effect": "4.0.0"
+  },
+  "devDependencies": {
+    "@effect/tsgo": "0.47.2",
+    "@oxlint/plugins": "1.86.0",
+    "@timmo001/oxlint-rules": "0.5.0",
+    "@types/bun": "1.4.2",
+    "oxlint": "1.86.0",
+    "oxlint-tsgolint": "7.0.2003",
+    "prettier": "3.9.9",
+    "typescript": "7.0.2"
+  }
+}
