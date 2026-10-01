@@ -1,6 +1,6 @@
 ---
 title: Actions
-description: Control lights, switches, covers, climate entities, input helpers and assist satellites from the command line.
+description: Control lights, switches, covers, climate entities, input helpers, assist satellites and cameras from the command line.
 ---
 
 Action commands send one Home Assistant action through the bridge and exit. They exit with status 1 and print the error when the bridge isn't running or Home Assistant rejects the action.
@@ -160,6 +160,25 @@ ha-bridge camera snapshot front_door /tmp/front-door.jpg
 
 The image is written to a temporary file first and then renamed, so anything reading the file never sees a partial image. It's readable only by you (`0600`).
 
+## Cameras
+
+`camera` also turns a camera on or off, switches motion detection and plays its stream on a media player:
+
+```bash
+ha-bridge camera turn-on front_door
+ha-bridge camera turn-off front_door
+ha-bridge camera enable-motion-detection front_door
+ha-bridge camera disable-motion-detection front_door
+ha-bridge camera play-stream front_door living_room_tv
+```
+
+`server-snapshot` and `record` save on the Home Assistant host instead of your machine. The path must be in Home Assistant's `allowlist_external_dirs`, and can be a template such as `/media/{{ entity_id.name }}.mp4`. `record` takes `--duration` (30 seconds by default) and `--lookback`:
+
+```bash
+ha-bridge camera server-snapshot front_door /media/front-door.jpg
+ha-bridge camera record front_door /media/front-door.mp4 --duration 20
+```
+
 ## Actions at a glance
 
 | Command | Home Assistant action | Target |
@@ -179,5 +198,8 @@ The image is written to a temporary file first and then renamed, so anything rea
 | `assist_satellite announce`, `start-conversation` | `assist_satellite.announce`, `start_conversation` | `area_id` |
 | `assist_satellite ask-question` | `assist_satellite.ask_question` | `assist_satellite.<name>` |
 | `camera snapshot` | Camera proxy image | `camera.<name>` |
+| `camera turn-on`, `turn-off` | `camera.turn_on`, `turn_off` | `camera.<name>` |
+| `camera enable-motion-detection`, `disable-motion-detection` | `camera.enable_motion_detection`, `disable_motion_detection` | `camera.<name>` |
+| `camera server-snapshot`, `record`, `play-stream` | `camera.snapshot`, `record`, `play_stream` | `camera.<name>` |
 
 Any other action can be called from your own app with [`CallAction`](/libraries/).

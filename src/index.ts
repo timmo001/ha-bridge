@@ -20,6 +20,7 @@ import {
   AssistSatelliteAnnounceOptions,
   AssistSatelliteAskQuestionData,
   AssistSatelliteStartConversationData,
+  Camera,
   Climate,
   ClimateSetTemperatureData,
   Cover,
@@ -735,13 +736,21 @@ const climate = domainCommand("climate", "cl", "Climate actions", [
   ),
 ]);
 
+const cameraName = nameArgument("Entity name without the camera. prefix");
+
+const serverFilenameArgument = Argument.String("filename").pipe(
+  Argument.withDescription(
+    "Path on the Home Assistant host, in allowlist_external_dirs",
+  ),
+);
+
 const camera = Command.make("camera").pipe(
   Command.withDescription("Camera actions"),
   Command.withSubcommands([
     Command.make(
       "snapshot",
       {
-        name: nameArgument("Entity name without the camera. prefix"),
+        name: cameraName,
         output: Argument.String("output").pipe(
           Argument.withDescription("File to write the image to"),
         ),
@@ -770,6 +779,82 @@ const camera = Command.make("camera").pipe(
           );
         }).pipe(withBridge),
     ).pipe(Command.withDescription("Save the camera's current image")),
+    entityActionCommand("camera", "turn-on", Camera.turnOn, "Turn on").pipe(
+      Command.withAlias("on"),
+    ),
+    entityActionCommand("camera", "turn-off", Camera.turnOff, "Turn off").pipe(
+      Command.withAlias("off"),
+    ),
+    entityActionCommand(
+      "camera",
+      "enable-motion-detection",
+      Camera.enableMotionDetection,
+      "Enable motion detection",
+    ),
+    entityActionCommand(
+      "camera",
+      "disable-motion-detection",
+      Camera.disableMotionDetection,
+      "Disable motion detection",
+    ),
+    Command.make(
+      "server-snapshot",
+      { name: cameraName, filename: serverFilenameArgument },
+      (input) =>
+        callAction(
+          Camera.snapshot(`camera.${input.name}`, input.filename),
+        ).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Save the camera's current image on the Home Assistant host",
+      ),
+    ),
+    Command.make(
+      "record",
+      {
+        name: cameraName,
+        filename: serverFilenameArgument,
+        duration: optionalFlag(
+          Flag.Int("duration"),
+          "Seconds to record (default: 30)",
+        ),
+        lookback: optionalFlag(
+          Flag.Int("lookback"),
+          "Seconds from before the call to include (default: 0)",
+        ),
+      },
+      (input) =>
+        callAction(
+          Camera.record(`camera.${input.name}`, input.filename, {
+            duration: Option.getOrUndefined(input.duration),
+            lookback: Option.getOrUndefined(input.lookback),
+          }),
+        ).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Record the camera's stream on the Home Assistant host",
+      ),
+    ),
+    Command.make(
+      "play-stream",
+      {
+        name: cameraName,
+        mediaPlayer: Argument.String("media_player").pipe(
+          Argument.withDescription(
+            "Media player name without the media_player. prefix",
+          ),
+        ),
+      },
+      (input) =>
+        callAction(
+          Camera.playStream(
+            `camera.${input.name}`,
+            `media_player.${input.mediaPlayer}`,
+          ),
+        ).pipe(withBridge),
+    ).pipe(
+      Command.withDescription("Play the camera's stream on a media player"),
+    ),
   ]),
 );
 

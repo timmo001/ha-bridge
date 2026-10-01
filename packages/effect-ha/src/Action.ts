@@ -424,3 +424,47 @@ export const AssistSatellite = {
       ),
     ),
 };
+
+// `camera.record` options. Core records 30 seconds by default, and `lookback`
+// adds seconds from before the call when the stream keeps them.
+export interface CameraRecordOptions {
+  readonly duration?: number;
+  readonly lookback?: number;
+}
+
+// `snapshot` and `record` write on the Home Assistant host, to a path in
+// `allowlist_external_dirs`. `filename` is a template, so it can use values
+// such as `{{ entity_id.name }}`.
+export const Camera = {
+  turnOn: (entityId: EntityId<"camera">) =>
+    onEntity("camera.turn_on", entityId),
+  turnOff: (entityId: EntityId<"camera">) =>
+    onEntity("camera.turn_off", entityId),
+  enableMotionDetection: (entityId: EntityId<"camera">) =>
+    onEntity("camera.enable_motion_detection", entityId),
+  disableMotionDetection: (entityId: EntityId<"camera">) =>
+    onEntity("camera.disable_motion_detection", entityId),
+  snapshot: (entityId: EntityId<"camera">, filename: string) =>
+    onEntity("camera.snapshot", entityId, { filename }),
+  record: (
+    entityId: EntityId<"camera">,
+    filename: string,
+    options?: CameraRecordOptions,
+  ) =>
+    onEntity("camera.record", entityId, {
+      filename,
+      duration: options?.duration,
+      lookback: options?.lookback,
+    }),
+  // Plays the camera's stream on media players. HLS is the only format.
+  playStream: (
+    entityId: EntityId<"camera">,
+    mediaPlayer:
+      EntityId<"media_player"> | ReadonlyArray<EntityId<"media_player">>,
+    format?: "hls",
+  ) =>
+    onEntity("camera.play_stream", entityId, {
+      media_player: mediaPlayer,
+      format,
+    }),
+};

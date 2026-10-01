@@ -57,13 +57,14 @@ The session has:
 Builders return a plain `Action` (`{ action, data?, target?, return_response? }`), so you can also write one by hand:
 
 ```ts
-import { Climate, Cover, InputNumber, Light } from "@timmo001/effect-ha";
+import { Camera, Climate, Cover, InputNumber, Light } from "@timmo001/effect-ha";
 
 Light.turnOn("light.office");
 Light.turnOn("light.office", { brightness_pct: 60, color_temp_kelvin: 3000 });
 InputNumber.increment("input_number.desk_height");
 Cover.setPosition("cover.office_blind", 40);
 Climate.setFanMode("climate.office", "high");
+Camera.record("camera.front_door", "/media/front_door.mp4", { duration: 20 });
 
 const restart = { action: "homeassistant.restart" };
 ```
