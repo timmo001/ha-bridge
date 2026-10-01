@@ -41,6 +41,8 @@ ha-bridge light turn-on bedroom_lamp
 | [Scenes](/actions/scenes/) | `scene` | None | Activate, apply states, create and delete |
 | [Timers and schedules](/actions/timers/) | `timer`, `schedule` | None | Start, pause and change timers, read schedules |
 | [Groups](/actions/groups/) | `group` | None | Create, change and remove groups |
+| [Fans](/actions/fans/) | `fan` | None | On, off, speed, preset, oscillation and direction |
+| [Humidifiers and water heaters](/actions/humidifiers/) | `humidifier`, `water_heater` | None | On, off, modes, humidity and temperature |
 | [Home Assistant](/actions/home-assistant/) | `homeassistant`, `zone`, `person` | None | Any entity, restart, reload and location |
 
 [Commands](/reference/commands/) lists every argument and flag. Any other action can be called from your own app with [`CallAction`](/libraries/).

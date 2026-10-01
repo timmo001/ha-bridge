@@ -953,3 +953,72 @@ export const HomeAssistantCore = {
       elevation: options?.elevation,
     }),
 };
+
+const Percent = Schema.Int.check(
+  Schema.isBetween({ minimum: 0, maximum: 100 }),
+);
+
+// `fan.turn_on` data. `preset_mode` is one of the fan's `preset_modes`.
+export const FanTurnOnData = Schema.Struct({
+  percentage: Schema.optionalKey(Percent),
+  preset_mode: Schema.optionalKey(Schema.String),
+});
+
+export type FanTurnOnData = typeof FanTurnOnData.Type;
+
+export const Fan = {
+  ...switchable("fan"),
+  turnOn: (entityId: EntityId<"fan">, data?: FanTurnOnData) =>
+    onEntity("fan.turn_on", entityId, data),
+  // `percentage` is 0 to 100; 0 turns the fan off.
+  setPercentage: (entityId: EntityId<"fan">, percentage: number) =>
+    onEntity("fan.set_percentage", entityId, { percentage }),
+  // `step` is in percent; Core uses the fan's own step by default.
+  increaseSpeed: (entityId: EntityId<"fan">, step?: number) =>
+    onEntity("fan.increase_speed", entityId, { percentage_step: step }),
+  decreaseSpeed: (entityId: EntityId<"fan">, step?: number) =>
+    onEntity("fan.decrease_speed", entityId, { percentage_step: step }),
+  setPresetMode: (entityId: EntityId<"fan">, presetMode: string) =>
+    onEntity("fan.set_preset_mode", entityId, { preset_mode: presetMode }),
+  oscillate: (entityId: EntityId<"fan">, oscillating: boolean) =>
+    onEntity("fan.oscillate", entityId, { oscillating }),
+  setDirection: (entityId: EntityId<"fan">, direction: "forward" | "reverse") =>
+    onEntity("fan.set_direction", entityId, { direction }),
+};
+
+export const Humidifier = {
+  ...switchable("humidifier"),
+  // `mode` is one of the humidifier's `available_modes`.
+  setMode: (entityId: EntityId<"humidifier">, mode: string) =>
+    onEntity("humidifier.set_mode", entityId, { mode }),
+  // `humidity` is a whole percentage.
+  setHumidity: (entityId: EntityId<"humidifier">, humidity: number) =>
+    onEntity("humidifier.set_humidity", entityId, { humidity }),
+};
+
+export const WaterHeater = {
+  turnOn: (entityId: EntityId<"water_heater">) =>
+    onEntity("water_heater.turn_on", entityId),
+  turnOff: (entityId: EntityId<"water_heater">) =>
+    onEntity("water_heater.turn_off", entityId),
+  // `temperature` is in the entity's unit. `operationMode` also switches
+  // mode, to one of the entity's `operation_list`.
+  setTemperature: (
+    entityId: EntityId<"water_heater">,
+    temperature: number,
+    options?: { readonly operationMode?: string },
+  ) =>
+    onEntity("water_heater.set_temperature", entityId, {
+      temperature,
+      operation_mode: options?.operationMode,
+    }),
+  setOperationMode: (
+    entityId: EntityId<"water_heater">,
+    operationMode: string,
+  ) =>
+    onEntity("water_heater.set_operation_mode", entityId, {
+      operation_mode: operationMode,
+    }),
+  setAwayMode: (entityId: EntityId<"water_heater">, awayMode: boolean) =>
+    onEntity("water_heater.set_away_mode", entityId, { away_mode: awayMode }),
+};

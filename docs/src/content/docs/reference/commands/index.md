@@ -45,6 +45,9 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`zone`](/reference/commands/zone/) | None |
 | [`person`](/reference/commands/person/) | None |
 | [`homeassistant`](/reference/commands/homeassistant/) | None |
+| [`fan`](/reference/commands/fan/) | None |
+| [`humidifier`](/reference/commands/humidifier/) | None |
+| [`water_heater`](/reference/commands/water-heater/) | None |
 
 ## Global flags
 
@@ -102,4 +105,7 @@ SUBCOMMANDS
   zone                Zone actions
   person              Person actions
   homeassistant       Home Assistant actions
+  fan                 Fan actions
+  humidifier          Humidifier actions
+  water_heater        Water heater actions
 ```

@@ -30,9 +30,12 @@ import {
   DateTimeEntity,
   DateTimeString,
   DurationValue,
+  Fan,
+  FanTurnOnData,
   Group,
   GroupSetData,
   HomeAssistantCore,
+  Humidifier,
   ClimateSetTemperatureData,
   Cover,
   HvacMode,
@@ -56,6 +59,7 @@ import {
   Text,
   TimeEntity,
   TimeString,
+  WaterHeater,
   Timer,
   Zone,
   Remote,
@@ -240,7 +244,7 @@ const parsePercent = (value: string) => {
 
   return position >= 0 && position <= 100
     ? Effect.succeed(position)
-    : failWith("position must be an integer from 0 to 100");
+    : failWith("value must be an integer from 0 to 100");
 };
 
 const percentArgument = Argument.String("position").pipe(
@@ -1904,6 +1908,208 @@ const homeAssistant = domainCommand(
   ],
 );
 
+// A command taking an entity name and one value argument.
+const valueCommand = <const Domain extends string, A>(
+  domain: Domain,
+  name: string,
+  argument: { readonly name: string; readonly description: string },
+  parse: (value: string) => Effect.Effect<A, CommandError>,
+  toAction: (entityId: EntityId<Domain>, value: A) => Action,
+  description: string,
+) =>
+  Command.make(
+    name,
+    {
+      name: entityName(domain),
+      value: Argument.String(argument.name).pipe(
+        Argument.withDescription(argument.description),
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const value = yield* parse(input.value);
+
+        yield* callAction(toAction(`${domain}.${input.name}`, value));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription(description));
+
+const onOffArgument = (value: string) =>
+  value === "on" || value === "off"
+    ? Effect.succeed(value === "on")
+    : failWith("value must be on or off");
+
+const decodeFanTurnOn = Schema.decodeUnknownEffect(FanTurnOnData);
+
+const fanStepFlag = optionalFlag(
+  Flag.Int("step"),
+  "Percent to change by (default: the fan's own step)",
+);
+
+const fan = domainCommand("fan", undefined, "Fan actions", [
+  Command.make(
+    "turn-on",
+    {
+      name: entityName("fan"),
+      percentage: optionalFlag(Flag.Int("percentage"), "Speed from 0 to 100"),
+      preset_mode: optionalFlag(
+        Flag.String("preset-mode"),
+        "Preset mode, one of the fan's preset_modes",
+      ),
+    },
+    ({ name, ...flags }) =>
+      Effect.gen(function* () {
+        const data = yield* decodeData(
+          "fan options",
+          decodeFanTurnOn(setFields(flags)),
+        );
+
+        yield* callAction(Fan.turnOn(`fan.${name}`, data));
+      }).pipe(withBridge),
+  ).pipe(Command.withAlias("on"), Command.withDescription("Turn on")),
+  entityActionCommand("fan", "turn-off", Fan.turnOff, "Turn off").pipe(
+    Command.withAlias("off"),
+  ),
+  entityActionCommand("fan", "toggle", Fan.toggle, "Toggle").pipe(
+    Command.withAlias("t"),
+  ),
+  valueCommand(
+    "fan",
+    "percentage",
+    { name: "percentage", description: "Speed from 0 to 100" },
+    parsePercent,
+    Fan.setPercentage,
+    "Set the speed",
+  ),
+  ...(
+    [
+      ["increase-speed", Fan.increaseSpeed, "Speed up by a step"],
+      ["decrease-speed", Fan.decreaseSpeed, "Slow down by a step"],
+    ] as const
+  ).map(([command, toAction, description]) =>
+    Command.make(
+      command,
+      { name: entityName("fan"), step: fanStepFlag },
+      (input) =>
+        callAction(
+          toAction(`fan.${input.name}`, Option.getOrUndefined(input.step)),
+        ).pipe(withBridge),
+    ).pipe(Command.withDescription(description)),
+  ),
+  valueCommand(
+    "fan",
+    "preset-mode",
+    { name: "mode", description: "One of the fan's preset_modes" },
+    Effect.succeed,
+    Fan.setPresetMode,
+    "Set the preset mode",
+  ),
+  valueCommand(
+    "fan",
+    "oscillate",
+    { name: "state", description: "on or off" },
+    onOffArgument,
+    Fan.oscillate,
+    "Turn oscillation on or off",
+  ),
+  valueCommand(
+    "fan",
+    "direction",
+    { name: "direction", description: "forward or reverse" },
+    (value) =>
+      value === "forward" || value === "reverse"
+        ? Effect.succeed(value)
+        : failWith("direction must be forward or reverse"),
+    Fan.setDirection,
+    "Set the direction",
+  ),
+]);
+
+const humidifier = domainCommand(
+  "humidifier",
+  undefined,
+  "Humidifier actions",
+  [
+    ...toggleCommands("humidifier", Humidifier),
+    valueCommand(
+      "humidifier",
+      "mode",
+      { name: "mode", description: "One of the humidifier's available_modes" },
+      Effect.succeed,
+      Humidifier.setMode,
+      "Set the mode",
+    ),
+    valueCommand(
+      "humidifier",
+      "humidity",
+      { name: "humidity", description: "Target humidity from 0 to 100" },
+      parsePercent,
+      Humidifier.setHumidity,
+      "Set the target humidity",
+    ),
+  ],
+);
+
+const waterHeater = domainCommand(
+  "water_heater",
+  undefined,
+  "Water heater actions",
+  [
+    entityActionCommand(
+      "water_heater",
+      "turn-on",
+      WaterHeater.turnOn,
+      "Turn on",
+    ).pipe(Command.withAlias("on")),
+    entityActionCommand(
+      "water_heater",
+      "turn-off",
+      WaterHeater.turnOff,
+      "Turn off",
+    ).pipe(Command.withAlias("off")),
+    Command.make(
+      "temperature",
+      {
+        name: entityName("water_heater"),
+        temperature: Argument.String("temperature").pipe(
+          Argument.withDescription("Target temperature in the entity's unit"),
+        ),
+        operationMode: optionalFlag(
+          Flag.String("operation-mode"),
+          "Also switch to this operation mode",
+        ),
+      },
+      (input) =>
+        Effect.gen(function* () {
+          const temperature = yield* finiteNumber(input.temperature);
+
+          yield* callAction(
+            WaterHeater.setTemperature(
+              `water_heater.${input.name}`,
+              temperature,
+              { operationMode: Option.getOrUndefined(input.operationMode) },
+            ),
+          );
+        }).pipe(withBridge),
+    ).pipe(Command.withDescription("Set the target temperature")),
+    valueCommand(
+      "water_heater",
+      "operation-mode",
+      { name: "mode", description: "One of the entity's operation_list" },
+      Effect.succeed,
+      WaterHeater.setOperationMode,
+      "Set the operation mode",
+    ),
+    valueCommand(
+      "water_heater",
+      "away-mode",
+      { name: "state", description: "on or off" },
+      onOffArgument,
+      WaterHeater.setAwayMode,
+      "Turn away mode on or off",
+    ),
+  ],
+);
+
 const serve = Command.make("serve", {}, () =>
   Effect.flatMap(socketPath, serveBridge).pipe(
     Effect.provide(
@@ -2049,6 +2255,9 @@ haBridge.pipe(
     zone,
     person,
     homeAssistant,
+    fan,
+    humidifier,
+    waterHeater,
   ]),
   Command.run({ version: packageJson.version }),
   Effect.catchCause(reportCliCause),

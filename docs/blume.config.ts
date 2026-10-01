@@ -51,6 +51,8 @@ export default defineConfig({
           "/actions/scenes",
           "/actions/timers",
           "/actions/groups",
+          "/actions/fans",
+          "/actions/humidifiers",
           "/actions/home-assistant",
         ],
       },

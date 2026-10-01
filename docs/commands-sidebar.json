@@ -35,5 +35,8 @@
   "/reference/commands/group",
   "/reference/commands/zone",
   "/reference/commands/person",
-  "/reference/commands/homeassistant"
+  "/reference/commands/homeassistant",
+  "/reference/commands/fan",
+  "/reference/commands/humidifier",
+  "/reference/commands/water-heater"
 ]
