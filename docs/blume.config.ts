@@ -43,6 +43,9 @@ export default defineConfig({
           "/actions/valves",
           "/actions/sirens",
           "/actions/remotes",
+          "/actions/selects",
+          "/actions/values",
+          "/actions/counters",
         ],
       },
       {

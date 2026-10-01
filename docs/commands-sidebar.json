@@ -16,5 +16,15 @@
   "/reference/commands/lock",
   "/reference/commands/valve",
   "/reference/commands/siren",
-  "/reference/commands/remote"
+  "/reference/commands/remote",
+  "/reference/commands/select",
+  "/reference/commands/input-select",
+  "/reference/commands/number",
+  "/reference/commands/text",
+  "/reference/commands/input-text",
+  "/reference/commands/date",
+  "/reference/commands/time",
+  "/reference/commands/datetime",
+  "/reference/commands/input-datetime",
+  "/reference/commands/counter"
 ]

@@ -33,5 +33,8 @@ ha-bridge light turn-on bedroom_lamp
 | [Valves](/actions/valves/) | `valve` | None | Open, close, stop and position |
 | [Sirens](/actions/sirens/) | `siren` | None | On, off and toggle, with tone and volume |
 | [Remotes](/actions/remotes/) | `remote` | None | On, off, and send, learn or delete commands |
+| [Selects](/actions/selects/) | `select`, `input_select` | None | Pick or step through options |
+| [Numbers, text, dates and times](/actions/values/) | `number`, `text`, `date`, `time`, `datetime`, `input_text`, `input_datetime` | None | Set a value |
+| [Counters](/actions/counters/) | `counter` | None | Step, reset or set the count |
 
 [Commands](/reference/commands/) lists every argument and flag. Any other action can be called from your own app with [`CallAction`](/libraries/).

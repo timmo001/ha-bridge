@@ -568,3 +568,136 @@ export const Remote = {
       device: options?.device,
     }),
 };
+
+// `select_next` and `select_previous` wrap round from the end by default;
+// `cycle: false` stops there instead.
+export interface SelectStepOptions {
+  readonly cycle?: boolean;
+}
+
+const selectable = <const Domain extends string>(domain: Domain) => ({
+  selectOption: (entityId: EntityId<Domain>, option: string) =>
+    onEntity(`${domain}.select_option`, entityId, { option }),
+  selectFirst: (entityId: EntityId<Domain>) =>
+    onEntity(`${domain}.select_first`, entityId),
+  selectLast: (entityId: EntityId<Domain>) =>
+    onEntity(`${domain}.select_last`, entityId),
+  selectNext: (entityId: EntityId<Domain>, options?: SelectStepOptions) =>
+    onEntity(`${domain}.select_next`, entityId, { cycle: options?.cycle }),
+  selectPrevious: (entityId: EntityId<Domain>, options?: SelectStepOptions) =>
+    onEntity(`${domain}.select_previous`, entityId, { cycle: options?.cycle }),
+});
+
+export const Select = selectable("select");
+
+export const InputSelect = {
+  ...selectable("input_select"),
+  // Replaces the options until Home Assistant restarts or reloads.
+  setOptions: (
+    entityId: EntityId<"input_select">,
+    options: readonly [string, ...Array<string>],
+  ) => onEntity("input_select.set_options", entityId, { options }),
+  reload: reload("input_select"),
+};
+
+// Core checks `value` against the entity's `min`, `max` and `step`.
+export const NumberEntity = {
+  setValue: (entityId: EntityId<"number">, value: number) =>
+    onEntity("number.set_value", entityId, { value }),
+};
+
+// Core checks `value` against the entity's `min`, `max` and `pattern`.
+export const Text = {
+  setValue: (entityId: EntityId<"text">, value: string) =>
+    onEntity("text.set_value", entityId, { value }),
+};
+
+export const InputText = {
+  setValue: (entityId: EntityId<"input_text">, value: string) =>
+    onEntity("input_text.set_value", entityId, { value }),
+  reload: reload("input_text"),
+};
+
+// A date as `YYYY-MM-DD`.
+export const DateString = Schema.String.check(
+  Schema.isPattern(/^\d{4}-\d{1,2}-\d{1,2}$/, {
+    message: "Expected a date as YYYY-MM-DD",
+  }),
+);
+
+// A time as `HH:MM` or `HH:MM:SS`.
+export const TimeString = Schema.String.check(
+  Schema.isPattern(/^\d{1,2}:\d{2}(:\d{2}(\.\d+)?)?$/, {
+    message: "Expected a time as HH:MM or HH:MM:SS",
+  }),
+);
+
+// A date and time, such as `2026-10-01 18:30:00` or an ISO 8601 timestamp.
+// Without an offset it's in Home Assistant's time zone.
+export const DateTimeString = Schema.String.check(
+  Schema.isPattern(/^\d{4}-\d{1,2}-\d{1,2}[T ]\d{1,2}:\d{2}/, {
+    message: "Expected a date and time, such as 2026-10-01 18:30",
+  }),
+);
+
+export const DateEntity = {
+  setValue: (entityId: EntityId<"date">, date: string) =>
+    onEntity("date.set_value", entityId, { date }),
+};
+
+export const TimeEntity = {
+  setValue: (entityId: EntityId<"time">, time: string) =>
+    onEntity("time.set_value", entityId, { time }),
+};
+
+export const DateTimeEntity = {
+  setValue: (entityId: EntityId<"datetime">, datetime: string) =>
+    onEntity("datetime.set_value", entityId, { datetime }),
+};
+
+const InputDateTimeSetFields = Schema.Struct({
+  date: Schema.optionalKey(DateString),
+  time: Schema.optionalKey(TimeString),
+  datetime: Schema.optionalKey(DateTimeString),
+  timestamp: Schema.optionalKey(Schema.Finite),
+});
+
+type InputDateTimeSetFields = typeof InputDateTimeSetFields.Type;
+
+// `input_datetime.set_datetime` data. Set `date`, `time` or both, or one of
+// `datetime` and `timestamp` (seconds since the Unix epoch).
+export const InputDateTimeSetData = InputDateTimeSetFields.check(
+  atLeastOne<InputDateTimeSetFields>(["date", "time", "datetime", "timestamp"]),
+  Schema.makeFilter<InputDateTimeSetFields>((input) => {
+    const groups = [
+      Object.hasOwn(input, "date") || Object.hasOwn(input, "time"),
+      Object.hasOwn(input, "datetime"),
+      Object.hasOwn(input, "timestamp"),
+    ].filter(Boolean).length;
+
+    return (
+      groups <= 1 || "set only one of date and time, datetime or timestamp"
+    );
+  }),
+);
+
+export type InputDateTimeSetData = typeof InputDateTimeSetData.Type;
+
+export const InputDateTime = {
+  setDateTime: (
+    entityId: EntityId<"input_datetime">,
+    data: InputDateTimeSetData,
+  ) => onEntity("input_datetime.set_datetime", entityId, data),
+  reload: reload("input_datetime"),
+};
+
+export const Counter = {
+  increment: (entityId: EntityId<"counter">) =>
+    onEntity("counter.increment", entityId),
+  decrement: (entityId: EntityId<"counter">) =>
+    onEntity("counter.decrement", entityId),
+  reset: (entityId: EntityId<"counter">) => onEntity("counter.reset", entityId),
+  // `value` is a whole number within the counter's `minimum` and `maximum`.
+  setValue: (entityId: EntityId<"counter">, value: number) =>
+    onEntity("counter.set_value", entityId, { value }),
+};

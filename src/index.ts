@@ -23,14 +23,28 @@ import {
   Button,
   Camera,
   Climate,
+  Counter,
+  DateEntity,
+  DateString,
+  DateTimeEntity,
+  DateTimeString,
   ClimateSetTemperatureData,
   Cover,
   HvacMode,
   InputBoolean,
   InputButton,
+  InputDateTime,
+  InputDateTimeSetData,
+  InputSelect,
+  InputText,
   InputNumber,
   Light,
   Lock,
+  NumberEntity,
+  Select,
+  Text,
+  TimeEntity,
+  TimeString,
   Remote,
   RemoteLearnCommandData,
   RemoteSendCommandData,
@@ -44,6 +58,7 @@ import {
   type CoverMoveOptions,
   type EntityId,
   type LockOptions,
+  type SelectStepOptions,
 } from "@timmo001/effect-ha";
 import {
   BridgeClient,
@@ -1097,6 +1112,292 @@ const remote = domainCommand("remote", undefined, "Remote actions", [
   ).pipe(Command.withDescription("Delete learned commands")),
 ]);
 
+const entityName = (domain: string) =>
+  nameArgument(`Entity name without the ${domain}. prefix`);
+
+const cycleFlag = optionalFlag(
+  Flag.Boolean("cycle"),
+  "Wrap round at the end (the default); --no-cycle stops there",
+);
+
+const selectCommands = <const Domain extends string>(
+  domain: Domain,
+  actions: {
+    readonly selectOption: (
+      entityId: EntityId<Domain>,
+      option: string,
+    ) => Action;
+    readonly selectFirst: (entityId: EntityId<Domain>) => Action;
+    readonly selectLast: (entityId: EntityId<Domain>) => Action;
+    readonly selectNext: (
+      entityId: EntityId<Domain>,
+      options: SelectStepOptions,
+    ) => Action;
+    readonly selectPrevious: (
+      entityId: EntityId<Domain>,
+      options: SelectStepOptions,
+    ) => Action;
+  },
+) => {
+  const stepCommand = (
+    name: string,
+    toAction: (
+      entityId: EntityId<Domain>,
+      options: SelectStepOptions,
+    ) => Action,
+    description: string,
+  ) =>
+    Command.make(
+      name,
+      { name: entityName(domain), cycle: cycleFlag },
+      (input) =>
+        callAction(
+          toAction(`${domain}.${input.name}`, {
+            cycle: Option.getOrUndefined(input.cycle),
+          }),
+        ).pipe(withBridge),
+    ).pipe(Command.withDescription(description));
+
+  return [
+    Command.make(
+      "select-option",
+      {
+        name: entityName(domain),
+        option: Argument.String("option").pipe(
+          Argument.withDescription("Option to select"),
+        ),
+      },
+      (input) =>
+        callAction(
+          actions.selectOption(`${domain}.${input.name}`, input.option),
+        ).pipe(withBridge),
+    ).pipe(Command.withDescription("Select an option")),
+    entityActionCommand(
+      domain,
+      "select-first",
+      actions.selectFirst,
+      "Select the first option",
+    ),
+    entityActionCommand(
+      domain,
+      "select-last",
+      actions.selectLast,
+      "Select the last option",
+    ),
+    stepCommand("select-next", actions.selectNext, "Select the next option"),
+    stepCommand(
+      "select-previous",
+      actions.selectPrevious,
+      "Select the previous option",
+    ),
+  ];
+};
+
+// A `set-value` command whose value is checked by `decode` before sending.
+const setValueCommand = <const Domain extends string, A>(
+  domain: Domain,
+  description: string,
+  decode: (value: string) => Effect.Effect<A, CommandError>,
+  toAction: (entityId: EntityId<Domain>, value: A) => Action,
+) =>
+  Command.make(
+    "set-value",
+    {
+      name: entityName(domain),
+      value: Argument.String("value").pipe(
+        Argument.withDescription(description),
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const value = yield* decode(input.value);
+
+        yield* callAction(toAction(`${domain}.${input.name}`, value));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Set the value"));
+
+const anyText = (value: string) => Effect.succeed(value);
+
+const finiteNumber = (value: string) => {
+  const number = parseInputNumberValue(value);
+
+  return number === undefined
+    ? failWith("value must be a finite number")
+    : Effect.succeed(number);
+};
+
+const wholeNumber = (value: string) => {
+  const number = parseInputNumberValue(value);
+
+  return number === undefined || !Number.isInteger(number)
+    ? failWith("value must be a whole number")
+    : Effect.succeed(number);
+};
+
+const schemaText =
+  (
+    label: string,
+    decode: (value: string) => Effect.Effect<string, Schema.SchemaError>,
+  ) =>
+  (value: string) =>
+    decodeData(label, decode(value));
+
+const decodeDate = Schema.decodeUnknownEffect(DateString);
+
+const decodeTime = Schema.decodeUnknownEffect(TimeString);
+
+const decodeDateTime = Schema.decodeUnknownEffect(DateTimeString);
+
+const decodeInputDateTimeSet = Schema.decodeUnknownEffect(InputDateTimeSetData);
+
+const select = domainCommand(
+  "select",
+  undefined,
+  "Select actions",
+  selectCommands("select", Select),
+);
+
+const inputSelect = domainCommand(
+  "input_select",
+  undefined,
+  "Input select actions",
+  [
+    ...selectCommands("input_select", InputSelect),
+    Command.make(
+      "set-options",
+      {
+        name: entityName("input_select"),
+        options: Argument.String("option").pipe(
+          Argument.withDescription("Option; repeat for each option"),
+          Argument.atLeast(1),
+        ),
+      },
+      (input) =>
+        Effect.gen(function* () {
+          const [first, ...rest] = input.options;
+
+          if (first === undefined) {
+            return yield* failWith("set at least one option");
+          }
+
+          yield* callAction(
+            InputSelect.setOptions(`input_select.${input.name}`, [
+              first,
+              ...rest,
+            ]),
+          );
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Replace the options until Home Assistant restarts or reloads",
+      ),
+    ),
+    reloadCommand("input_select", InputSelect.reload),
+  ],
+);
+
+const number = domainCommand("number", undefined, "Number actions", [
+  setValueCommand("number", "New value", finiteNumber, NumberEntity.setValue),
+]);
+
+const text = domainCommand("text", undefined, "Text actions", [
+  setValueCommand("text", "New text", anyText, Text.setValue),
+]);
+
+const inputText = domainCommand("input_text", undefined, "Input text actions", [
+  setValueCommand("input_text", "New text", anyText, InputText.setValue),
+  reloadCommand("input_text", InputText.reload),
+]);
+
+const date = domainCommand("date", undefined, "Date actions", [
+  setValueCommand(
+    "date",
+    "Date as YYYY-MM-DD",
+    schemaText("date", decodeDate),
+    DateEntity.setValue,
+  ),
+]);
+
+const time = domainCommand("time", undefined, "Time actions", [
+  setValueCommand(
+    "time",
+    "Time as HH:MM or HH:MM:SS",
+    schemaText("time", decodeTime),
+    TimeEntity.setValue,
+  ),
+]);
+
+const dateTime = domainCommand("datetime", undefined, "Date and time actions", [
+  setValueCommand(
+    "datetime",
+    'Date and time, such as "2026-10-01 18:30"',
+    schemaText("date and time", decodeDateTime),
+    DateTimeEntity.setValue,
+  ),
+]);
+
+const inputDateTime = domainCommand(
+  "input_datetime",
+  undefined,
+  "Input date and time actions",
+  [
+    Command.make(
+      "set-datetime",
+      {
+        name: entityName("input_datetime"),
+        date: optionalFlag(Flag.String("date"), "Date as YYYY-MM-DD"),
+        time: optionalFlag(Flag.String("time"), "Time as HH:MM or HH:MM:SS"),
+        datetime: optionalFlag(
+          Flag.String("datetime"),
+          'Date and time, such as "2026-10-01 18:30"',
+        ),
+        timestamp: optionalFlag(
+          Flag.Finite("timestamp"),
+          "Seconds since the Unix epoch",
+        ),
+      },
+      ({ name, ...flags }) =>
+        Effect.gen(function* () {
+          const data = yield* decodeData(
+            "date and time",
+            decodeInputDateTimeSet(setFields(flags)),
+          );
+
+          yield* callAction(
+            InputDateTime.setDateTime(`input_datetime.${name}`, data),
+          );
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Set the date, time or both, or a date and time or timestamp",
+      ),
+    ),
+    reloadCommand("input_datetime", InputDateTime.reload),
+  ],
+);
+
+const counter = domainCommand("counter", undefined, "Counter actions", [
+  entityActionCommand(
+    "counter",
+    "increment",
+    Counter.increment,
+    "Raise the count by one step",
+  ),
+  entityActionCommand(
+    "counter",
+    "decrement",
+    Counter.decrement,
+    "Lower the count by one step",
+  ),
+  entityActionCommand(
+    "counter",
+    "reset",
+    Counter.reset,
+    "Reset to the initial value",
+  ),
+  setValueCommand("counter", "New count", wholeNumber, Counter.setValue),
+]);
+
 const serve = Command.make("serve", {}, () =>
   Effect.flatMap(socketPath, serveBridge).pipe(
     Effect.provide(
@@ -1223,6 +1524,16 @@ haBridge.pipe(
     valve,
     siren,
     remote,
+    select,
+    inputSelect,
+    number,
+    text,
+    inputText,
+    date,
+    time,
+    dateTime,
+    inputDateTime,
+    counter,
   ]),
   Command.run({ version: packageJson.version }),
   Effect.catchCause(reportCliCause),

@@ -26,6 +26,16 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`valve`](/reference/commands/valve/) | None |
 | [`siren`](/reference/commands/siren/) | None |
 | [`remote`](/reference/commands/remote/) | None |
+| [`select`](/reference/commands/select/) | None |
+| [`input_select`](/reference/commands/input-select/) | None |
+| [`number`](/reference/commands/number/) | None |
+| [`text`](/reference/commands/text/) | None |
+| [`input_text`](/reference/commands/input-text/) | None |
+| [`date`](/reference/commands/date/) | None |
+| [`time`](/reference/commands/time/) | None |
+| [`datetime`](/reference/commands/datetime/) | None |
+| [`input_datetime`](/reference/commands/input-datetime/) | None |
+| [`counter`](/reference/commands/counter/) | None |
 
 ## Global flags
 
@@ -64,4 +74,14 @@ SUBCOMMANDS
   valve               Valve actions
   siren               Siren actions
   remote              Remote actions
+  select              Select actions
+  input_select        Input select actions
+  number              Number actions
+  text                Text actions
+  input_text          Input text actions
+  date                Date actions
+  time                Time actions
+  datetime            Date and time actions
+  input_datetime      Input date and time actions
+  counter             Counter actions
 ```
