@@ -1,4 +1,6 @@
-# 🏠 Home Assistant Bridge
+# Home Assistant Bridge
+
+![Home Assistant Bridge](.github/assets/banner.png)
 
 One shared Home Assistant connection for your machine, served to local apps over a single socket.
 
