@@ -12,6 +12,19 @@ pre_remove() {
 
 _ha_bridge_unit="ha-bridge.service"
 
+# The user who ran the install through sudo or pkexec, if not root.
+_ha_bridge_installing_user() {
+  local user="${SUDO_USER:-}"
+
+  if [ -z "$user" ] && [ -n "${PKEXEC_UID:-}" ]; then
+    user="$(id -nu "$PKEXEC_UID" 2>/dev/null)" || user=""
+  fi
+
+  if [ -n "$user" ] && [ "$user" != "root" ]; then
+    printf "%s" "$user"
+  fi
+}
+
 # Runs systemctl --user for the installing user, if they have a running user session.
 _ha_bridge_user_systemctl() {
   local user="$1"
@@ -43,10 +56,13 @@ _ha_bridge_configure_user_service() {
     systemctl --global enable "$_ha_bridge_unit" >/dev/null 2>&1 || true
   fi
 
-  if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != "root" ]; then
-    _ha_bridge_user_systemctl "$SUDO_USER" daemon-reload &&
-      _ha_bridge_user_systemctl "$SUDO_USER" enable "$_ha_bridge_unit" &&
-      _ha_bridge_user_systemctl "$SUDO_USER" "$activate" "$_ha_bridge_unit"
+  local user
+  user="$(_ha_bridge_installing_user)"
+
+  if [ -n "$user" ]; then
+    _ha_bridge_user_systemctl "$user" daemon-reload &&
+      _ha_bridge_user_systemctl "$user" enable "$_ha_bridge_unit" &&
+      _ha_bridge_user_systemctl "$user" "$activate" "$_ha_bridge_unit"
   fi
 
   cat <<'EOF'
@@ -67,7 +83,10 @@ _ha_bridge_disable_user_service() {
     systemctl --global disable "$_ha_bridge_unit" >/dev/null 2>&1 || true
   fi
 
-  if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != "root" ]; then
-    _ha_bridge_user_systemctl "$SUDO_USER" disable --now "$_ha_bridge_unit" || true
+  local user
+  user="$(_ha_bridge_installing_user)"
+
+  if [ -n "$user" ]; then
+    _ha_bridge_user_systemctl "$user" disable --now "$_ha_bridge_unit" || true
   fi
 }
