@@ -50,12 +50,25 @@ ha-bridge input_number reload
 
 ## Covers
 
-`cover` (`c`) sets a position or tilt position from 0 to 100, or closes the cover:
+`cover` (`c`) opens, closes, toggles or stops a cover or its tilt, and sets a position or tilt position from 0 to 100:
 
 ```bash
-ha-bridge cover position curtain 30
-ha-bridge cover tilt-position office_blind 40
+ha-bridge cover open curtain
 ha-bridge cover close curtain
+ha-bridge cover toggle curtain
+ha-bridge cover stop curtain
+ha-bridge cover position curtain 30
+ha-bridge cover open-tilt office_blind
+ha-bridge cover close-tilt office_blind
+ha-bridge cover toggle-tilt office_blind
+ha-bridge cover stop-tilt office_blind
+ha-bridge cover tilt-position office_blind 40
+```
+
+`open`, `close` and `position` take `--speed` for covers that list `supported_speeds`:
+
+```bash
+ha-bridge cover open curtain --speed fast
 ```
 
 ## Climate
@@ -94,7 +107,9 @@ The image is written to a temporary file first and then renamed, so anything rea
 | `input_boolean reload` | `input_boolean.reload` | None |
 | `input_number increment`, `decrement`, `set-value` | `input_number.increment`, `decrement`, `set_value` | `input_number.<name>` |
 | `input_number reload` | `input_number.reload` | None |
-| `cover position`, `tilt-position`, `close` | `cover.set_cover_position`, `set_cover_tilt_position`, `close_cover` | `cover.<name>` |
+| `cover open`, `close`, `toggle`, `stop` | `cover.open_cover`, `close_cover`, `toggle`, `stop_cover` | `cover.<name>` |
+| `cover open-tilt`, `close-tilt`, `toggle-tilt`, `stop-tilt` | `cover.open_cover_tilt`, `close_cover_tilt`, `toggle_cover_tilt`, `stop_cover_tilt` | `cover.<name>` |
+| `cover position`, `tilt-position` | `cover.set_cover_position`, `set_cover_tilt_position` | `cover.<name>` |
 | `climate fan-mode` | `climate.set_fan_mode` | `climate.<name>` |
 | `assist_satellite announce` | `assist_satellite.announce` | `area_id` |
 | `camera snapshot` | Camera proxy image | `camera.<name>` |

@@ -25,14 +25,32 @@ export type Action = typeof Action.Type;
 
 export type EntityId<Domain extends string> = `${Domain}.${string}`;
 
+// Unset optional fields are left out, so Home Assistant applies its defaults.
 const onEntity = (
   action: string,
   entityId: string,
-  data?: Record<string, Schema.Json>,
+  data?: Readonly<Record<string, Schema.Json | undefined>>,
 ): Action => {
   const target = { entity_id: entityId };
+  const fields = definedFields(data);
 
-  return data === undefined ? { action, target } : { action, data, target };
+  return fields === undefined
+    ? { action, target }
+    : { action, data: fields, target };
+};
+
+const definedFields = (
+  data: Readonly<Record<string, Schema.Json | undefined>> | undefined,
+) => {
+  const fields: Record<string, Schema.Json> = {};
+
+  for (const [key, value] of Object.entries(data ?? {})) {
+    if (value !== undefined) {
+      fields[key] = value;
+    }
+  }
+
+  return Object.keys(fields).length === 0 ? undefined : fields;
 };
 
 const switchable = <const Domain extends string>(domain: Domain) => ({
@@ -68,11 +86,35 @@ export const InputNumber = {
     onEntity("input_number.decrement", entityId),
 };
 
+// `speed` must be one of the cover's `supported_speeds`.
+export interface CoverMoveOptions {
+  readonly speed?: string;
+}
+
 export const Cover = {
-  close: (entityId: EntityId<"cover">) =>
-    onEntity("cover.close_cover", entityId),
-  setPosition: (entityId: EntityId<"cover">, position: number) =>
-    onEntity("cover.set_cover_position", entityId, { position }),
+  open: (entityId: EntityId<"cover">, options?: CoverMoveOptions) =>
+    onEntity("cover.open_cover", entityId, { speed: options?.speed }),
+  close: (entityId: EntityId<"cover">, options?: CoverMoveOptions) =>
+    onEntity("cover.close_cover", entityId, { speed: options?.speed }),
+  toggle: (entityId: EntityId<"cover">) => onEntity("cover.toggle", entityId),
+  stop: (entityId: EntityId<"cover">) => onEntity("cover.stop_cover", entityId),
+  setPosition: (
+    entityId: EntityId<"cover">,
+    position: number,
+    options?: CoverMoveOptions,
+  ) =>
+    onEntity("cover.set_cover_position", entityId, {
+      position,
+      speed: options?.speed,
+    }),
+  openTilt: (entityId: EntityId<"cover">) =>
+    onEntity("cover.open_cover_tilt", entityId),
+  closeTilt: (entityId: EntityId<"cover">) =>
+    onEntity("cover.close_cover_tilt", entityId),
+  toggleTilt: (entityId: EntityId<"cover">) =>
+    onEntity("cover.toggle_cover_tilt", entityId),
+  stopTilt: (entityId: EntityId<"cover">) =>
+    onEntity("cover.stop_cover_tilt", entityId),
   setTiltPosition: (entityId: EntityId<"cover">, tiltPosition: number) =>
     onEntity("cover.set_cover_tilt_position", entityId, {
       tilt_position: tiltPosition,

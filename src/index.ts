@@ -7,6 +7,7 @@ import {
   FileSystem,
   Layer,
   Logger,
+  Option,
   Predicate,
   Stream,
 } from "effect";
@@ -22,6 +23,7 @@ import {
   Light,
   Switch,
   type Action,
+  type CoverMoveOptions,
   type EntityId,
 } from "@timmo001/effect-ha";
 import {
@@ -264,27 +266,68 @@ const inputNumber = domainCommand(
 
 const coverName = nameArgument("Entity name without the cover. prefix");
 
-const coverPositionCommand = (
+const speedFlag = Flag.String("speed").pipe(
+  Flag.withDescription("Speed, one of the cover's supported_speeds"),
+  Flag.optional,
+);
+
+const coverMoveCommand = (
   name: string,
-  toAction: (entityId: EntityId<"cover">, position: number) => Action,
+  toAction: (entityId: EntityId<"cover">, options: CoverMoveOptions) => Action,
   description: string,
 ) =>
-  Command.make(name, { name: coverName, position: percentArgument }, (input) =>
-    Effect.gen(function* () {
-      const position = yield* parsePercent(input.position);
-      yield* callAction(toAction(`cover.${input.name}`, position));
-    }).pipe(withBridge),
+  Command.make(name, { name: coverName, speed: speedFlag }, (input) =>
+    callAction(
+      toAction(`cover.${input.name}`, {
+        speed: Option.getOrUndefined(input.speed),
+      }),
+    ).pipe(withBridge),
   ).pipe(Command.withDescription(description));
 
 const cover = domainCommand("cover", "c", "Cover actions", [
   stateWatchCommand("cover", coverStateText),
-  coverPositionCommand("position", Cover.setPosition, "Set the position"),
-  coverPositionCommand(
-    "tilt-position",
-    Cover.setTiltPosition,
-    "Set the tilt position",
+  coverMoveCommand("open", Cover.open, "Open the cover"),
+  coverMoveCommand("close", Cover.close, "Close the cover"),
+  entityActionCommand(
+    "cover",
+    "toggle",
+    Cover.toggle,
+    "Open or close the cover",
   ),
-  entityActionCommand("cover", "close", Cover.close, "Close the cover"),
+  entityActionCommand("cover", "stop", Cover.stop, "Stop the cover"),
+  Command.make(
+    "position",
+    { name: coverName, position: percentArgument, speed: speedFlag },
+    (input) =>
+      Effect.gen(function* () {
+        const position = yield* parsePercent(input.position);
+        yield* callAction(
+          Cover.setPosition(`cover.${input.name}`, position, {
+            speed: Option.getOrUndefined(input.speed),
+          }),
+        );
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Set the position")),
+  entityActionCommand("cover", "open-tilt", Cover.openTilt, "Open the tilt"),
+  entityActionCommand("cover", "close-tilt", Cover.closeTilt, "Close the tilt"),
+  entityActionCommand(
+    "cover",
+    "toggle-tilt",
+    Cover.toggleTilt,
+    "Open or close the tilt",
+  ),
+  entityActionCommand("cover", "stop-tilt", Cover.stopTilt, "Stop the tilt"),
+  Command.make(
+    "tilt-position",
+    { name: coverName, position: percentArgument },
+    (input) =>
+      Effect.gen(function* () {
+        const position = yield* parsePercent(input.position);
+        yield* callAction(
+          Cover.setTiltPosition(`cover.${input.name}`, position),
+        );
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Set the tilt position")),
 ]);
 
 const climate = domainCommand("climate", "cl", "Climate actions", [

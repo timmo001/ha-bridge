@@ -471,6 +471,72 @@ FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
+## `ha-bridge cover open`
+
+```text
+DESCRIPTION
+  Open the cover
+
+USAGE
+  ha-bridge cover open [flags] <name>
+
+ARGUMENTS
+  name string    Entity name without the cover. prefix
+
+FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --speed string     Speed, one of the cover's supported_speeds
+```
+
+## `ha-bridge cover close`
+
+```text
+DESCRIPTION
+  Close the cover
+
+USAGE
+  ha-bridge cover close [flags] <name>
+
+ARGUMENTS
+  name string    Entity name without the cover. prefix
+
+FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --speed string     Speed, one of the cover's supported_speeds
+```
+
+## `ha-bridge cover toggle`
+
+```text
+DESCRIPTION
+  Open or close the cover
+
+USAGE
+  ha-bridge cover toggle [flags] <name>
+
+ARGUMENTS
+  name string    Entity name without the cover. prefix
+
+FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```
+
+## `ha-bridge cover stop`
+
+```text
+DESCRIPTION
+  Stop the cover
+
+USAGE
+  ha-bridge cover stop [flags] <name>
+
+ARGUMENTS
+  name string    Entity name without the cover. prefix
+
+FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```
+
 ## `ha-bridge cover position`
 
 ```text
@@ -483,6 +549,71 @@ USAGE
 ARGUMENTS
   name string        Entity name without the cover. prefix
   position string    Position from 0 to 100
+
+FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --speed string     Speed, one of the cover's supported_speeds
+```
+
+## `ha-bridge cover open-tilt`
+
+```text
+DESCRIPTION
+  Open the tilt
+
+USAGE
+  ha-bridge cover open-tilt [flags] <name>
+
+ARGUMENTS
+  name string    Entity name without the cover. prefix
+
+FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```
+
+## `ha-bridge cover close-tilt`
+
+```text
+DESCRIPTION
+  Close the tilt
+
+USAGE
+  ha-bridge cover close-tilt [flags] <name>
+
+ARGUMENTS
+  name string    Entity name without the cover. prefix
+
+FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```
+
+## `ha-bridge cover toggle-tilt`
+
+```text
+DESCRIPTION
+  Open or close the tilt
+
+USAGE
+  ha-bridge cover toggle-tilt [flags] <name>
+
+ARGUMENTS
+  name string    Entity name without the cover. prefix
+
+FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```
+
+## `ha-bridge cover stop-tilt`
+
+```text
+DESCRIPTION
+  Stop the tilt
+
+USAGE
+  ha-bridge cover stop-tilt [flags] <name>
+
+ARGUMENTS
+  name string    Entity name without the cover. prefix
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -500,22 +631,6 @@ USAGE
 ARGUMENTS
   name string        Entity name without the cover. prefix
   position string    Position from 0 to 100
-
-FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
-```
-
-## `ha-bridge cover close`
-
-```text
-DESCRIPTION
-  Close the cover
-
-USAGE
-  ha-bridge cover close [flags] <name>
-
-ARGUMENTS
-  name string    Entity name without the cover. prefix
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
