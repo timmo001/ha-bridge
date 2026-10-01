@@ -38,5 +38,10 @@
   "/reference/commands/homeassistant",
   "/reference/commands/fan",
   "/reference/commands/humidifier",
-  "/reference/commands/water-heater"
+  "/reference/commands/water-heater",
+  "/reference/commands/media-player",
+  "/reference/commands/vacuum",
+  "/reference/commands/lawn-mower",
+  "/reference/commands/alarm-control-panel",
+  "/reference/commands/update"
 ]

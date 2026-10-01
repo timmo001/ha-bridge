@@ -1022,3 +1022,166 @@ export const WaterHeater = {
   setAwayMode: (entityId: EntityId<"water_heater">, awayMode: boolean) =>
     onEntity("water_heater.set_away_mode", entityId, { away_mode: awayMode }),
 };
+
+// `media_player.play_media` data. `media_content_type` is a type such as
+// `music` or `url`; `enqueue` is `play` (the default), `next`, `add` or
+// `replace`; `announce` pauses what's playing for the media.
+export const MediaPlayerPlayMediaData = Schema.Struct({
+  media_content_id: Schema.String,
+  media_content_type: Schema.String,
+  enqueue: Schema.optionalKey(
+    Schema.Literals(["play", "next", "add", "replace"]),
+  ),
+  announce: Schema.optionalKey(Schema.Boolean),
+});
+
+export type MediaPlayerPlayMediaData = typeof MediaPlayerPlayMediaData.Type;
+
+// Where to browse or search, from a previous `browse_media` response.
+export interface MediaLocation {
+  readonly mediaContentType?: string;
+  readonly mediaContentId?: string;
+}
+
+const mediaLocation = (location?: MediaLocation) => ({
+  media_content_type: location?.mediaContentType,
+  media_content_id: location?.mediaContentId,
+});
+
+const mediaPlayerAction =
+  (action: string) => (entityId: EntityId<"media_player">) =>
+    onEntity(`media_player.${action}`, entityId);
+
+export const MediaPlayer = {
+  ...switchable("media_player"),
+  volumeUp: mediaPlayerAction("volume_up"),
+  volumeDown: mediaPlayerAction("volume_down"),
+  // `volume` is 0 to 1.
+  setVolume: (entityId: EntityId<"media_player">, volume: number) =>
+    onEntity("media_player.volume_set", entityId, { volume_level: volume }),
+  mute: (entityId: EntityId<"media_player">, muted: boolean) =>
+    onEntity("media_player.volume_mute", entityId, { is_volume_muted: muted }),
+  play: mediaPlayerAction("media_play"),
+  pause: mediaPlayerAction("media_pause"),
+  playPause: mediaPlayerAction("media_play_pause"),
+  stop: mediaPlayerAction("media_stop"),
+  nextTrack: mediaPlayerAction("media_next_track"),
+  previousTrack: mediaPlayerAction("media_previous_track"),
+  // `position` is in seconds.
+  seek: (entityId: EntityId<"media_player">, position: number) =>
+    onEntity("media_player.media_seek", entityId, { seek_position: position }),
+  playMedia: (
+    entityId: EntityId<"media_player">,
+    data: MediaPlayerPlayMediaData,
+  ) => onEntity("media_player.play_media", entityId, data),
+  // `source` is one of the player's `source_list`.
+  selectSource: (entityId: EntityId<"media_player">, source: string) =>
+    onEntity("media_player.select_source", entityId, { source }),
+  // `soundMode` is one of the player's `sound_mode_list`.
+  selectSoundMode: (entityId: EntityId<"media_player">, soundMode: string) =>
+    onEntity("media_player.select_sound_mode", entityId, {
+      sound_mode: soundMode,
+    }),
+  clearPlaylist: mediaPlayerAction("clear_playlist"),
+  setShuffle: (entityId: EntityId<"media_player">, shuffle: boolean) =>
+    onEntity("media_player.shuffle_set", entityId, { shuffle }),
+  setRepeat: (
+    entityId: EntityId<"media_player">,
+    repeat: "off" | "all" | "one",
+  ) => onEntity("media_player.repeat_set", entityId, { repeat }),
+  // Groups other players with this one for synchronised playback.
+  join: (
+    entityId: EntityId<"media_player">,
+    members: ReadonlyArray<EntityId<"media_player">>,
+  ) => onEntity("media_player.join", entityId, { group_members: members }),
+  unjoin: mediaPlayerAction("unjoin"),
+  // Responds with the media under `location`, or the top level.
+  browseMedia: (
+    entityId: EntityId<"media_player">,
+    location?: MediaLocation,
+  ): Action => ({
+    ...onEntity("media_player.browse_media", entityId, mediaLocation(location)),
+    return_response: true,
+  }),
+  search: (
+    entityId: EntityId<"media_player">,
+    query: string,
+    location?: MediaLocation,
+  ): Action => ({
+    ...onEntity("media_player.search_media", entityId, {
+      search_query: query,
+      ...mediaLocation(location),
+    }),
+    return_response: true,
+  }),
+};
+
+const vacuumAction = (action: string) => (entityId: EntityId<"vacuum">) =>
+  onEntity(`vacuum.${action}`, entityId);
+
+export const Vacuum = {
+  start: vacuumAction("start"),
+  pause: vacuumAction("pause"),
+  startPause: vacuumAction("start_pause"),
+  stop: vacuumAction("stop"),
+  returnToBase: vacuumAction("return_to_base"),
+  locate: vacuumAction("locate"),
+  cleanSpot: vacuumAction("clean_spot"),
+  // Cleans the areas mapped to the vacuum's segments, by area ID.
+  cleanArea: (entityId: EntityId<"vacuum">, areaIds: ReadonlyArray<string>) =>
+    onEntity("vacuum.clean_area", entityId, { cleaning_area_id: areaIds }),
+  // `fanSpeed` is one of the vacuum's `fan_speed_list`.
+  setFanSpeed: (entityId: EntityId<"vacuum">, fanSpeed: string) =>
+    onEntity("vacuum.set_fan_speed", entityId, { fan_speed: fanSpeed }),
+  // Sends a command the integration understands, with optional parameters.
+  sendCommand: (
+    entityId: EntityId<"vacuum">,
+    command: string,
+    params?: Schema.Json,
+  ) => onEntity("vacuum.send_command", entityId, { command, params }),
+};
+
+const lawnMowerAction =
+  (action: string) => (entityId: EntityId<"lawn_mower">) =>
+    onEntity(`lawn_mower.${action}`, entityId);
+
+export const LawnMower = {
+  startMowing: lawnMowerAction("start_mowing"),
+  pause: lawnMowerAction("pause"),
+  stop: lawnMowerAction("stop"),
+  dock: lawnMowerAction("dock"),
+};
+
+const alarmAction =
+  (action: string) =>
+  (entityId: EntityId<"alarm_control_panel">, options?: LockOptions) =>
+    onEntity(`alarm_control_panel.${action}`, entityId, {
+      code: options?.code,
+    });
+
+// `code` is the panel's code, when it needs one.
+export const AlarmControlPanel = {
+  disarm: alarmAction("alarm_disarm"),
+  armHome: alarmAction("alarm_arm_home"),
+  armAway: alarmAction("alarm_arm_away"),
+  armNight: alarmAction("alarm_arm_night"),
+  armVacation: alarmAction("alarm_arm_vacation"),
+  armCustomBypass: alarmAction("alarm_arm_custom_bypass"),
+  trigger: alarmAction("alarm_trigger"),
+};
+
+export const Update = {
+  // Installs `version`, or the latest. `backup` backs up first, where the
+  // integration supports it.
+  install: (
+    entityId: EntityId<"update">,
+    options?: { readonly version?: string; readonly backup?: boolean },
+  ) =>
+    onEntity("update.install", entityId, {
+      version: options?.version,
+      backup: options?.backup,
+    }),
+  skip: (entityId: EntityId<"update">) => onEntity("update.skip", entityId),
+  clearSkipped: (entityId: EntityId<"update">) =>
+    onEntity("update.clear_skipped", entityId),
+};

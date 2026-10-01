@@ -43,6 +43,10 @@ ha-bridge light turn-on bedroom_lamp
 | [Groups](/actions/groups/) | `group` | None | Create, change and remove groups |
 | [Fans](/actions/fans/) | `fan` | None | On, off, speed, preset, oscillation and direction |
 | [Humidifiers and water heaters](/actions/humidifiers/) | `humidifier`, `water_heater` | None | On, off, modes, humidity and temperature |
+| [Media players](/actions/media-players/) | `media_player` | `mp` | Playback, volume, sources, grouping and browsing |
+| [Vacuums and lawn mowers](/actions/vacuums/) | `vacuum`, `lawn_mower` | None | Start, pause, dock and clean areas |
+| [Alarm panels](/actions/alarms/) | `alarm_control_panel` | `alarm` | Arm, disarm and trigger |
+| [Updates](/actions/updates/) | `update` | None | Install, skip and clear skipped |
 | [Home Assistant](/actions/home-assistant/) | `homeassistant`, `zone`, `person` | None | Any entity, restart, reload and location |
 
 [Commands](/reference/commands/) lists every argument and flag. Any other action can be called from your own app with [`CallAction`](/libraries/).

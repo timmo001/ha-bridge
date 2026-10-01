@@ -19,6 +19,7 @@ import {
   AssistSatellite,
   AssistSatelliteAnnounceOptions,
   AssistSatelliteAskQuestionData,
+  AlarmControlPanel,
   AssistSatelliteStartConversationData,
   Automation,
   Button,
@@ -46,8 +47,11 @@ import {
   InputSelect,
   InputText,
   InputNumber,
+  LawnMower,
   Light,
   Lock,
+  MediaPlayer,
+  MediaPlayerPlayMediaData,
   NumberEntity,
   Person,
   Scene,
@@ -59,6 +63,8 @@ import {
   Text,
   TimeEntity,
   TimeString,
+  Update,
+  Vacuum,
   WaterHeater,
   Timer,
   Zone,
@@ -2110,6 +2116,348 @@ const waterHeater = domainCommand(
   ],
 );
 
+const simpleCommands = <const Domain extends string>(
+  domain: Domain,
+  commands: ReadonlyArray<
+    readonly [string, (entityId: EntityId<Domain>) => Action, string]
+  >,
+) =>
+  commands.map(([name, toAction, description]) =>
+    entityActionCommand(domain, name, toAction, description),
+  );
+
+const printResponse = (action: Action) =>
+  callAction(action).pipe(Effect.flatMap(printJson));
+
+const mediaPlayerName = entityName("media_player");
+
+const decodePlayMedia = Schema.decodeUnknownEffect(MediaPlayerPlayMediaData);
+
+const mediaLocationFlags = {
+  mediaContentType: optionalFlag(
+    Flag.String("content-type"),
+    "Media content type, from a browse response",
+  ),
+  mediaContentId: optionalFlag(
+    Flag.String("content-id"),
+    "Media content ID, from a browse response",
+  ),
+};
+
+const mediaPlayer = domainCommand(
+  "media_player",
+  "mp",
+  "Media player actions",
+  [
+    ...toggleCommands("media_player", MediaPlayer),
+    ...simpleCommands("media_player", [
+      ["play", MediaPlayer.play, "Play"],
+      ["pause", MediaPlayer.pause, "Pause"],
+      ["play-pause", MediaPlayer.playPause, "Play or pause"],
+      ["stop", MediaPlayer.stop, "Stop"],
+      ["next", MediaPlayer.nextTrack, "Next track"],
+      ["previous", MediaPlayer.previousTrack, "Previous track"],
+      ["volume-up", MediaPlayer.volumeUp, "Turn the volume up"],
+      ["volume-down", MediaPlayer.volumeDown, "Turn the volume down"],
+      ["clear-playlist", MediaPlayer.clearPlaylist, "Clear the playlist"],
+      ["unjoin", MediaPlayer.unjoin, "Leave the player's group"],
+    ]),
+    valueCommand(
+      "media_player",
+      "volume",
+      { name: "volume", description: "Volume from 0 to 1" },
+      (value) => {
+        const volume = parseInputNumberValue(value);
+
+        return volume !== undefined && volume >= 0 && volume <= 1
+          ? Effect.succeed(volume)
+          : failWith("volume must be a number from 0 to 1");
+      },
+      MediaPlayer.setVolume,
+      "Set the volume",
+    ),
+    valueCommand(
+      "media_player",
+      "mute",
+      { name: "state", description: "on or off" },
+      onOffArgument,
+      MediaPlayer.mute,
+      "Mute or unmute",
+    ),
+    valueCommand(
+      "media_player",
+      "seek",
+      { name: "position", description: "Position in seconds" },
+      (value) => {
+        const position = parseInputNumberValue(value);
+
+        return position !== undefined && position >= 0
+          ? Effect.succeed(position)
+          : failWith("position must be a number of seconds from 0");
+      },
+      MediaPlayer.seek,
+      "Seek to a position",
+    ),
+    valueCommand(
+      "media_player",
+      "source",
+      { name: "source", description: "One of the player's source_list" },
+      Effect.succeed,
+      MediaPlayer.selectSource,
+      "Select the input source",
+    ),
+    valueCommand(
+      "media_player",
+      "sound-mode",
+      { name: "mode", description: "One of the player's sound_mode_list" },
+      Effect.succeed,
+      MediaPlayer.selectSoundMode,
+      "Select the sound mode",
+    ),
+    valueCommand(
+      "media_player",
+      "shuffle",
+      { name: "state", description: "on or off" },
+      onOffArgument,
+      MediaPlayer.setShuffle,
+      "Turn shuffle on or off",
+    ),
+    valueCommand(
+      "media_player",
+      "repeat",
+      { name: "mode", description: "off, all or one" },
+      (value) =>
+        value === "off" || value === "all" || value === "one"
+          ? Effect.succeed(value)
+          : failWith("repeat must be off, all or one"),
+      MediaPlayer.setRepeat,
+      "Set the repeat mode",
+    ),
+    Command.make(
+      "play-media",
+      {
+        name: mediaPlayerName,
+        media_content_id: Argument.String("content_id").pipe(
+          Argument.withDescription("Media to play, such as a URL"),
+        ),
+        media_content_type: Flag.String("content-type").pipe(
+          Flag.withDescription("Media type, such as music or url"),
+          Flag.withDefault("music"),
+        ),
+        enqueue: optionalFlag(
+          Flag.Literals("enqueue", ["play", "next", "add", "replace"]),
+          "Queue behaviour (default: play)",
+        ),
+        announce: optionalFlag(
+          Flag.Boolean("announce"),
+          "Pause what's playing to announce the media",
+        ),
+      },
+      ({ name, media_content_id, media_content_type, ...flags }) =>
+        Effect.gen(function* () {
+          const data = yield* decodeData(
+            "media",
+            decodePlayMedia({
+              media_content_id,
+              media_content_type,
+              ...setFields(flags),
+            }),
+          );
+
+          yield* callAction(
+            MediaPlayer.playMedia(`media_player.${name}`, data),
+          );
+        }).pipe(withBridge),
+    ).pipe(Command.withDescription("Play media")),
+    Command.make(
+      "join",
+      {
+        name: mediaPlayerName,
+        members: Argument.String("member").pipe(
+          Argument.withDescription(
+            "Player to group with this one, without media_player.; repeat for more",
+          ),
+          Argument.atLeast(1),
+        ),
+      },
+      (input) =>
+        callAction(
+          MediaPlayer.join(
+            `media_player.${input.name}`,
+            input.members.map(
+              (member): EntityId<"media_player"> => `media_player.${member}`,
+            ),
+          ),
+        ).pipe(withBridge),
+    ).pipe(Command.withDescription("Group players with this one")),
+    Command.make(
+      "browse",
+      { name: mediaPlayerName, ...mediaLocationFlags },
+      ({ name, ...location }) =>
+        printResponse(
+          MediaPlayer.browseMedia(`media_player.${name}`, {
+            mediaContentType: Option.getOrUndefined(location.mediaContentType),
+            mediaContentId: Option.getOrUndefined(location.mediaContentId),
+          }),
+        ).pipe(withBridge),
+    ).pipe(Command.withDescription("Print the player's media library as JSON")),
+    Command.make(
+      "search",
+      {
+        name: mediaPlayerName,
+        query: Argument.String("query").pipe(
+          Argument.withDescription("Text to search for"),
+        ),
+        ...mediaLocationFlags,
+      },
+      ({ name, query, ...location }) =>
+        printResponse(
+          MediaPlayer.search(`media_player.${name}`, query, {
+            mediaContentType: Option.getOrUndefined(location.mediaContentType),
+            mediaContentId: Option.getOrUndefined(location.mediaContentId),
+          }),
+        ).pipe(withBridge),
+    ).pipe(Command.withDescription("Search the player's media, printing JSON")),
+  ],
+);
+
+const decodeJsonValue = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(Schema.Json),
+);
+
+const vacuum = domainCommand("vacuum", undefined, "Vacuum actions", [
+  ...simpleCommands("vacuum", [
+    ["start", Vacuum.start, "Start cleaning"],
+    ["pause", Vacuum.pause, "Pause cleaning"],
+    ["start-pause", Vacuum.startPause, "Start or pause cleaning"],
+    ["stop", Vacuum.stop, "Stop cleaning"],
+    ["return-to-base", Vacuum.returnToBase, "Go back to the dock"],
+    ["locate", Vacuum.locate, "Make the vacuum sound so you can find it"],
+    ["clean-spot", Vacuum.cleanSpot, "Clean the spot it's on"],
+  ]),
+  Command.make(
+    "clean-area",
+    {
+      name: entityName("vacuum"),
+      areas: Argument.String("area_id").pipe(
+        Argument.withDescription("Area ID to clean; repeat for more"),
+        Argument.atLeast(1),
+      ),
+    },
+    (input) =>
+      callAction(Vacuum.cleanArea(`vacuum.${input.name}`, input.areas)).pipe(
+        withBridge,
+      ),
+  ).pipe(Command.withDescription("Clean areas")),
+  valueCommand(
+    "vacuum",
+    "fan-speed",
+    { name: "speed", description: "One of the vacuum's fan_speed_list" },
+    Effect.succeed,
+    Vacuum.setFanSpeed,
+    "Set the fan speed",
+  ),
+  Command.make(
+    "send-command",
+    {
+      name: entityName("vacuum"),
+      command: Argument.String("command").pipe(
+        Argument.withDescription("Command the integration understands"),
+      ),
+      params: optionalFlag(
+        Flag.String("params"),
+        'Parameters as JSON, such as {"speed":2}',
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const params = yield* parseOptional(input.params, (json) =>
+          decodeData("params", decodeJsonValue(json)),
+        );
+
+        yield* callAction(
+          Vacuum.sendCommand(`vacuum.${input.name}`, input.command, params),
+        );
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Send a raw command")),
+]);
+
+const lawnMower = domainCommand("lawn_mower", undefined, "Lawn mower actions", [
+  ...simpleCommands("lawn_mower", [
+    ["start", LawnMower.startMowing, "Start mowing"],
+    ["pause", LawnMower.pause, "Pause mowing"],
+    ["stop", LawnMower.stop, "Stop mowing"],
+    ["dock", LawnMower.dock, "Go back to the dock"],
+  ]),
+]);
+
+const codeCommands = <const Domain extends string>(
+  domain: Domain,
+  commands: ReadonlyArray<
+    readonly [
+      string,
+      (entityId: EntityId<Domain>, options: LockOptions) => Action,
+      string,
+    ]
+  >,
+) =>
+  commands.map(([name, toAction, description]) =>
+    Command.make(name, { name: entityName(domain), code: codeFlag }, (input) =>
+      callAction(
+        toAction(`${domain}.${input.name}`, {
+          code: Option.getOrUndefined(input.code),
+        }),
+      ).pipe(withBridge),
+    ).pipe(Command.withDescription(description)),
+  );
+
+const alarm = domainCommand(
+  "alarm_control_panel",
+  "alarm",
+  "Alarm control panel actions",
+  codeCommands("alarm_control_panel", [
+    ["disarm", AlarmControlPanel.disarm, "Disarm"],
+    ["arm-home", AlarmControlPanel.armHome, "Arm for when you're home"],
+    ["arm-away", AlarmControlPanel.armAway, "Arm for when you're away"],
+    ["arm-night", AlarmControlPanel.armNight, "Arm for the night"],
+    ["arm-vacation", AlarmControlPanel.armVacation, "Arm for a holiday"],
+    [
+      "arm-custom-bypass",
+      AlarmControlPanel.armCustomBypass,
+      "Arm with the panel's bypassed zones",
+    ],
+    ["trigger", AlarmControlPanel.trigger, "Set off the alarm"],
+  ]),
+);
+
+const update = domainCommand("update", undefined, "Update actions", [
+  Command.make(
+    "install",
+    {
+      name: entityName("update"),
+      version: optionalFlag(
+        Flag.String("version"),
+        "Version to install (default: the latest)",
+      ),
+      backup: optionalFlag(
+        Flag.Boolean("backup"),
+        "Back up first, where the integration supports it",
+      ),
+    },
+    (input) =>
+      callAction(
+        Update.install(`update.${input.name}`, {
+          version: Option.getOrUndefined(input.version),
+          backup: Option.getOrUndefined(input.backup),
+        }),
+      ).pipe(withBridge),
+  ).pipe(Command.withDescription("Install the update")),
+  ...simpleCommands("update", [
+    ["skip", Update.skip, "Skip this version"],
+    ["clear-skipped", Update.clearSkipped, "Stop skipping the version"],
+  ]),
+]);
+
 const serve = Command.make("serve", {}, () =>
   Effect.flatMap(socketPath, serveBridge).pipe(
     Effect.provide(
@@ -2258,6 +2606,11 @@ haBridge.pipe(
     fan,
     humidifier,
     waterHeater,
+    mediaPlayer,
+    vacuum,
+    lawnMower,
+    alarm,
+    update,
   ]),
   Command.run({ version: packageJson.version }),
   Effect.catchCause(reportCliCause),

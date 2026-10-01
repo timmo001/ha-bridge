@@ -48,6 +48,11 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`fan`](/reference/commands/fan/) | None |
 | [`humidifier`](/reference/commands/humidifier/) | None |
 | [`water_heater`](/reference/commands/water-heater/) | None |
+| [`media_player`](/reference/commands/media-player/) | `mp` |
+| [`vacuum`](/reference/commands/vacuum/) | None |
+| [`lawn_mower`](/reference/commands/lawn-mower/) | None |
+| [`alarm_control_panel`](/reference/commands/alarm-control-panel/) | `alarm` |
+| [`update`](/reference/commands/update/) | None |
 
 ## Global flags
 
@@ -108,4 +113,9 @@ SUBCOMMANDS
   fan                 Fan actions
   humidifier          Humidifier actions
   water_heater        Water heater actions
+  media_player, mp    Media player actions
+  vacuum              Vacuum actions
+  lawn_mower          Lawn mower actions
+  alarm_control_panel, alarm Alarm control panel actions
+  update              Update actions
 ```
