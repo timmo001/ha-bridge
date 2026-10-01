@@ -6,6 +6,7 @@
       "name": "ha-bridge",
       "dependencies": {
         "@effect/platform-bun": "4.0.0",
+        "@timmo001/effect-ha": "workspace:*",
         "@timmo001/effect-ha-bridge": "workspace:*",
         "effect": "4.0.0",
       },
@@ -25,7 +26,15 @@
       "version": "0.1.0",
       "dependencies": {
         "@effect/platform-node-shared": "4.0.0",
+        "@timmo001/effect-ha": "0.1.0",
       },
+      "peerDependencies": {
+        "effect": "4.0.0",
+      },
+    },
+    "packages/effect-ha": {
+      "name": "@timmo001/effect-ha",
+      "version": "0.1.0",
       "peerDependencies": {
         "effect": "4.0.0",
       },
@@ -103,6 +112,8 @@
     "@oxlint/binding-win32-x64-msvc": ["@oxlint/binding-win32-x64-msvc@1.86.0", "", { "os": "win32", "cpu": "x64" }, "sha512-az4dzifCRzES1crwu6pDFXzJTIanrdxXFL9TbiJWrx9LKcuacbR83aPvxDA1LKLNswi/RoqitC7Afcflhu3zBQ=="],
 
     "@oxlint/plugins": ["@oxlint/plugins@1.86.0", "", {}, "sha512-JeAiaaRMyUiUEQHQ7zBsJn1aEdbLyt1HJsOs4XKIIlATNxcvWRrRxneZA+RF4G03cQobq3IhTqSfyLhOFv03qA=="],
+
+    "@timmo001/effect-ha": ["@timmo001/effect-ha@workspace:packages/effect-ha"],
 
     "@timmo001/effect-ha-bridge": ["@timmo001/effect-ha-bridge@workspace:packages/client"],
 

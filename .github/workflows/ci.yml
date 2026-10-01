@@ -36,8 +36,8 @@ jobs:
       - name: Build
         run: mise run build
 
-      - name: Build client package
-        run: mise run build:client
+      - name: Build packages
+        run: mise run build:packages
 
       - name: Smoke test CLI
         run: |

@@ -1,14 +1,13 @@
 {
-  "name": "@timmo001/effect-ha-bridge",
+  "name": "@timmo001/effect-ha",
   "version": "0.1.0",
-  "description": "Effect client and protocol for the ha-bridge Home Assistant socket",
+  "description": "Effect services, schemas and typed actions for Home Assistant",
   "keywords": [
     "effect",
     "home-assistant",
-    "ha-bridge",
-    "rpc"
+    "websocket"
   ],
-  "homepage": "https://github.com/timmo001/ha-bridge/tree/main/packages/client#readme",
+  "homepage": "https://github.com/timmo001/ha-bridge/tree/main/packages/effect-ha#readme",
   "bugs": {
     "url": "https://github.com/timmo001/ha-bridge/issues"
   },
@@ -16,7 +15,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/timmo001/ha-bridge.git",
-    "directory": "packages/client"
+    "directory": "packages/effect-ha"
   },
   "type": "module",
   "main": "./dist/index.js",
@@ -42,10 +41,6 @@
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "prepack": "bun run build"
-  },
-  "dependencies": {
-    "@effect/platform-node-shared": "4.0.0",
-    "@timmo001/effect-ha": "0.1.0"
   },
   "peerDependencies": {
     "effect": "4.0.0"

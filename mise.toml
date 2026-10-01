@@ -18,10 +18,18 @@ description = "Compile the ha-bridge binary"
 depends = ["install"]
 run = "bun run build"
 
-[tasks."build:client"]
-description = "Build the @timmo001/effect-ha-bridge package into packages/client/dist"
+[tasks."build:packages"]
+description = "Build @timmo001/effect-ha and @timmo001/effect-ha-bridge into their dist directories"
 depends = ["install"]
-run = "bun run build:client"
+run = "bun run build:packages"
+
+[tasks."version:sync"]
+description = "Pin the client's @timmo001/effect-ha dependency to the shared release version"
+run = '''
+version="$(bun pm pkg get version | tr -d '"')"
+cd packages/client
+bun pm pkg set "dependencies.@timmo001/effect-ha=$version"
+'''
 
 [tasks.typecheck]
 description = "Type-check the source"

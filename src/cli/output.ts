@@ -3,7 +3,7 @@ import {
   stateWithUnit,
   stringAttribute,
   type EntityState,
-} from "@timmo001/effect-ha-bridge";
+} from "@timmo001/effect-ha";
 
 export interface EntityBarOptions {
   readonly icon: string;

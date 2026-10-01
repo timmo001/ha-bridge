@@ -15,16 +15,18 @@ import { RpcClientError } from "effect/rpc/RpcClientError";
 import packageJson from "../package.json" with { type: "json" };
 import {
   AssistSatellite,
-  BridgeClient,
   Climate,
   Cover,
   InputBoolean,
   InputNumber,
   Light,
-  resolveSocketPath,
   Switch,
   type Action,
   type EntityId,
+} from "@timmo001/effect-ha";
+import {
+  BridgeClient,
+  resolveSocketPath,
   type EntityUpdate,
 } from "@timmo001/effect-ha-bridge";
 import { serve as serveBridge } from "./bridge/Server.js";

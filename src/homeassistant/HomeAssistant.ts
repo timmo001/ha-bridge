@@ -8,25 +8,26 @@ import {
   Schema,
   Stream,
 } from "effect";
-import { HttpClient, HttpClientRequest } from "effect/http";
+import { HttpClient } from "effect/http";
 import { BridgeConfig } from "../config/Config.js";
-import { connect, type HomeAssistantSession } from "./Connection.js";
 import {
+  cameraSnapshot,
+  connect,
   DeviceRegistry,
   displayName,
   EntityRegistryDisplay,
-  entityNamerFrom,
-  type EntityNamer,
-} from "./naming.js";
-import {
   EntityState,
+  entityNamerFrom,
   friendlyName,
-  HomeAssistantConfig,
   HomeAssistantError,
   type Action,
   type CameraSnapshot,
-  type EntityUpdate,
-} from "@timmo001/effect-ha-bridge";
+  type EntityId,
+  type EntityNamer,
+  type HomeAssistantConfig,
+  type HomeAssistantSession,
+} from "@timmo001/effect-ha";
+import type { EntityUpdate } from "@timmo001/effect-ha-bridge";
 
 export interface HomeAssistantService {
   readonly getEntity: (entityId: string) => Effect.Effect<EntityUpdate | null>;
@@ -37,7 +38,7 @@ export interface HomeAssistantService {
   ) => Effect.Effect<Schema.Json | null, HomeAssistantError>;
   readonly getConfig: Effect.Effect<HomeAssistantConfig, HomeAssistantError>;
   readonly cameraSnapshot: (
-    entityId: string,
+    entityId: EntityId<"camera">,
   ) => Effect.Effect<CameraSnapshot, HomeAssistantError>;
 }
 
@@ -48,15 +49,6 @@ const decodeStates = Schema.decodeUnknownEffect(Schema.Array(EntityState));
 const decodeDisplay = Schema.decodeUnknownEffect(EntityRegistryDisplay);
 
 const decodeDevices = Schema.decodeUnknownEffect(DeviceRegistry);
-
-const decodeConfig = Schema.decodeUnknownEffect(HomeAssistantConfig);
-
-const decodeActionResult = Schema.decodeUnknownEffect(
-  Schema.Struct({ response: Schema.optionalKey(Schema.Json) }),
-);
-
-const failWith = (context: string) => (error: { readonly message: string }) =>
-  new HomeAssistantError({ message: `${context}: ${error.message}` });
 
 export class HomeAssistant extends Context.Service<
   HomeAssistant,
@@ -183,65 +175,27 @@ export class HomeAssistant extends Context.Service<
         ),
       );
 
-      const callAction = Effect.fn("HomeAssistant.callAction")(function* (
-        action: Action,
-      ) {
-        const current = yield* connected;
-        const separator = action.action.indexOf(".");
+      const callAction = (action: Action) =>
+        Effect.flatMap(connected, (current) => current.callAction(action));
 
-        const result = yield* current.request({
-          type: "call_service",
-          domain: action.action.slice(0, separator),
-          service: action.action.slice(separator + 1),
-          service_data: action.data,
-          target: action.target,
-          return_response: action.return_response,
-        });
+      const getConfig = Effect.flatMap(
+        connected,
+        (current) => current.getConfig,
+      );
 
-        const { response } = yield* decodeActionResult(result).pipe(
-          Effect.mapError(failWith("decode action result")),
+      const http = yield* HttpClient.HttpClient;
+
+      const snapshot = (entityId: EntityId<"camera">) =>
+        cameraSnapshot(config, entityId).pipe(
+          Effect.provideService(HttpClient.HttpClient, http),
         );
-
-        return response ?? null;
-      });
-
-      const getConfig = connected.pipe(
-        Effect.flatMap((current) => current.request({ type: "get_config" })),
-        Effect.flatMap((result) =>
-          decodeConfig(result).pipe(
-            Effect.mapError(failWith("decode Home Assistant config")),
-          ),
-        ),
-      );
-
-      const http = (yield* HttpClient.HttpClient).pipe(
-        HttpClient.mapRequest(HttpClientRequest.bearerToken(config.token)),
-        HttpClient.filterStatusOk,
-      );
-
-      const cameraSnapshot = Effect.fn("HomeAssistant.cameraSnapshot")(
-        function* (entityId: string) {
-          const response = yield* http.get(
-            `${config.url.replace(/\/$/, "")}/api/camera_proxy/${encodeURIComponent(entityId)}`,
-          );
-
-          const data = yield* response.arrayBuffer;
-
-          return {
-            contentType:
-              response.headers["content-type"] ?? "application/octet-stream",
-            data: new Uint8Array(data),
-          };
-        },
-        Effect.mapError(failWith("camera snapshot")),
-      );
 
       return HomeAssistant.of({
         getEntity,
         watchEntity,
         callAction,
         getConfig,
-        cameraSnapshot,
+        cameraSnapshot: snapshot,
       });
     }),
   );

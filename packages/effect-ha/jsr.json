@@ -1,6 +1,6 @@
 {
   "$schema": "https://jsr.io/schema/config-file.v1.json",
-  "name": "@timmo001/effect-ha-bridge",
+  "name": "@timmo001/effect-ha",
   "version": "0.1.0",
   "license": "Apache-2.0",
   "exports": "./jsr/index.js",

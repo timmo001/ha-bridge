@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { stateWithUnit, type EntityState } from "@timmo001/effect-ha-bridge";
+import { stateWithUnit, type EntityState } from "@timmo001/effect-ha";
 import {
   climateStateText,
   coverStateText,

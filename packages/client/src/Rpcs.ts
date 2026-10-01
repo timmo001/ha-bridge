@@ -1,9 +1,11 @@
 import { Rpc, RpcGroup } from "effect/rpc";
 import { Schema } from "effect";
-import { Action } from "./Action.js";
-import { CameraSnapshot } from "./Camera.js";
-import { HomeAssistantError } from "./HomeAssistantError.js";
-import { HomeAssistantConfig } from "./HomeAssistantConfig.js";
+import {
+  Action,
+  CameraSnapshot,
+  HomeAssistantConfig,
+  HomeAssistantError,
+} from "@timmo001/effect-ha";
 import { EntityUpdate } from "./Entity.js";
 
 const EntityPayload = { entityId: Schema.String };
@@ -29,7 +31,9 @@ export class BridgeRpcs extends RpcGroup.make(
     error: HomeAssistantError,
   }),
   Rpc.make("CameraSnapshot", {
-    payload: EntityPayload,
+    payload: {
+      entityId: Schema.TemplateLiteral(["camera.", Schema.String]),
+    },
     success: CameraSnapshot,
     error: HomeAssistantError,
   }),

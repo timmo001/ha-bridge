@@ -7,12 +7,12 @@ Use it to talk to a running `ha-bridge serve` from your own Effect app instead o
 ## Install
 
 ```bash
-bun add @timmo001/effect-ha-bridge effect
-npm install @timmo001/effect-ha-bridge effect
-npx jsr add @timmo001/effect-ha-bridge
+bun add @timmo001/effect-ha-bridge @timmo001/effect-ha effect
+npm install @timmo001/effect-ha-bridge @timmo001/effect-ha effect
+npx jsr add @timmo001/effect-ha-bridge @timmo001/effect-ha
 ```
 
-`effect` is a peer dependency, so install the same Effect v4 version your app uses.
+`effect` is a peer dependency, so install the same Effect v4 version your app uses. Home Assistant types and action builders, such as `EntityState`, `Light` and `HomeAssistantError`, come from [`@timmo001/effect-ha`](https://github.com/timmo001/ha-bridge/tree/main/packages/effect-ha); add it when you use them directly.
 
 ## Usage
 
@@ -27,11 +27,8 @@ npx jsr add @timmo001/effect-ha-bridge
 
 ```ts
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
-import {
-  BridgeClient,
-  resolveSocketPath,
-  stateWithUnit,
-} from "@timmo001/effect-ha-bridge";
+import { stateWithUnit } from "@timmo001/effect-ha";
+import { BridgeClient, resolveSocketPath } from "@timmo001/effect-ha-bridge";
 import { Console, Effect, Option } from "effect";
 
 const program = Effect.gen(function* () {
@@ -88,7 +85,7 @@ const watchDesk = Effect.gen(function* () {
 
 ### Run an action
 
-`CallAction` takes an action in the shape Home Assistant automations use: `action`, `data` and `target`. Typed builders cover common actions, such as `Light.toggle`, `InputNumber.setValue`, `Cover.setPosition` and `Climate.setFanMode`. It fails with `HomeAssistantError` when Home Assistant rejects the action.
+`CallAction` takes an action in the shape Home Assistant automations use: `action`, `data` and `target`. Typed builders from `@timmo001/effect-ha` cover common actions, such as `Light.toggle`, `InputNumber.setValue`, `Cover.setPosition` and `Climate.setFanMode`. It fails with `HomeAssistantError` when Home Assistant rejects the action.
 
 ```ts
 const dimDesk = Effect.gen(function* () {
@@ -143,4 +140,4 @@ Calls fail with `RpcClientError` when the bridge isn't reachable rather than wai
 
 ## Licence
 
-Apache 2.0. See [LICENSE](./LICENSE).
+Apache 2.0. See [LICENSE](https://github.com/timmo001/ha-bridge/blob/main/LICENSE).
