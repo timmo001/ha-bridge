@@ -36,6 +36,15 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`datetime`](/reference/commands/datetime/) | None |
 | [`input_datetime`](/reference/commands/input-datetime/) | None |
 | [`counter`](/reference/commands/counter/) | None |
+| [`script`](/reference/commands/script/) | None |
+| [`automation`](/reference/commands/automation/) | None |
+| [`scene`](/reference/commands/scene/) | None |
+| [`timer`](/reference/commands/timer/) | None |
+| [`schedule`](/reference/commands/schedule/) | None |
+| [`group`](/reference/commands/group/) | None |
+| [`zone`](/reference/commands/zone/) | None |
+| [`person`](/reference/commands/person/) | None |
+| [`homeassistant`](/reference/commands/homeassistant/) | None |
 
 ## Global flags
 
@@ -84,4 +93,13 @@ SUBCOMMANDS
   datetime            Date and time actions
   input_datetime      Input date and time actions
   counter             Counter actions
+  script              Script actions
+  automation          Automation actions
+  scene               Scene actions
+  timer               Timer actions
+  schedule            Schedule actions
+  group               Group actions
+  zone                Zone actions
+  person              Person actions
+  homeassistant       Home Assistant actions
 ```

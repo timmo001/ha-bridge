@@ -20,6 +20,7 @@ import {
   AssistSatelliteAnnounceOptions,
   AssistSatelliteAskQuestionData,
   AssistSatelliteStartConversationData,
+  Automation,
   Button,
   Camera,
   Climate,
@@ -28,6 +29,10 @@ import {
   DateString,
   DateTimeEntity,
   DateTimeString,
+  DurationValue,
+  Group,
+  GroupSetData,
+  HomeAssistantCore,
   ClimateSetTemperatureData,
   Cover,
   HvacMode,
@@ -41,10 +46,18 @@ import {
   Light,
   Lock,
   NumberEntity,
+  Person,
+  Scene,
+  SceneCreateData,
+  SceneEntities,
+  Schedule,
+  Script,
   Select,
   Text,
   TimeEntity,
   TimeString,
+  Timer,
+  Zone,
   Remote,
   RemoteLearnCommandData,
   RemoteSendCommandData,
@@ -59,6 +72,7 @@ import {
   type EntityId,
   type LockOptions,
   type SelectStepOptions,
+  type Target,
 } from "@timmo001/effect-ha";
 import {
   BridgeClient,
@@ -1398,6 +1412,498 @@ const counter = domainCommand("counter", undefined, "Counter actions", [
   setValueCommand("counter", "New count", wholeNumber, Counter.setValue),
 ]);
 
+const printJson = (value: Schema.Json | null) =>
+  Console.log(JSON.stringify(value));
+
+const decodeScriptVariables = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(Schema.Record(Schema.String, Schema.Json)),
+);
+
+const variablesFlag = optionalFlag(
+  Flag.String("variables"),
+  'Script variables as a JSON object, such as \'{"room":"office"}\'',
+);
+
+// Parses an optional flag or argument, leaving it undefined when unset.
+const parseOptional = <A, E>(
+  value: Option.Option<string>,
+  parse: (value: string) => Effect.Effect<A, E>,
+): Effect.Effect<A | undefined, E> =>
+  Option.isSome(value) ? parse(value.value) : Effect.succeed(undefined);
+
+const parseVariables = (value: Option.Option<string>) =>
+  parseOptional(value, (json) =>
+    decodeData("variables", decodeScriptVariables(json)),
+  );
+
+const scriptName = entityName("script");
+
+const script = domainCommand("script", undefined, "Script actions", [
+  Command.make(
+    "turn-on",
+    { name: scriptName, variables: variablesFlag },
+    (input) =>
+      Effect.gen(function* () {
+        const variables = yield* parseVariables(input.variables);
+
+        yield* callAction(Script.turnOn(`script.${input.name}`, variables));
+      }).pipe(withBridge),
+  ).pipe(
+    Command.withAlias("on"),
+    Command.withDescription("Start the script without waiting for it"),
+  ),
+  entityActionCommand(
+    "script",
+    "turn-off",
+    Script.turnOff,
+    "Stop the script",
+  ).pipe(Command.withAlias("off")),
+  entityActionCommand(
+    "script",
+    "toggle",
+    Script.toggle,
+    "Start or stop the script",
+  ).pipe(Command.withAlias("t")),
+  Command.make("run", { name: scriptName, variables: variablesFlag }, (input) =>
+    Effect.gen(function* () {
+      const variables = yield* parseVariables(input.variables);
+
+      const response = yield* callAction(
+        Script.run(`script.${input.name}`, variables),
+      );
+
+      yield* printJson(response);
+    }).pipe(withBridge),
+  ).pipe(
+    Command.withDescription(
+      "Run the script, wait for it to finish and print its response as JSON",
+    ),
+  ),
+  reloadCommand("script", Script.reload),
+]);
+
+const automationName = entityName("automation");
+
+const automation = domainCommand(
+  "automation",
+  undefined,
+  "Automation actions",
+  [
+    entityActionCommand(
+      "automation",
+      "turn-on",
+      Automation.turnOn,
+      "Turn on",
+    ).pipe(Command.withAlias("on")),
+    Command.make(
+      "turn-off",
+      {
+        name: automationName,
+        stopActions: optionalFlag(
+          Flag.Boolean("stop-actions"),
+          "Stop running actions (the default); --no-stop-actions lets them finish",
+        ),
+      },
+      (input) =>
+        callAction(
+          Automation.turnOff(`automation.${input.name}`, {
+            stopActions: Option.getOrUndefined(input.stopActions),
+          }),
+        ).pipe(withBridge),
+    ).pipe(Command.withAlias("off"), Command.withDescription("Turn off")),
+    entityActionCommand(
+      "automation",
+      "toggle",
+      Automation.toggle,
+      "Toggle",
+    ).pipe(Command.withAlias("t")),
+    Command.make(
+      "trigger",
+      {
+        name: automationName,
+        skipCondition: optionalFlag(
+          Flag.Boolean("skip-condition"),
+          "Skip the conditions (the default); --no-skip-condition checks them",
+        ),
+      },
+      (input) =>
+        callAction(
+          Automation.trigger(`automation.${input.name}`, {
+            skipCondition: Option.getOrUndefined(input.skipCondition),
+          }),
+        ).pipe(withBridge),
+    ).pipe(Command.withDescription("Run the automation's actions")),
+    reloadCommand("automation", Automation.reload),
+  ],
+);
+
+const transitionFlag = optionalFlag(
+  Flag.Finite("transition"),
+  "Transition time in seconds",
+);
+
+const decodeSceneEntities = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(SceneEntities),
+);
+
+const decodeSceneCreate = Schema.decodeUnknownEffect(SceneCreateData);
+
+const sceneEntitiesDescription =
+  'Entity states as a JSON object, such as \'{"light.desk":{"state":"on","brightness":80}}\'';
+
+const scene = domainCommand("scene", undefined, "Scene actions", [
+  Command.make(
+    "turn-on",
+    { name: entityName("scene"), transition: transitionFlag },
+    (input) =>
+      callAction(
+        Scene.turnOn(`scene.${input.name}`, {
+          transition: Option.getOrUndefined(input.transition),
+        }),
+      ).pipe(withBridge),
+  ).pipe(
+    Command.withAlias("on"),
+    Command.withDescription("Activate the scene"),
+  ),
+  Command.make(
+    "apply",
+    {
+      entities: Argument.String("entities").pipe(
+        Argument.withDescription(sceneEntitiesDescription),
+      ),
+      transition: transitionFlag,
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const entities = yield* decodeData(
+          "scene entities",
+          decodeSceneEntities(input.entities),
+        );
+
+        yield* callAction(
+          Scene.apply(entities, {
+            transition: Option.getOrUndefined(input.transition),
+          }),
+        );
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Set entity states without making a scene")),
+  Command.make(
+    "create",
+    {
+      sceneId: Argument.String("scene_id").pipe(
+        Argument.withDescription("ID for the new scene, such as before_movie"),
+      ),
+      entities: optionalFlag(Flag.String("entities"), sceneEntitiesDescription),
+      snapshot: Flag.String("snapshot-entity").pipe(
+        Flag.withDescription(
+          "Entity ID whose current state to capture; repeat for more",
+        ),
+        Flag.atLeast(0),
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const entities = yield* parseOptional(input.entities, (json) =>
+          decodeData("scene entities", decodeSceneEntities(json)),
+        );
+
+        const data = yield* decodeData(
+          "scene",
+          decodeSceneCreate({
+            scene_id: input.sceneId,
+            ...setFields({
+              entities: Option.fromUndefinedOr(entities),
+              snapshot_entities: Option.some(input.snapshot).pipe(
+                Option.filter((ids) => ids.length > 0),
+              ),
+            }),
+          }),
+        );
+
+        yield* callAction(Scene.create(data));
+      }).pipe(withBridge),
+  ).pipe(
+    Command.withDescription(
+      "Make a scene that lasts until Home Assistant restarts",
+    ),
+  ),
+  entityActionCommand(
+    "scene",
+    "delete",
+    Scene.delete,
+    "Delete a scene made with create",
+  ),
+  reloadCommand("scene", Scene.reload),
+]);
+
+const decodeDuration = Schema.decodeUnknownEffect(DurationValue);
+
+// A duration argument: seconds, or HH:MM:SS.
+const parseDuration = (value: string) =>
+  decodeData("duration", decodeDuration(parseInputNumberValue(value) ?? value));
+
+const timerName = entityName("timer");
+
+const timer = domainCommand("timer", undefined, "Timer actions", [
+  Command.make(
+    "start",
+    {
+      name: timerName,
+      duration: Argument.String("duration").pipe(
+        Argument.withDescription(
+          "Seconds or HH:MM:SS (default: the timer's own duration)",
+        ),
+        Argument.optional,
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const duration = yield* parseOptional(input.duration, parseDuration);
+
+        yield* callAction(Timer.start(`timer.${input.name}`, duration));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Start or restart the timer")),
+  entityActionCommand("timer", "pause", Timer.pause, "Pause the timer"),
+  entityActionCommand("timer", "cancel", Timer.cancel, "Cancel the timer"),
+  entityActionCommand("timer", "finish", Timer.finish, "Finish the timer now"),
+  Command.make(
+    "change",
+    {
+      name: timerName,
+      duration: Argument.String("duration").pipe(
+        Argument.withDescription(
+          "Seconds or HH:MM:SS to add; negative to take away, after --",
+        ),
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const duration = yield* parseDuration(input.duration);
+
+        yield* callAction(Timer.change(`timer.${input.name}`, duration));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Add time to a running timer")),
+  reloadCommand("timer", Timer.reload),
+]);
+
+const schedule = domainCommand("schedule", undefined, "Schedule actions", [
+  Command.make("get", { name: entityName("schedule") }, (input) =>
+    Effect.gen(function* () {
+      const entityId: EntityId<"schedule"> = `schedule.${input.name}`;
+      const response = yield* callAction(Schedule.getSchedule(entityId));
+
+      const week = yield* Schedule.scheduleFrom(entityId, response).pipe(
+        Effect.mapError(
+          (error) => new CommandError({ message: error.message }),
+        ),
+      );
+
+      yield* printJson(week);
+    }).pipe(withBridge),
+  ).pipe(Command.withDescription("Print the schedule's week as JSON")),
+  reloadCommand("schedule", Schedule.reload),
+]);
+
+const entityIdsFlag = (name: string, description: string) =>
+  Flag.String(name).pipe(Flag.withDescription(description), Flag.atLeast(0));
+
+const nonEmpty = (ids: ReadonlyArray<string>) =>
+  Option.some(ids).pipe(Option.filter((list) => list.length > 0));
+
+const decodeGroupSet = Schema.decodeUnknownEffect(GroupSetData);
+
+const objectIdArgument = Argument.String("object_id").pipe(
+  Argument.withDescription("Group ID, without group."),
+);
+
+const group = domainCommand("group", undefined, "Group actions", [
+  Command.make(
+    "set",
+    {
+      objectId: objectIdArgument,
+      name: optionalFlag(Flag.String("name"), "Group name"),
+      icon: optionalFlag(Flag.String("icon"), "Icon, such as mdi:lamp"),
+      all: optionalFlag(Flag.Boolean("all"), "On only when every member is on"),
+      entities: entityIdsFlag(
+        "entity",
+        "Member entity ID, replacing the members; repeat for more",
+      ),
+      addEntities: entityIdsFlag("add-entity", "Entity ID to add"),
+      removeEntities: entityIdsFlag("remove-entity", "Entity ID to remove"),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const data = yield* decodeData(
+          "group",
+          decodeGroupSet({
+            object_id: input.objectId,
+            ...setFields({
+              name: input.name,
+              icon: input.icon,
+              all: input.all,
+              entities: nonEmpty(input.entities),
+              add_entities: nonEmpty(input.addEntities),
+              remove_entities: nonEmpty(input.removeEntities),
+            }),
+          }),
+        );
+
+        yield* callAction(Group.set(data));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Create or change a group")),
+  Command.make("remove", { objectId: objectIdArgument }, (input) =>
+    callAction(Group.remove(input.objectId)).pipe(withBridge),
+  ).pipe(Command.withDescription("Remove a group made with set")),
+  reloadCommand("group", Group.reload),
+]);
+
+const zone = domainCommand("zone", undefined, "Zone actions", [
+  reloadCommand("zone", Zone.reload),
+]);
+
+const person = domainCommand("person", undefined, "Person actions", [
+  reloadCommand("person", Person.reload),
+]);
+
+const entityIdsArgument = Argument.String("entity_id").pipe(
+  Argument.withDescription(
+    "Full entity ID, such as light.desk; repeat for more",
+  ),
+  Argument.atLeast(1),
+);
+
+const anyEntityCommand = (
+  name: string,
+  alias: string,
+  toAction: (target: Target) => Action,
+  description: string,
+) =>
+  Command.make(name, { entityIds: entityIdsArgument }, (input) =>
+    callAction(toAction({ entity_id: input.entityIds })).pipe(withBridge),
+  ).pipe(Command.withAlias(alias), Command.withDescription(description));
+
+const systemCommand = (
+  name: string,
+  toAction: () => Action,
+  description: string,
+) =>
+  Command.make(name, {}, () => callAction(toAction()).pipe(withBridge)).pipe(
+    Command.withDescription(description),
+  );
+
+const homeAssistant = domainCommand(
+  "homeassistant",
+  undefined,
+  "Home Assistant actions",
+  [
+    anyEntityCommand(
+      "turn-on",
+      "on",
+      HomeAssistantCore.turnOn,
+      "Turn on entities of any domain",
+    ),
+    anyEntityCommand(
+      "turn-off",
+      "off",
+      HomeAssistantCore.turnOff,
+      "Turn off entities of any domain",
+    ),
+    anyEntityCommand(
+      "toggle",
+      "t",
+      HomeAssistantCore.toggle,
+      "Toggle entities of any domain",
+    ),
+    Command.make("update-entity", { entityIds: entityIdsArgument }, (input) =>
+      callAction(HomeAssistantCore.updateEntity(input.entityIds)).pipe(
+        withBridge,
+      ),
+    ).pipe(Command.withDescription("Refresh entities now")),
+    Command.make(
+      "restart",
+      {
+        safeMode: optionalFlag(
+          Flag.Boolean("safe-mode"),
+          "Restart in safe mode, without custom integrations",
+        ),
+      },
+      (input) =>
+        callAction(
+          HomeAssistantCore.restart({
+            safeMode: Option.getOrUndefined(input.safeMode),
+          }),
+        ).pipe(withBridge),
+    ).pipe(Command.withDescription("Restart Home Assistant")),
+    systemCommand("stop", HomeAssistantCore.stop, "Stop Home Assistant"),
+    systemCommand(
+      "check-config",
+      HomeAssistantCore.checkConfig,
+      "Check the configuration files",
+    ),
+    systemCommand(
+      "reload-core-config",
+      HomeAssistantCore.reloadCoreConfig,
+      "Reload the core configuration, such as location and customisations",
+    ),
+    systemCommand(
+      "reload-custom-templates",
+      HomeAssistantCore.reloadCustomTemplates,
+      "Reload custom Jinja templates",
+    ),
+    systemCommand(
+      "reload-all",
+      HomeAssistantCore.reloadAll,
+      "Reload all YAML configuration",
+    ),
+    Command.make(
+      "reload-config-entry",
+      {
+        entryId: Argument.String("entry_id").pipe(
+          Argument.withDescription("Config entry ID"),
+        ),
+      },
+      (input) =>
+        callAction(HomeAssistantCore.reloadConfigEntry(input.entryId)).pipe(
+          withBridge,
+        ),
+    ).pipe(Command.withDescription("Reload an integration's config entry")),
+    systemCommand(
+      "save-persistent-states",
+      HomeAssistantCore.savePersistentStates,
+      "Save states that are restored after a restart",
+    ),
+    Command.make(
+      "set-location",
+      {
+        latitude: Argument.Finite("latitude").pipe(
+          Argument.withDescription("Latitude from -90 to 90"),
+        ),
+        longitude: Argument.Finite("longitude").pipe(
+          Argument.withDescription("Longitude from -180 to 180"),
+        ),
+        elevation: optionalFlag(Flag.Int("elevation"), "Elevation in metres"),
+      },
+      (input) =>
+        Effect.gen(function* () {
+          if (
+            Math.abs(input.latitude) > 90 ||
+            Math.abs(input.longitude) > 180
+          ) {
+            return yield* failWith(
+              "latitude must be from -90 to 90 and longitude from -180 to 180",
+            );
+          }
+
+          yield* callAction(
+            HomeAssistantCore.setLocation(input.latitude, input.longitude, {
+              elevation: Option.getOrUndefined(input.elevation),
+            }),
+          );
+        }).pipe(withBridge),
+    ).pipe(Command.withDescription("Set the home location")),
+  ],
+);
+
 const serve = Command.make("serve", {}, () =>
   Effect.flatMap(socketPath, serveBridge).pipe(
     Effect.provide(
@@ -1534,6 +2040,15 @@ haBridge.pipe(
     dateTime,
     inputDateTime,
     counter,
+    script,
+    automation,
+    scene,
+    timer,
+    schedule,
+    group,
+    zone,
+    person,
+    homeAssistant,
   ]),
   Command.run({ version: packageJson.version }),
   Effect.catchCause(reportCliCause),

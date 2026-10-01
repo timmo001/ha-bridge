@@ -46,6 +46,12 @@ export default defineConfig({
           "/actions/selects",
           "/actions/values",
           "/actions/counters",
+          "/actions/scripts",
+          "/actions/automations",
+          "/actions/scenes",
+          "/actions/timers",
+          "/actions/groups",
+          "/actions/home-assistant",
         ],
       },
       {

@@ -41,6 +41,13 @@ const onTarget = (
     : { action, data: fields, target };
 };
 
+// An action with no target, such as a reload or `scene.apply`.
+const onDomain = (action: string, data?: ActionData): Action => {
+  const fields = definedFields(data);
+
+  return fields === undefined ? { action } : { action, data: fields };
+};
+
 const onEntity = (action: string, entityId: string, data?: ActionData) =>
   onTarget(action, { entity_id: entityId }, data);
 
@@ -66,9 +73,7 @@ const switchable = <const Domain extends string>(domain: Domain) => ({
 });
 
 // Reloads a helper domain's YAML configuration.
-const reload = (domain: string) => (): Action => ({
-  action: `${domain}.reload`,
-});
+const reload = (domain: string) => () => onDomain(`${domain}.reload`);
 
 export const InputBoolean = {
   ...switchable("input_boolean"),
@@ -700,4 +705,251 @@ export const Counter = {
   // `value` is a whole number within the counter's `minimum` and `maximum`.
   setValue: (entityId: EntityId<"counter">, value: number) =>
     onEntity("counter.set_value", entityId, { value }),
+};
+
+// Values passed to a script as `variables`.
+export type ScriptVariables = Readonly<Record<string, Schema.Json>>;
+
+export const Script = {
+  // Starts the script without waiting for it to finish.
+  turnOn: (entityId: EntityId<"script">, variables?: ScriptVariables) =>
+    onEntity("script.turn_on", entityId, { variables }),
+  turnOff: (entityId: EntityId<"script">) =>
+    onEntity("script.turn_off", entityId),
+  toggle: (entityId: EntityId<"script">) => onEntity("script.toggle", entityId),
+  // Runs the script through its own action and waits for it to finish. The
+  // response is whatever the script returns with a `stop` action.
+  run: (entityId: EntityId<"script">, variables?: ScriptVariables): Action => ({
+    ...onDomain(entityId, variables),
+    return_response: true,
+  }),
+  reload: reload("script"),
+};
+
+export const Automation = {
+  turnOn: (entityId: EntityId<"automation">) =>
+    onEntity("automation.turn_on", entityId),
+  // `stopActions: false` lets running actions finish; Core stops them by
+  // default.
+  turnOff: (
+    entityId: EntityId<"automation">,
+    options?: { readonly stopActions?: boolean },
+  ) =>
+    onEntity("automation.turn_off", entityId, {
+      stop_actions: options?.stopActions,
+    }),
+  toggle: (entityId: EntityId<"automation">) =>
+    onEntity("automation.toggle", entityId),
+  // Runs the actions. `skipCondition: false` checks the conditions first;
+  // Core skips them by default.
+  trigger: (
+    entityId: EntityId<"automation">,
+    options?: { readonly skipCondition?: boolean },
+  ) =>
+    onEntity("automation.trigger", entityId, {
+      skip_condition: options?.skipCondition,
+    }),
+  reload: reload("automation"),
+};
+
+// Scene entity states, keyed by entity ID: a state such as `"on"`, or an
+// object with `state` and attributes such as `brightness`.
+export const SceneEntities = Schema.Record(
+  Schema.String,
+  Schema.Union([Schema.String, Schema.Record(Schema.String, Schema.Json)]),
+);
+
+export type SceneEntities = typeof SceneEntities.Type;
+
+const SceneCreateFields = Schema.Struct({
+  scene_id: Schema.String.check(
+    Schema.isPattern(/^[a-z0-9_]+$/, {
+      message: "Expected a scene ID of lowercase letters, digits and _",
+    }),
+  ),
+  entities: Schema.optionalKey(SceneEntities),
+  snapshot_entities: Schema.optionalKey(Schema.Array(Schema.String)),
+});
+
+// `scene.create` data. The scene lasts until Home Assistant restarts; set
+// `entities`, `snapshot_entities` (current states to capture) or both.
+export const SceneCreateData = SceneCreateFields.check(
+  atLeastOne<typeof SceneCreateFields.Type>(["entities", "snapshot_entities"]),
+);
+
+export type SceneCreateData = typeof SceneCreateData.Type;
+
+// `transition` is in seconds, for entities that support it.
+export interface SceneTransitionOptions {
+  readonly transition?: number;
+}
+
+export const Scene = {
+  turnOn: (entityId: EntityId<"scene">, options?: SceneTransitionOptions) =>
+    onEntity("scene.turn_on", entityId, { transition: options?.transition }),
+  // Sets entity states without creating a scene.
+  apply: (entities: SceneEntities, options?: SceneTransitionOptions) =>
+    onDomain("scene.apply", { entities, transition: options?.transition }),
+  create: (data: SceneCreateData) => onDomain("scene.create", data),
+  // Deletes a scene made with `create`.
+  delete: (entityId: EntityId<"scene">) => onEntity("scene.delete", entityId),
+  reload: reload("scene"),
+};
+
+// A duration as `HH:MM:SS` (or `HH:MM`), or seconds. Timer `change` takes a
+// leading `-` to shorten the timer.
+export const DurationValue = Schema.Union([
+  Schema.String.check(
+    Schema.isPattern(/^-?\d+:\d{1,2}(:\d{1,2}(\.\d+)?)?$/, {
+      message: "Expected a duration as HH:MM:SS",
+    }),
+  ),
+  Schema.Finite,
+]);
+
+export type DurationValue = typeof DurationValue.Type;
+
+export const Timer = {
+  // Starts or restarts the timer, for `duration` or its configured one.
+  start: (entityId: EntityId<"timer">, duration?: DurationValue) =>
+    onEntity("timer.start", entityId, { duration }),
+  pause: (entityId: EntityId<"timer">) => onEntity("timer.pause", entityId),
+  cancel: (entityId: EntityId<"timer">) => onEntity("timer.cancel", entityId),
+  finish: (entityId: EntityId<"timer">) => onEntity("timer.finish", entityId),
+  // Adds `duration` to a running timer; negative values shorten it.
+  change: (entityId: EntityId<"timer">, duration: DurationValue) =>
+    onEntity("timer.change", entityId, { duration }),
+  reload: reload("timer"),
+};
+
+const ScheduleBlock = Schema.Struct({
+  from: Schema.String,
+  to: Schema.String,
+  data: Schema.optionalKey(Schema.Record(Schema.String, Schema.Json)),
+});
+
+// A schedule's time blocks for each day, from `schedule.get_schedule`.
+export const ScheduleWeek = Schema.Struct({
+  monday: Schema.Array(ScheduleBlock),
+  tuesday: Schema.Array(ScheduleBlock),
+  wednesday: Schema.Array(ScheduleBlock),
+  thursday: Schema.Array(ScheduleBlock),
+  friday: Schema.Array(ScheduleBlock),
+  saturday: Schema.Array(ScheduleBlock),
+  sunday: Schema.Array(ScheduleBlock),
+});
+
+export type ScheduleWeek = typeof ScheduleWeek.Type;
+
+const decodeScheduleResponse = Schema.decodeUnknownEffect(
+  Schema.Record(Schema.String, ScheduleWeek),
+);
+
+export const Schedule = {
+  getSchedule: (entityId: EntityId<"schedule">): Action => ({
+    action: "schedule.get_schedule",
+    target: { entity_id: entityId },
+    return_response: true,
+  }),
+  // Reads one schedule's week from a `schedule.get_schedule` response.
+  scheduleFrom: (
+    entityId: EntityId<"schedule">,
+    response: Schema.Json | null,
+  ) =>
+    decodeScheduleResponse(response).pipe(
+      Effect.flatMap((schedules) => {
+        const week = schedules[entityId];
+
+        return week === undefined
+          ? Effect.fail(
+              new HomeAssistantError({
+                message: `no schedule for ${entityId} in the response`,
+              }),
+            )
+          : Effect.succeed(week);
+      }),
+      Effect.catchTag("SchemaError", (error) =>
+        Effect.fail(
+          new HomeAssistantError({
+            message: `decode schedule: ${error.message}`,
+          }),
+        ),
+      ),
+    ),
+  reload: reload("schedule"),
+};
+
+const GroupSetFields = Schema.Struct({
+  object_id: Schema.String.check(
+    Schema.isPattern(/^[a-z0-9_]+$/, {
+      message: "Expected an object ID of lowercase letters, digits and _",
+    }),
+  ),
+  name: Schema.optionalKey(Schema.String),
+  icon: Schema.optionalKey(Schema.String),
+  all: Schema.optionalKey(Schema.Boolean),
+  entities: Schema.optionalKey(Schema.Array(Schema.String)),
+  add_entities: Schema.optionalKey(Schema.Array(Schema.String)),
+  remove_entities: Schema.optionalKey(Schema.Array(Schema.String)),
+});
+
+// `group.set` data, for old-style groups made by actions. Set one of
+// `entities`, `add_entities` and `remove_entities`. `all: true` makes the
+// group on only when every member is on.
+export const GroupSetData = GroupSetFields.check(
+  exclusive<typeof GroupSetFields.Type>("entities", [
+    "entities",
+    "add_entities",
+    "remove_entities",
+  ]),
+);
+
+export type GroupSetData = typeof GroupSetData.Type;
+
+export const Group = {
+  set: (data: GroupSetData) => onDomain("group.set", data),
+  remove: (objectId: string) =>
+    onDomain("group.remove", { object_id: objectId }),
+  reload: reload("group"),
+};
+
+export const Zone = { reload: reload("zone") };
+
+export const Person = { reload: reload("person") };
+
+// Actions in the `homeassistant` domain. `turnOn`, `turnOff` and `toggle`
+// work on entities of any domain.
+export const HomeAssistantCore = {
+  turnOn: (target: Target) => onTarget("homeassistant.turn_on", target),
+  turnOff: (target: Target) => onTarget("homeassistant.turn_off", target),
+  toggle: (target: Target) => onTarget("homeassistant.toggle", target),
+  // Asks the integrations to refresh these entities now.
+  updateEntity: (entityIds: ReadonlyArray<string>) =>
+    onDomain("homeassistant.update_entity", { entity_id: entityIds }),
+  restart: (options?: { readonly safeMode?: boolean }) =>
+    onDomain("homeassistant.restart", { safe_mode: options?.safeMode }),
+  stop: () => onDomain("homeassistant.stop"),
+  checkConfig: () => onDomain("homeassistant.check_config"),
+  reloadCoreConfig: () => onDomain("homeassistant.reload_core_config"),
+  reloadCustomTemplates: () =>
+    onDomain("homeassistant.reload_custom_templates"),
+  reloadAll: () => onDomain("homeassistant.reload_all"),
+  // Reloads one config entry, by ID or through an entity, device or area.
+  reloadConfigEntry: (entryId: string) =>
+    onDomain("homeassistant.reload_config_entry", { entry_id: entryId }),
+  // Reloads the config entries behind an entity, device or area.
+  reloadConfigEntryOf: (target: Target) =>
+    onTarget("homeassistant.reload_config_entry", target),
+  savePersistentStates: () => onDomain("homeassistant.save_persistent_states"),
+  // Sets the home location. `elevation` is in metres.
+  setLocation: (
+    latitude: number,
+    longitude: number,
+    options?: { readonly elevation?: number },
+  ) =>
+    onDomain("homeassistant.set_location", {
+      latitude,
+      longitude,
+      elevation: options?.elevation,
+    }),
 };
