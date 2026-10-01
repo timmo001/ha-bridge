@@ -13,6 +13,9 @@ export default defineConfig({
   content: {
     root: "src/content/docs",
   },
+  markdown: {
+    externalLinks: true,
+  },
   github: {
     owner: "timmo001",
     repo: "ha-bridge",
