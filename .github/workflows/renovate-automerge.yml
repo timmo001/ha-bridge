@@ -1,0 +1,13 @@
+---
+name: Renovate automerge
+
+# yamllint disable-line rule:truthy
+on:
+  pull_request_target: {}
+
+jobs:
+  automerge:
+    uses: timmo001/workflows/.github/workflows/renovate-automerge.yml@d787ea887605af00fd70650e7be38acbdab95aad # 20260929.0
+    permissions:
+      pull-requests: write
+      contents: write
