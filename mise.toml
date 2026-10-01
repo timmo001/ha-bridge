@@ -74,7 +74,8 @@ run = "bun install"
 description = "Run the docs dev server"
 depends = ["docs:install"]
 dir = "docs"
-run = "bun run dev"
+# A reused Vite cache makes every page fail to resolve Astro's ClientRouter script
+run = ["rm -rf .blume/.cache/vite", "bun run dev"]
 
 [tasks."docs:build"]
 description = "Build the docs site"
