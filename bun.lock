@@ -28,6 +28,9 @@
         "@effect/platform-node-shared": "4.0.0",
         "@timmo001/effect-ha": "0.1.0",
       },
+      "devDependencies": {
+        "effect": "4.0.0",
+      },
       "peerDependencies": {
         "effect": "4.0.0",
       },
@@ -35,6 +38,9 @@
     "packages/effect-ha": {
       "name": "@timmo001/effect-ha",
       "version": "0.1.0",
+      "devDependencies": {
+        "effect": "4.0.0",
+      },
       "peerDependencies": {
         "effect": "4.0.0",
       },

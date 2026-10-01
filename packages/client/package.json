@@ -49,5 +49,8 @@
   },
   "peerDependencies": {
     "effect": "4.0.0"
+  },
+  "devDependencies": {
+    "effect": "4.0.0"
   }
 }
