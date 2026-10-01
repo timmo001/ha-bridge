@@ -16,29 +16,30 @@ const description = page.description ?? data.config.description;
   home && description && (
     <section
       aria-labelledby="home-banner-title"
-      class="home-banner relative -mx-6 -mt-6 mb-14 overflow-hidden px-6 py-16 sm:py-24 lg:-mx-8 xl:-mx-10"
+      class="home-banner relative -mx-6 -mt-6 mb-8 overflow-hidden px-6 pt-0 pb-6 sm:pb-8 lg:-mx-8 xl:-mx-10"
     >
       <div class="mx-auto flex max-w-3xl flex-col items-center text-center">
         <img
           alt=""
-          class="size-24 rounded-[1.75rem] bg-[#fff6e4] p-3.5 shadow-lg sm:size-28"
-          height="112"
-          src="/favicon.svg"
-          width="112"
+          class="-mt-[34px] -mb-[32px] size-56 sm:-mt-[51px] sm:-mb-[49px] sm:size-80 dark:hidden"
+          height="320"
+          src="/logo-light.svg"
+          width="320"
+        />
+        <img
+          alt=""
+          class="-mt-[34px] -mb-[32px] hidden size-56 sm:-mt-[51px] sm:-mb-[49px] sm:size-80 dark:block"
+          height="320"
+          src="/logo-dark.svg"
+          width="320"
         />
         <h1
-          class="mt-8 font-display text-4xl font-semibold tracking-tight text-white sm:text-6xl"
+          class="mt-2 font-display text-4xl font-semibold tracking-tight text-zinc-900 sm:text-6xl dark:text-white"
           id="home-banner-title"
         >
           {data.config.title}
         </h1>
-        <p class="mt-5 max-w-xl text-lg text-white/90 sm:text-xl">{description}</p>
-        <a
-          class="mt-8 inline-flex items-center rounded-full bg-white px-5 py-2.5 font-medium text-[#01497c] transition-opacity hover:opacity-90"
-          href="/install/"
-        >
-          Install
-        </a>
+        <p class="mt-3 max-w-xl text-lg text-zinc-700 sm:text-xl dark:text-zinc-300">{description}</p>
       </div>
     </section>
   )
@@ -46,10 +47,11 @@ const description = page.description ?? data.config.description;
 
 <style>
   .home-banner {
-    background-color: #01579b;
-    background-image:
-      radial-gradient(42rem 18rem at 50% -6rem, rgb(255 255 255 / 0.2), transparent 70%),
-      linear-gradient(180deg, #0288d1 0%, #01579b 100%);
+    background-color: #d4d4d8;
+  }
+
+  :global([data-theme="dark"]) .home-banner {
+    background-color: #18181b;
   }
 
   /* The home page's own title is the banner. The layout still prints the
