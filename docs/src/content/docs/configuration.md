@@ -40,7 +40,7 @@ The directory is only readable by you (`0700`) and the file by you (`0600`). The
 
 ### Go Automate config
 
-If `~/.config/ha-bridge/config.yml` doesn't exist, the bridge reads `~/.config/go-automate/config.yml` instead and copies it to the new location. See [Migrating from Go Automate](/migrating/).
+If `~/.config/ha-bridge/config.yml` doesn't exist, the bridge reads `~/.config/go-automate/config.yml` instead and copies it to the new location. See [Migrating from Go Automate](/from-go-automate/).
 
 ## Create a long-lived access token
 

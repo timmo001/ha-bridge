@@ -38,9 +38,10 @@ export default defineConfig({
         ],
       },
       "/libraries",
-      "/migrating",
+      "/from-go-automate",
     ],
   },
+  redirects: [{ from: "/migrating", to: "/from-go-automate" }],
   theme: {
     accent: {
       light: "#0277bd",
