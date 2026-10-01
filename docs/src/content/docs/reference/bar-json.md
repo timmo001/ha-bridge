@@ -3,7 +3,7 @@ title: Bar JSON
 description: The JSON lines that watchers print for status bars, shells and scripts.
 ---
 
-`watch entity --bar-json`, `cover watch` and `climate watch` print one JSON object per line: once straight away, then on every change. Any status bar or script that reads JSON lines can use them, including [Waybar](https://github.com/Alexays/Waybar) and [Quickshell](https://quickshell.org).
+`watch entity --bar-json`, `cover watch` and `climate watch` print one JSON object per line: once straight away, then on every change. Any status bar or script that reads JSON lines can use them, including [Quickshell](https://quickshell.org) and [Waybar](https://github.com/Alexays/Waybar).
 
 ## Output
 
@@ -91,3 +91,7 @@ ha-bridge watch entity input_boolean.guest_mode --bar-json |
     jq -r '.text' <<< "$line"
   done
 ```
+
+## Example setup
+
+[timmo001/dotfiles](https://github.com/timmo001/dotfiles) uses bar JSON in an Omarchy (Quickshell) status bar. The [stream command widget](https://github.com/timmo001/dotfiles/tree/HEAD/omarchy/.config/omarchy/plugins/timmo.stream-command) renders each line, and [`ha-module-bar`](https://github.com/timmo001/dotfiles/blob/HEAD/scripts/.local/bin/ha-module-bar) and [`ha-watch-singleton`](https://github.com/timmo001/dotfiles/blob/HEAD/scripts/.local/bin/ha-watch-singleton) wrap the watcher.
