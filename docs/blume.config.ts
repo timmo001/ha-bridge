@@ -28,8 +28,8 @@ export default defineConfig({
       "/running",
       {
         label: "Actions",
+        root: "/actions",
         items: [
-          "/actions",
           "/actions/lights",
           "/actions/switches",
           "/actions/input-booleans",
@@ -72,7 +72,12 @@ export default defineConfig({
       {
         label: "Reference",
         items: [
-          { label: "Commands", items: commandPages, collapsed: true },
+          {
+            label: "Commands",
+            root: "/reference/commands",
+            items: commandPages.filter((page) => page !== "/reference/commands"),
+            collapsed: true,
+          },
           "/reference/bar-json",
           "/reference/protocol",
         ],
