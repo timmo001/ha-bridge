@@ -53,6 +53,17 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`lawn_mower`](/reference/commands/lawn-mower/) | None |
 | [`alarm_control_panel`](/reference/commands/alarm-control-panel/) | `alarm` |
 | [`update`](/reference/commands/update/) | None |
+| [`notify`](/reference/commands/notify/) | None |
+| [`persistent_notification`](/reference/commands/persistent-notification/) | `pn` |
+| [`tts`](/reference/commands/tts/) | None |
+| [`todo`](/reference/commands/todo/) | None |
+| [`calendar`](/reference/commands/calendar/) | None |
+| [`weather`](/reference/commands/weather/) | None |
+| [`conversation`](/reference/commands/conversation/) | None |
+| [`ai_task`](/reference/commands/ai-task/) | None |
+| [`image`](/reference/commands/image/) | None |
+| [`image_processing`](/reference/commands/image-processing/) | None |
+| [`device_tracker`](/reference/commands/device-tracker/) | None |
 
 ## Global flags
 
@@ -118,4 +129,15 @@ SUBCOMMANDS
   lawn_mower          Lawn mower actions
   alarm_control_panel, alarm Alarm control panel actions
   update              Update actions
+  notify              Notification actions
+  persistent_notification, pn Persistent notification actions
+  tts                 Text-to-speech actions
+  todo                To-do list actions
+  calendar            Calendar actions
+  weather             Weather actions
+  conversation        Conversation actions
+  ai_task             AI task actions
+  image               Image actions
+  image_processing    Image processing actions
+  device_tracker      Device tracker actions
 ```

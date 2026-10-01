@@ -43,5 +43,16 @@
   "/reference/commands/vacuum",
   "/reference/commands/lawn-mower",
   "/reference/commands/alarm-control-panel",
-  "/reference/commands/update"
+  "/reference/commands/update",
+  "/reference/commands/notify",
+  "/reference/commands/persistent-notification",
+  "/reference/commands/tts",
+  "/reference/commands/todo",
+  "/reference/commands/calendar",
+  "/reference/commands/weather",
+  "/reference/commands/conversation",
+  "/reference/commands/ai-task",
+  "/reference/commands/image",
+  "/reference/commands/image-processing",
+  "/reference/commands/device-tracker"
 ]

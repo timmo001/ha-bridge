@@ -47,6 +47,11 @@ ha-bridge light turn-on bedroom_lamp
 | [Vacuums and lawn mowers](/actions/vacuums/) | `vacuum`, `lawn_mower` | None | Start, pause, dock and clean areas |
 | [Alarm panels](/actions/alarms/) | `alarm_control_panel` | `alarm` | Arm, disarm and trigger |
 | [Updates](/actions/updates/) | `update` | None | Install, skip and clear skipped |
+| [Notifications and speech](/actions/notifications/) | `notify`, `persistent_notification`, `tts` | `pn` | Send notifications and speak messages |
+| [To-do lists](/actions/todo-lists/) | `todo` | None | Read, add, change and remove items |
+| [Calendars and weather](/actions/calendars/) | `calendar`, `weather` | None | Read and add events, read forecasts |
+| [Conversation and AI tasks](/actions/conversation/) | `conversation`, `ai_task` | None | Talk to agents, generate data and images |
+| [Images and device trackers](/actions/images/) | `image`, `image_processing`, `device_tracker` | None | Save images, scan and report locations |
 | [Home Assistant](/actions/home-assistant/) | `homeassistant`, `zone`, `person` | None | Any entity, restart, reload and location |
 
 [Commands](/reference/commands/) lists every argument and flag. Any other action can be called from your own app with [`CallAction`](/libraries/).

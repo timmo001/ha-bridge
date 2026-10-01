@@ -1185,3 +1185,241 @@ export const Update = {
   clearSkipped: (entityId: EntityId<"update">) =>
     onEntity("update.clear_skipped", entityId),
 };
+
+export interface NotifyMessage {
+  readonly message: string;
+  readonly title?: string;
+}
+
+export const Notify = {
+  // Sends to a notify entity.
+  sendMessage: (entityId: EntityId<"notify">, message: NotifyMessage) =>
+    onEntity("notify.send_message", entityId, { ...message }),
+  // Sends through a legacy notify action, such as `mobile_app_pixel`.
+  // `data` is passed on to the integration.
+  legacy: (
+    service: string,
+    message: NotifyMessage & { readonly data?: Schema.Json },
+  ) => onDomain(`notify.${service}`, { ...message }),
+};
+
+export const PersistentNotification = {
+  // Reusing a `notificationId` replaces that notification.
+  create: (message: NotifyMessage & { readonly notificationId?: string }) =>
+    onDomain("persistent_notification.create", {
+      message: message.message,
+      title: message.title,
+      notification_id: message.notificationId,
+    }),
+  dismiss: (notificationId: string) =>
+    onDomain("persistent_notification.dismiss", {
+      notification_id: notificationId,
+    }),
+  dismissAll: () => onDomain("persistent_notification.dismiss_all"),
+};
+
+export interface TtsSpeakOptions {
+  readonly language?: string;
+  readonly cache?: boolean;
+  readonly options?: Readonly<Record<string, Schema.Json>>;
+}
+
+export const Tts = {
+  // Speaks `message` with a TTS entity on a media player.
+  speak: (
+    entityId: EntityId<"tts">,
+    mediaPlayer: EntityId<"media_player">,
+    message: string,
+    options?: TtsSpeakOptions,
+  ) =>
+    onEntity("tts.speak", entityId, {
+      media_player_entity_id: mediaPlayer,
+      message,
+      language: options?.language,
+      cache: options?.cache,
+      options: options?.options,
+    }),
+  clearCache: () => onDomain("tts.clear_cache"),
+};
+
+export type TodoStatus = "needs_action" | "completed";
+
+// Fields for a to-do item. Set at most one of `due_date` (`YYYY-MM-DD`) and
+// `due_datetime`.
+export const TodoItemFields = Schema.Struct({
+  due_date: Schema.optionalKey(DateString),
+  due_datetime: Schema.optionalKey(DateTimeString),
+  description: Schema.optionalKey(Schema.String),
+}).check(
+  Schema.makeFilter(
+    (input) =>
+      !(
+        Object.hasOwn(input, "due_date") && Object.hasOwn(input, "due_datetime")
+      ) || "set only one of due_date and due_datetime",
+  ),
+);
+
+export type TodoItemFields = typeof TodoItemFields.Type;
+
+export const Todo = {
+  // Responds with the list's items, optionally only those with `status`.
+  getItems: (
+    entityId: EntityId<"todo">,
+    status?: ReadonlyArray<TodoStatus>,
+  ): Action => ({
+    ...onEntity("todo.get_items", entityId, { status }),
+    return_response: true,
+  }),
+  addItem: (
+    entityId: EntityId<"todo">,
+    item: string,
+    fields?: TodoItemFields,
+  ) => onEntity("todo.add_item", entityId, { item, ...fields }),
+  // `item` is the item's name or UID.
+  updateItem: (
+    entityId: EntityId<"todo">,
+    item: string,
+    changes: TodoItemFields & {
+      readonly rename?: string;
+      readonly status?: TodoStatus;
+    },
+  ) => onEntity("todo.update_item", entityId, { item, ...changes }),
+  removeItem: (entityId: EntityId<"todo">, items: ReadonlyArray<string>) =>
+    onEntity("todo.remove_item", entityId, { item: items }),
+  removeCompletedItems: (entityId: EntityId<"todo">) =>
+    onEntity("todo.remove_completed_items", entityId),
+};
+
+export const Weather = {
+  // Responds with forecasts keyed by entity ID.
+  getForecasts: (
+    entityId: EntityId<"weather">,
+    type: "daily" | "hourly" | "twice_daily",
+  ): Action => ({
+    ...onEntity("weather.get_forecasts", entityId, { type }),
+    return_response: true,
+  }),
+};
+
+export const Conversation = {
+  // Sends `text` to a conversation agent and responds with its reply.
+  process: (
+    text: string,
+    options?: {
+      readonly language?: string;
+      readonly agentId?: string;
+      readonly conversationId?: string;
+    },
+  ): Action => ({
+    ...onDomain("conversation.process", {
+      text,
+      language: options?.language,
+      agent_id: options?.agentId,
+      conversation_id: options?.conversationId,
+    }),
+    return_response: true,
+  }),
+  reload: (options?: {
+    readonly language?: string;
+    readonly agentId?: string;
+  }) =>
+    onDomain("conversation.reload", {
+      language: options?.language,
+      agent_id: options?.agentId,
+    }),
+};
+
+export const AiTask = {
+  // Responds with generated data, matching `structure` when given.
+  generateData: (
+    taskName: string,
+    instructions: string,
+    options?: {
+      readonly entityId?: EntityId<"ai_task">;
+      readonly structure?: Readonly<Record<string, Schema.Json>>;
+    },
+  ): Action => ({
+    ...onDomain("ai_task.generate_data", {
+      task_name: taskName,
+      instructions,
+      entity_id: options?.entityId,
+      structure: options?.structure,
+    }),
+    return_response: true,
+  }),
+  // Responds with the generated image's details.
+  generateImage: (
+    entityId: EntityId<"ai_task">,
+    taskName: string,
+    instructions: string,
+  ): Action => ({
+    ...onDomain("ai_task.generate_image", {
+      task_name: taskName,
+      instructions,
+      entity_id: entityId,
+    }),
+    return_response: true,
+  }),
+};
+
+export const Image = {
+  // Saves the image to `filename` on the Home Assistant host. The path must
+  // be allowed by `allowlist_external_dirs`.
+  snapshot: (entityId: EntityId<"image">, filename: string) =>
+    onEntity("image.snapshot", entityId, { filename }),
+};
+
+export const ImageProcessing = {
+  scan: (entityId: EntityId<"image_processing">) =>
+    onEntity("image_processing.scan", entityId),
+};
+
+// When a new event happens: all-day dates (end is exclusive), date-times,
+// or all day a number of days or weeks from today.
+export type CalendarEventWhen =
+  | { readonly startDate: string; readonly endDate: string }
+  | { readonly startDateTime: string; readonly endDateTime: string }
+  | { readonly in: { readonly days: number } | { readonly weeks: number } };
+
+// Adds an event to a calendar. `calendar.get_events` is on `Calendar`.
+export const CalendarActions = {
+  createEvent: (
+    entityId: EntityId<"calendar">,
+    summary: string,
+    when: CalendarEventWhen,
+    options?: { readonly description?: string; readonly location?: string },
+  ) =>
+    onEntity("calendar.create_event", entityId, {
+      summary,
+      start_date: "startDate" in when ? when.startDate : undefined,
+      end_date: "endDate" in when ? when.endDate : undefined,
+      start_date_time: "startDateTime" in when ? when.startDateTime : undefined,
+      end_date_time: "endDateTime" in when ? when.endDateTime : undefined,
+      in: "in" in when ? when.in : undefined,
+      description: options?.description,
+      location: options?.location,
+    }),
+};
+
+const DeviceTrackerSeeFields = Schema.Struct({
+  mac: Schema.optionalKey(Schema.String),
+  dev_id: Schema.optionalKey(Schema.String),
+  host_name: Schema.optionalKey(Schema.String),
+  location_name: Schema.optionalKey(Schema.String),
+  gps: Schema.optionalKey(Schema.Tuple([between(-90, 90), between(-180, 180)])),
+  gps_accuracy: Schema.optionalKey(NonNegativeInt),
+  battery: Schema.optionalKey(Percent),
+});
+
+// `device_tracker.see` data, for legacy trackers. Set `mac`, `dev_id` or
+// both to say which device; `location_name` is a zone name, `home` or
+// `not_home`.
+export const DeviceTrackerSeeData = DeviceTrackerSeeFields.check(
+  atLeastOne<typeof DeviceTrackerSeeFields.Type>(["mac", "dev_id"]),
+);
+
+export type DeviceTrackerSeeData = typeof DeviceTrackerSeeData.Type;
+
+export const DeviceTracker = {
+  see: (data: DeviceTrackerSeeData) => onDomain("device_tracker.see", data),
+};

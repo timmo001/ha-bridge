@@ -19,17 +19,23 @@ import {
   AssistSatellite,
   AssistSatelliteAnnounceOptions,
   AssistSatelliteAskQuestionData,
+  AiTask,
   AlarmControlPanel,
   AssistSatelliteStartConversationData,
   Automation,
   Button,
   Camera,
+  Calendar,
+  CalendarActions,
   Climate,
+  Conversation,
   Counter,
   DateEntity,
   DateString,
   DateTimeEntity,
   DateTimeString,
+  DeviceTracker,
+  DeviceTrackerSeeData,
   DurationValue,
   Fan,
   FanTurnOnData,
@@ -37,6 +43,8 @@ import {
   GroupSetData,
   HomeAssistantCore,
   Humidifier,
+  Image,
+  ImageProcessing,
   ClimateSetTemperatureData,
   Cover,
   HvacMode,
@@ -52,7 +60,9 @@ import {
   Lock,
   MediaPlayer,
   MediaPlayerPlayMediaData,
+  Notify,
   NumberEntity,
+  PersistentNotification,
   Person,
   Scene,
   SceneCreateData,
@@ -63,8 +73,12 @@ import {
   Text,
   TimeEntity,
   TimeString,
+  Todo,
+  TodoItemFields,
+  Tts,
   Update,
   Vacuum,
+  Weather,
   WaterHeater,
   Timer,
   Zone,
@@ -79,6 +93,7 @@ import {
   Switch,
   type Action,
   type CoverMoveOptions,
+  type CalendarEventWhen,
   type EntityId,
   type LockOptions,
   type SelectStepOptions,
@@ -2458,6 +2473,581 @@ const update = domainCommand("update", undefined, "Update actions", [
   ]),
 ]);
 
+const decodeJsonObject = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(Schema.Record(Schema.String, Schema.Json)),
+);
+
+const parseJsonObject = (label: string) => (json: string) =>
+  decodeData(label, decodeJsonObject(json));
+
+const titleFlag = optionalFlag(Flag.String("title"), "Title");
+
+const messageArgument = Argument.String("message").pipe(
+  Argument.withDescription("Message text"),
+);
+
+const notify = domainCommand("notify", undefined, "Notification actions", [
+  Command.make(
+    "send-message",
+    { name: entityName("notify"), message: messageArgument, title: titleFlag },
+    (input) =>
+      callAction(
+        Notify.sendMessage(`notify.${input.name}`, {
+          message: input.message,
+          title: Option.getOrUndefined(input.title),
+        }),
+      ).pipe(withBridge),
+  ).pipe(Command.withDescription("Send a message to a notify entity")),
+  Command.make(
+    "legacy",
+    {
+      service: Argument.String("action").pipe(
+        Argument.withDescription(
+          "Notify action without notify., such as mobile_app_pixel",
+        ),
+      ),
+      message: messageArgument,
+      title: titleFlag,
+      data: optionalFlag(
+        Flag.String("data"),
+        "Extra data for the integration, as a JSON object",
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const data = yield* parseOptional(input.data, parseJsonObject("data"));
+
+        yield* callAction(
+          Notify.legacy(input.service, {
+            message: input.message,
+            title: Option.getOrUndefined(input.title),
+            data,
+          }),
+        );
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Send through a legacy notify action")),
+]);
+
+const persistentNotification = domainCommand(
+  "persistent_notification",
+  "pn",
+  "Persistent notification actions",
+  [
+    Command.make(
+      "create",
+      {
+        message: messageArgument,
+        title: titleFlag,
+        notificationId: optionalFlag(
+          Flag.String("id"),
+          "Notification ID; reusing one replaces that notification",
+        ),
+      },
+      (input) =>
+        callAction(
+          PersistentNotification.create({
+            message: input.message,
+            title: Option.getOrUndefined(input.title),
+            notificationId: Option.getOrUndefined(input.notificationId),
+          }),
+        ).pipe(withBridge),
+    ).pipe(Command.withDescription("Show a notification in Home Assistant")),
+    Command.make(
+      "dismiss",
+      {
+        notificationId: Argument.String("id").pipe(
+          Argument.withDescription("Notification ID"),
+        ),
+      },
+      (input) =>
+        callAction(PersistentNotification.dismiss(input.notificationId)).pipe(
+          withBridge,
+        ),
+    ).pipe(Command.withDescription("Dismiss a notification")),
+    systemCommand(
+      "dismiss-all",
+      PersistentNotification.dismissAll,
+      "Dismiss every notification",
+    ),
+  ],
+);
+
+const tts = domainCommand("tts", undefined, "Text-to-speech actions", [
+  Command.make(
+    "speak",
+    {
+      name: entityName("tts"),
+      mediaPlayer: Argument.String("media_player").pipe(
+        Argument.withDescription("Media player name without media_player."),
+      ),
+      message: messageArgument,
+      language: optionalFlag(
+        Flag.String("language"),
+        "Language, such as en-GB",
+      ),
+      cache: optionalFlag(
+        Flag.Boolean("cache"),
+        "Cache the audio (the default); --no-cache skips it",
+      ),
+      options: optionalFlag(
+        Flag.String("options"),
+        "Engine options, such as a voice, as a JSON object",
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const options = yield* parseOptional(
+          input.options,
+          parseJsonObject("options"),
+        );
+
+        yield* callAction(
+          Tts.speak(
+            `tts.${input.name}`,
+            `media_player.${input.mediaPlayer}`,
+            input.message,
+            {
+              language: Option.getOrUndefined(input.language),
+              cache: Option.getOrUndefined(input.cache),
+              options,
+            },
+          ),
+        );
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Speak a message on a media player")),
+  systemCommand("clear-cache", Tts.clearCache, "Clear the speech cache"),
+]);
+
+const todoName = entityName("todo");
+
+const todoStatusFlag = Flag.Literals("status", ["needs_action", "completed"]);
+
+const decodeTodoItemFields = Schema.decodeUnknownEffect(TodoItemFields);
+
+const todoFieldFlags = {
+  due_date: optionalFlag(Flag.String("due-date"), "Due date as YYYY-MM-DD"),
+  due_datetime: optionalFlag(
+    Flag.String("due-datetime"),
+    'Due date and time, such as "2026-10-01 18:30"',
+  ),
+  description: optionalFlag(Flag.String("description"), "Description"),
+};
+
+const itemArgument = Argument.String("item").pipe(
+  Argument.withDescription("Item name or UID"),
+);
+
+const todo = domainCommand("todo", undefined, "To-do list actions", [
+  Command.make(
+    "get",
+    {
+      name: todoName,
+      status: todoStatusFlag.pipe(
+        Flag.withDescription("Only items with this status; repeat for both"),
+        Flag.atLeast(0),
+      ),
+    },
+    (input) =>
+      printResponse(
+        Todo.getItems(
+          `todo.${input.name}`,
+          input.status.length > 0 ? input.status : undefined,
+        ),
+      ).pipe(withBridge),
+  ).pipe(Command.withDescription("Print the list's items as JSON")),
+  Command.make(
+    "add",
+    {
+      name: todoName,
+      item: Argument.String("item").pipe(Argument.withDescription("Item name")),
+      ...todoFieldFlags,
+    },
+    ({ name, item, ...flags }) =>
+      Effect.gen(function* () {
+        const fields = yield* decodeData(
+          "item",
+          decodeTodoItemFields(setFields(flags)),
+        );
+
+        yield* callAction(Todo.addItem(`todo.${name}`, item, fields));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Add an item")),
+  Command.make(
+    "update",
+    {
+      name: todoName,
+      item: itemArgument,
+      rename: optionalFlag(Flag.String("rename"), "New name"),
+      status: optionalFlag(todoStatusFlag, "New status"),
+      ...todoFieldFlags,
+    },
+    ({ name, item, rename, status, ...flags }) =>
+      Effect.gen(function* () {
+        const fields = yield* decodeData(
+          "item",
+          decodeTodoItemFields(setFields(flags)),
+        );
+
+        yield* callAction(
+          Todo.updateItem(`todo.${name}`, item, {
+            ...fields,
+            rename: Option.getOrUndefined(rename),
+            status: Option.getOrUndefined(status),
+          }),
+        );
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Change an item")),
+  Command.make(
+    "remove",
+    {
+      name: todoName,
+      items: itemArgument.pipe(Argument.atLeast(1)),
+    },
+    (input) =>
+      callAction(Todo.removeItem(`todo.${input.name}`, input.items)).pipe(
+        withBridge,
+      ),
+  ).pipe(Command.withDescription("Remove items")),
+  entityActionCommand(
+    "todo",
+    "remove-completed",
+    Todo.removeCompletedItems,
+    "Remove completed items",
+  ),
+]);
+
+const calendarName = entityName("calendar");
+
+const isDateOnly = (value: string) => /^\d{4}-\d{1,2}-\d{1,2}$/.test(value);
+
+const calendarWhen = (input: {
+  readonly start: Option.Option<string>;
+  readonly end: Option.Option<string>;
+  readonly inDays: Option.Option<number>;
+  readonly inWeeks: Option.Option<number>;
+}): Effect.Effect<CalendarEventWhen, CommandError> => {
+  const set = [
+    Option.isSome(input.start) || Option.isSome(input.end),
+    Option.isSome(input.inDays),
+    Option.isSome(input.inWeeks),
+  ].filter(Boolean).length;
+
+  if (set !== 1) {
+    return failWith("set --start and --end, --in-days or --in-weeks");
+  }
+
+  if (Option.isSome(input.inDays)) {
+    return Effect.succeed({ in: { days: input.inDays.value } });
+  }
+
+  if (Option.isSome(input.inWeeks)) {
+    return Effect.succeed({ in: { weeks: input.inWeeks.value } });
+  }
+
+  if (Option.isNone(input.start) || Option.isNone(input.end)) {
+    return failWith("set both --start and --end");
+  }
+
+  const start = input.start.value;
+
+  const end = input.end.value;
+
+  if (isDateOnly(start) !== isDateOnly(end)) {
+    return failWith("--start and --end must both be dates or both date-times");
+  }
+
+  return Effect.succeed(
+    isDateOnly(start)
+      ? { startDate: start, endDate: end }
+      : { startDateTime: start, endDateTime: end },
+  );
+};
+
+const calendar = domainCommand("calendar", undefined, "Calendar actions", [
+  Command.make(
+    "events",
+    {
+      name: calendarName,
+      days: Flag.Int("days").pipe(
+        Flag.withDescription("Days ahead to read, from now"),
+        Flag.withDefault(7),
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        if (input.days < 1) {
+          return yield* failWith("days must be at least 1");
+        }
+
+        const entityId: EntityId<"calendar"> = `calendar.${input.name}`;
+
+        const start = new Date();
+
+        const response = yield* callAction(
+          Calendar.getEvents(entityId, {
+            start,
+            end: new Date(start.getTime() + input.days * 86_400_000),
+          }),
+        );
+
+        const events = yield* Calendar.eventsFrom(entityId, response).pipe(
+          Effect.mapError(
+            (error) => new CommandError({ message: error.message }),
+          ),
+        );
+
+        yield* printJson(events);
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Print upcoming events as JSON")),
+  Command.make(
+    "create-event",
+    {
+      name: calendarName,
+      summary: Argument.String("summary").pipe(
+        Argument.withDescription("Event title"),
+      ),
+      start: optionalFlag(
+        Flag.String("start"),
+        "Start date (all day) or date and time",
+      ),
+      end: optionalFlag(
+        Flag.String("end"),
+        "End date (exclusive, all day) or date and time",
+      ),
+      inDays: optionalFlag(
+        Flag.Int("in-days"),
+        "All day, this many days from today",
+      ),
+      inWeeks: optionalFlag(
+        Flag.Int("in-weeks"),
+        "All day, this many weeks from today",
+      ),
+      description: optionalFlag(Flag.String("description"), "Description"),
+      location: optionalFlag(Flag.String("location"), "Location"),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const when = yield* calendarWhen(input);
+
+        yield* callAction(
+          CalendarActions.createEvent(
+            `calendar.${input.name}`,
+            input.summary,
+            when,
+            {
+              description: Option.getOrUndefined(input.description),
+              location: Option.getOrUndefined(input.location),
+            },
+          ),
+        );
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Add an event")),
+]);
+
+const weather = domainCommand("weather", undefined, "Weather actions", [
+  Command.make(
+    "forecast",
+    {
+      name: entityName("weather"),
+      type: Flag.Literals("type", ["daily", "hourly", "twice_daily"]).pipe(
+        Flag.withDescription("Forecast type"),
+        Flag.withDefault("daily"),
+      ),
+    },
+    (input) =>
+      printResponse(
+        Weather.getForecasts(`weather.${input.name}`, input.type),
+      ).pipe(withBridge),
+  ).pipe(Command.withDescription("Print the forecast as JSON")),
+]);
+
+const languageFlag = optionalFlag(
+  Flag.String("language"),
+  "Language, such as en",
+);
+
+const agentFlag = optionalFlag(
+  Flag.String("agent-id"),
+  "Conversation agent (default: Home Assistant)",
+);
+
+const conversation = domainCommand(
+  "conversation",
+  undefined,
+  "Conversation actions",
+  [
+    Command.make(
+      "process",
+      {
+        text: Argument.String("text").pipe(
+          Argument.withDescription(
+            'What to say, such as "turn on the desk light"',
+          ),
+        ),
+        language: languageFlag,
+        agentId: agentFlag,
+        conversationId: optionalFlag(
+          Flag.String("conversation-id"),
+          "Continue this conversation",
+        ),
+      },
+      (input) =>
+        printResponse(
+          Conversation.process(input.text, {
+            language: Option.getOrUndefined(input.language),
+            agentId: Option.getOrUndefined(input.agentId),
+            conversationId: Option.getOrUndefined(input.conversationId),
+          }),
+        ).pipe(withBridge),
+    ).pipe(
+      Command.withDescription("Send text to an agent and print the reply"),
+    ),
+    Command.make(
+      "reload",
+      { language: languageFlag, agentId: agentFlag },
+      (input) =>
+        callAction(
+          Conversation.reload({
+            language: Option.getOrUndefined(input.language),
+            agentId: Option.getOrUndefined(input.agentId),
+          }),
+        ).pipe(withBridge),
+    ).pipe(Command.withDescription("Reload the agent's intents")),
+  ],
+);
+
+const taskArguments = {
+  taskName: Argument.String("task_name").pipe(
+    Argument.withDescription("Short name for the task"),
+  ),
+  instructions: Argument.String("instructions").pipe(
+    Argument.withDescription("What to generate"),
+  ),
+};
+
+const aiTask = domainCommand("ai_task", undefined, "AI task actions", [
+  Command.make(
+    "generate-data",
+    {
+      ...taskArguments,
+      entity: optionalFlag(
+        Flag.String("entity"),
+        "AI task entity name without ai_task. (default: the preferred one)",
+      ),
+      structure: optionalFlag(
+        Flag.String("structure"),
+        "Output structure as a JSON object of selectors",
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const structure = yield* parseOptional(
+          input.structure,
+          parseJsonObject("structure"),
+        );
+
+        yield* printResponse(
+          AiTask.generateData(input.taskName, input.instructions, {
+            entityId: Option.getOrUndefined(
+              Option.map(
+                input.entity,
+                (entity): EntityId<"ai_task"> => `ai_task.${entity}`,
+              ),
+            ),
+            structure,
+          }),
+        );
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Generate data and print it as JSON")),
+  Command.make(
+    "generate-image",
+    { name: entityName("ai_task"), ...taskArguments },
+    (input) =>
+      printResponse(
+        AiTask.generateImage(
+          `ai_task.${input.name}`,
+          input.taskName,
+          input.instructions,
+        ),
+      ).pipe(withBridge),
+  ).pipe(Command.withDescription("Generate an image and print its details")),
+]);
+
+const image = domainCommand("image", undefined, "Image actions", [
+  valueCommand(
+    "image",
+    "snapshot",
+    {
+      name: "filename",
+      description: "Path on the Home Assistant host to save to",
+    },
+    Effect.succeed,
+    Image.snapshot,
+    "Save the image on the Home Assistant host",
+  ),
+]);
+
+const imageProcessing = domainCommand(
+  "image_processing",
+  undefined,
+  "Image processing actions",
+  [
+    entityActionCommand(
+      "image_processing",
+      "scan",
+      ImageProcessing.scan,
+      "Process the image now",
+    ),
+  ],
+);
+
+const decodeDeviceTrackerSee = Schema.decodeUnknownEffect(DeviceTrackerSeeData);
+
+const deviceTracker = domainCommand(
+  "device_tracker",
+  undefined,
+  "Device tracker actions",
+  [
+    Command.make(
+      "see",
+      {
+        mac: optionalFlag(Flag.String("mac"), "Device MAC address"),
+        dev_id: optionalFlag(Flag.String("dev-id"), "Device ID"),
+        host_name: optionalFlag(Flag.String("host-name"), "Host name"),
+        location_name: optionalFlag(
+          Flag.String("location-name"),
+          "Zone name, home or not_home",
+        ),
+        latitude: optionalFlag(Flag.Finite("latitude"), "GPS latitude"),
+        longitude: optionalFlag(Flag.Finite("longitude"), "GPS longitude"),
+        gps_accuracy: optionalFlag(
+          Flag.Int("gps-accuracy"),
+          "GPS accuracy in metres",
+        ),
+        battery: optionalFlag(Flag.Int("battery"), "Battery percentage"),
+      },
+      ({ latitude, longitude, ...flags }) =>
+        Effect.gen(function* () {
+          if (Option.isSome(latitude) !== Option.isSome(longitude)) {
+            return yield* failWith("set both --latitude and --longitude");
+          }
+
+          const data = yield* decodeData(
+            "device",
+            decodeDeviceTrackerSee(
+              setFields({
+                ...flags,
+                gps: Option.all([latitude, longitude]),
+              }),
+            ),
+          );
+
+          yield* callAction(DeviceTracker.see(data));
+        }).pipe(withBridge),
+    ).pipe(Command.withDescription("Report a legacy tracker's location")),
+  ],
+);
+
 const serve = Command.make("serve", {}, () =>
   Effect.flatMap(socketPath, serveBridge).pipe(
     Effect.provide(
@@ -2611,6 +3201,17 @@ haBridge.pipe(
     lawnMower,
     alarm,
     update,
+    notify,
+    persistentNotification,
+    tts,
+    todo,
+    calendar,
+    weather,
+    conversation,
+    aiTask,
+    image,
+    imageProcessing,
+    deviceTracker,
   ]),
   Command.run({ version: packageJson.version }),
   Effect.catchCause(reportCliCause),
