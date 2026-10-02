@@ -1,5 +1,7 @@
 export * from "./Action.js";
 
+export * from "./Automation.js";
+
 export * from "./Calendar.js";
 
 export * from "./Camera.js";

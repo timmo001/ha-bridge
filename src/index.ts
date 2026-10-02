@@ -40,6 +40,8 @@ import {
   DeviceTrackerSeeData,
   DurationValue,
   type LogbookEntry,
+  ConditionRequest,
+  TriggerRequest,
   Fan,
   FanTurnOnData,
   Group,
@@ -4330,6 +4332,167 @@ const eventCommand = Command.make("event").pipe(
   ]),
 );
 
+// Trigger or condition config, as YAML or JSON.
+const automationConfigError = (label: string, expected: string) =>
+  new CommandError({
+    message: `${label} must be ${expected}, as YAML or JSON`,
+  });
+
+const parseYaml = (text: string, error: CommandError) =>
+  Effect.try({ try: () => Bun.YAML.parse(text), catch: () => error });
+
+const decodeTrigger = Schema.decodeUnknownEffect(TriggerRequest.fields.trigger);
+
+const decodeCondition = Schema.decodeUnknownEffect(
+  ConditionRequest.fields.condition,
+);
+
+const parseTrigger = (text: string) => {
+  const error = automationConfigError("trigger", "an object or a list of them");
+
+  return parseYaml(text, error).pipe(
+    Effect.flatMap(decodeTrigger),
+    Effect.mapError(() => error),
+  );
+};
+
+const parseCondition = (text: string) => {
+  const error = automationConfigError(
+    "condition",
+    "an object; combine several with an and condition",
+  );
+
+  return parseYaml(text, error).pipe(
+    Effect.flatMap(decodeCondition),
+    Effect.mapError(() => error),
+  );
+};
+
+const automationConfigArgument = (label: string, example: string) =>
+  Argument.String(label).pipe(
+    Argument.withDescription(
+      `${label[0]?.toUpperCase()}${label.slice(1)} config as YAML or JSON, such as '${example}'`,
+    ),
+  );
+
+const automationVariablesFlag = optionalFlag(
+  Flag.String("variables"),
+  'Variables as a JSON object, such as \'{"room":"office"}\'',
+);
+
+const parseAutomationVariables = (value: Option.Option<string>) =>
+  parseOptional(value, parseJsonObject("variables"));
+
+const conditionExample =
+  "{condition: state, entity_id: sun.sun, state: above_horizon}";
+
+const warnTemplateErrors = (errors: ReadonlyArray<string> | undefined) =>
+  Effect.forEach(errors ?? [], (error) => Effect.logWarning(error));
+
+const triggerCommand = Command.make("trigger").pipe(
+  Command.withDescription("Listen for automation triggers"),
+  Command.withSubcommands([
+    Command.make(
+      "watch",
+      {
+        trigger: automationConfigArgument(
+          "trigger",
+          "{trigger: state, entity_id: sun.sun}",
+        ),
+        variables: automationVariablesFlag,
+      },
+      (input) =>
+        Effect.gen(function* () {
+          const trigger = yield* parseTrigger(input.trigger);
+
+          const variables = yield* parseAutomationVariables(input.variables);
+          const client = yield* BridgeClient;
+
+          yield* client.WatchTrigger({ trigger, variables }).pipe(
+            Stream.catchTag("HomeAssistantError", (error) =>
+              Stream.fromEffect(
+                failWith(`could not listen for the trigger: ${error.message}`),
+              ),
+            ),
+            Stream.runForEach((event) => Console.log(JSON.stringify(event))),
+          );
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withAlias("w"),
+      Command.withDescription(
+        "Print each firing as a line of JSON, with its variables and context. Needs an admin token",
+      ),
+    ),
+  ]),
+);
+
+const conditionCommand = Command.make("condition").pipe(
+  Command.withDescription("Check automation conditions"),
+  Command.withSubcommands([
+    Command.make(
+      "test",
+      {
+        condition: automationConfigArgument("condition", conditionExample),
+        variables: automationVariablesFlag,
+      },
+      (input) =>
+        Effect.gen(function* () {
+          const condition = yield* parseCondition(input.condition);
+
+          const variables = yield* parseAutomationVariables(input.variables);
+          const client = yield* BridgeClient;
+
+          const checked = yield* client
+            .TestCondition({ condition, variables })
+            .pipe(
+              Effect.catchTag("HomeAssistantError", (error) =>
+                failWith(`could not test the condition: ${error.message}`),
+              ),
+            );
+
+          yield* warnTemplateErrors(checked.template_errors);
+          yield* Console.log(String(checked.result));
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withAlias("t"),
+      Command.withDescription(
+        "Print whether the conditions pass, as true or false. Needs an admin token",
+      ),
+    ),
+    Command.make(
+      "watch",
+      { condition: automationConfigArgument("condition", conditionExample) },
+      (input) =>
+        Effect.gen(function* () {
+          const condition = yield* parseCondition(input.condition);
+
+          const client = yield* BridgeClient;
+
+          yield* client.WatchCondition({ condition }).pipe(
+            Stream.catchTag("HomeAssistantError", (error) =>
+              Stream.fromEffect(
+                failWith(`could not watch the condition: ${error.message}`),
+              ),
+            ),
+            Stream.runForEach((update) =>
+              Effect.andThen(
+                warnTemplateErrors(update.template_errors),
+                "error" in update
+                  ? Effect.logWarning(update.error)
+                  : Console.log(String(update.result)),
+              ),
+            ),
+          );
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withAlias("w"),
+      Command.withDescription(
+        "Print whether the conditions pass, then each change, as true or false",
+      ),
+    ),
+  ]),
+);
+
 const serve = Command.make("serve", {}, () =>
   Effect.flatMap(socketPath, serveBridge).pipe(
     Effect.provide(
@@ -4676,6 +4839,8 @@ const commands = [
   lovelace,
   template,
   eventCommand,
+  triggerCommand,
+  conditionCommand,
   historyCommand,
   ...yamlReloadCommands,
 ] as const;

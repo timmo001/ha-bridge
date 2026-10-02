@@ -13,6 +13,12 @@ import {
   HomeAssistantEvent,
   History,
   LogbookEntry,
+  ConditionRequest,
+  ConditionResult,
+  ConditionUpdate,
+  TriggerEvent,
+  TriggerRequest,
+  WatchConditionRequest,
   WatchEventsRequest,
 } from "@timmo001/effect-ha";
 import { EntityUpdate } from "./Entity.js";
@@ -101,6 +107,26 @@ export class BridgeRpcs extends RpcGroup.make(
     payload: WatchLogbookRequest,
     success: LogbookEntry,
     error: TargetFailure,
+    stream: true,
+  }),
+  // Each time the triggers fire, following reconnects. Needs an admin token.
+  Rpc.make("WatchTrigger", {
+    payload: TriggerRequest,
+    success: TriggerEvent,
+    error: HomeAssistantError,
+    stream: true,
+  }),
+  // Whether the conditions pass. Needs an admin token.
+  Rpc.make("TestCondition", {
+    payload: ConditionRequest,
+    success: ConditionResult,
+    error: HomeAssistantError,
+  }),
+  // Whether the conditions pass, then each change, following reconnects.
+  Rpc.make("WatchCondition", {
+    payload: WatchConditionRequest,
+    success: ConditionUpdate,
+    error: HomeAssistantError,
     stream: true,
   }),
   // Fuzzy search over cached entities, devices and areas, or a list of

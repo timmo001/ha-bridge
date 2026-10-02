@@ -44,6 +44,12 @@ import {
   type LogbookEntry,
   logbookEventFrom,
   logbookFrom,
+  ConditionResult,
+  ConditionUpdate,
+  TriggerEvent,
+  type ConditionRequest,
+  type TriggerRequest,
+  type WatchConditionRequest,
   type HomeAssistantSubscription,
 } from "@timmo001/effect-ha";
 import {
@@ -124,6 +130,17 @@ export interface HomeAssistantService {
   readonly watchLogbook: (
     request: WatchLogbookRequest,
   ) => Stream.Stream<LogbookEntry, HomeAssistantError | TargetError>;
+  // Each time the triggers fire, following reconnects.
+  readonly watchTrigger: (
+    request: TriggerRequest,
+  ) => Stream.Stream<TriggerEvent, HomeAssistantError>;
+  readonly testCondition: (
+    request: ConditionRequest,
+  ) => Effect.Effect<ConditionResult, HomeAssistantError>;
+  // Whether the conditions pass, then each change, following reconnects.
+  readonly watchCondition: (
+    request: WatchConditionRequest,
+  ) => Stream.Stream<ConditionUpdate, HomeAssistantError>;
   // Searches the cached states and registries. Only a target asks Home
   // Assistant, to expand it.
   readonly search: (
@@ -169,25 +186,46 @@ const decodeStates = Schema.decodeUnknownEffect(Schema.Array(EntityState));
 
 const decodeStateChanged = Schema.decodeUnknownEffect(StateChangedEvent);
 
-const decodeTemplateUpdate = (event: Schema.Json) =>
-  Schema.decodeUnknownEffect(TemplateUpdate)(event).pipe(
-    Effect.mapError(
-      (error) =>
-        new HomeAssistantError({
-          message: `decode template render: ${error.message}`,
-        }),
-    ),
-  );
+// Decodes a reply or event, failing as a Home Assistant error.
+const decodeWith =
+  <A>(
+    decode: (value: Schema.Json | null) => Effect.Effect<A, Schema.SchemaError>,
+    label: string,
+  ) =>
+  (value: Schema.Json | null) =>
+    decode(value).pipe(
+      Effect.mapError(
+        (error) =>
+          new HomeAssistantError({
+            message: `decode ${label}: ${error.message}`,
+          }),
+      ),
+    );
 
-const decodeEvent = (event: Schema.Json) =>
-  Schema.decodeUnknownEffect(HomeAssistantEvent)(event).pipe(
-    Effect.mapError(
-      (error) =>
-        new HomeAssistantError({
-          message: `decode event: ${error.message}`,
-        }),
-    ),
-  );
+const decodeTemplateUpdate = decodeWith(
+  Schema.decodeUnknownEffect(TemplateUpdate),
+  "template render",
+);
+
+const decodeEvent = decodeWith(
+  Schema.decodeUnknownEffect(HomeAssistantEvent),
+  "event",
+);
+
+const decodeTriggerEvent = decodeWith(
+  Schema.decodeUnknownEffect(TriggerEvent),
+  "trigger",
+);
+
+const decodeConditionResult = decodeWith(
+  Schema.decodeUnknownEffect(ConditionResult),
+  "condition result",
+);
+
+const decodeConditionUpdate = decodeWith(
+  Schema.decodeUnknownEffect(ConditionUpdate),
+  "condition",
+);
 
 const templateSubscription = (
   request: TemplateRequest,
@@ -732,6 +770,35 @@ export class HomeAssistant extends Context.Service<
           ),
         ).pipe(Stream.mapEffect(logbookEventFrom), Stream.flattenIterable);
 
+      const watchTrigger = (request: TriggerRequest) =>
+        followSessions(() =>
+          Effect.succeed<HomeAssistantSubscription>({
+            type: "subscribe_trigger",
+            ...request,
+          }),
+        ).pipe(Stream.mapEffect(decodeTriggerEvent));
+
+      const testCondition = Effect.fn("HomeAssistant.testCondition")(function* (
+        request: ConditionRequest,
+      ) {
+        const current = yield* connected;
+
+        const result = yield* current.request({
+          type: "test_condition",
+          ...request,
+        });
+
+        return yield* decodeConditionResult(result);
+      });
+
+      const watchCondition = (request: WatchConditionRequest) =>
+        followSessions(() =>
+          Effect.succeed<HomeAssistantSubscription>({
+            type: "subscribe_condition",
+            ...request,
+          }),
+        ).pipe(Stream.mapEffect(decodeConditionUpdate));
+
       const callAction = Effect.fn("HomeAssistant.callAction")(function* (
         action: Action,
       ) {
@@ -871,6 +938,9 @@ export class HomeAssistant extends Context.Service<
         getHistory,
         getLogbook,
         watchLogbook,
+        watchTrigger,
+        testCondition,
+        watchCondition,
         search: runSearch,
       });
     }),

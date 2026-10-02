@@ -13,6 +13,7 @@ import { Socket } from "effect/socket";
 import type { Action } from "./Action.js";
 import { HomeAssistantConfig } from "./HomeAssistantConfig.js";
 import { HomeAssistantError } from "./HomeAssistantError.js";
+import type { ConditionRequest, TriggerRequest } from "./Automation.js";
 import type { FireEventRequest } from "./Event.js";
 import type { TemplateRequest } from "./Template.js";
 import {
@@ -76,6 +77,11 @@ export type HomeAssistantCommand =
     }
   | ({ readonly type: "logbook/get_events" } & LogbookQuery)
   | {
+      readonly type: "test_condition";
+      readonly condition: ConditionRequest["condition"];
+      readonly variables?: ConditionRequest["variables"] | undefined;
+    }
+  | {
       readonly type: "extract_from_target";
       readonly target: Target;
       readonly expand_group?: boolean | undefined;
@@ -107,7 +113,17 @@ export type HomeAssistantSubscription =
       // Sends render errors and warnings as events.
       readonly report_errors?: boolean | undefined;
     }
-  | ({ readonly type: "logbook/event_stream" } & LogbookQuery);
+  | ({ readonly type: "logbook/event_stream" } & LogbookQuery)
+  | {
+      readonly type: "subscribe_trigger";
+      readonly trigger: TriggerRequest["trigger"];
+      readonly variables?: TriggerRequest["variables"] | undefined;
+    }
+  | {
+      // Checked every second; an event is sent only when the result changes.
+      readonly type: "subscribe_condition";
+      readonly condition: ConditionRequest["condition"];
+    };
 
 // Logbook entries between ISO times, for some entities and devices, or all
 // of them when both are left out.

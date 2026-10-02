@@ -33,6 +33,9 @@ const Handlers = BridgeRpcs.toLayer(
       GetHistory: (request) => homeAssistant.getHistory(request),
       GetLogbook: (request) => homeAssistant.getLogbook(request),
       WatchLogbook: (request) => homeAssistant.watchLogbook(request),
+      WatchTrigger: (request) => homeAssistant.watchTrigger(request),
+      TestCondition: (request) => homeAssistant.testCondition(request),
+      WatchCondition: (request) => homeAssistant.watchCondition(request),
     });
   }),
 );
