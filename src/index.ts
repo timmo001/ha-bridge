@@ -237,7 +237,10 @@ const callAction = Effect.fn("callAction")(function* (action: Action) {
     Effect.catchTag("HomeAssistantError", (error) =>
       Effect.fail(
         new CommandError({
-          message: `home assistant action ${action.action} failed: ${error.message}`,
+          message:
+            error.message === ""
+              ? `home assistant action ${action.action} failed without saying why`
+              : `home assistant action ${action.action} failed: ${error.message}`,
         }),
       ),
     ),
@@ -2254,8 +2257,8 @@ const simpleCommands = (
     entityActionCommand(domain, name, toAction, description),
   );
 
-// Checks the target matches something first: Home Assistant only says an
-// action with a response matched no entities, not why.
+// Checks the target matches something Home Assistant will answer for first:
+// it skips unavailable entities and only says nothing matched, not why.
 const callResponseAction = Effect.fn("callResponseAction")(function* (
   action: Action,
 ) {
@@ -2266,6 +2269,14 @@ const callResponseAction = Effect.fn("callResponseAction")(function* (
 
     if (updates.length === 0) {
       return yield* failWith(`The target matches no ${domain} entity`);
+    }
+
+    if (updates.every(({ state }) => state.state === "unavailable")) {
+      const ids = updates.map(({ state }) => state.entity_id).join(", ");
+
+      return yield* failWith(
+        `Home Assistant won't answer for unavailable entities: ${ids}`,
+      );
     }
   }
 
