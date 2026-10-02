@@ -48,8 +48,8 @@ The session has:
 
 - `callAction(action)`: runs an action. It succeeds with the action's response when `return_response` is set, otherwise `null`.
 - `getConfig`: the instance's configuration, such as its time zone and version.
-- `request(command)`: sends a raw WebSocket command, such as `get_states`.
-- `subscribe(subscription)`: sends a subscription, such as `subscribe_events`, and succeeds once Home Assistant accepts it with a `Stream` of its events. Closing the scope unsubscribes.
+- `request(command)`: sends a raw WebSocket command, such as `get_states`, `fire_event`, `history/history_during_period`, `logbook/get_events` or `test_condition`. It succeeds with the reply's result as JSON.
+- `subscribe(subscription)`: sends a subscription (`subscribe_events`, `render_template`, `logbook/event_stream`, `subscribe_trigger` or `subscribe_condition`) and succeeds once Home Assistant accepts it with a `Stream` of its events. Closing the scope unsubscribes.
 - `extractTarget(target)`: asks Home Assistant which entities, devices and areas a target refers to, with `extract_from_target`. It takes IDs only.
 - `closed`: fails once the connection is lost.
 
@@ -66,6 +66,8 @@ yield* events.pipe(
   Stream.runForEach(({ data }) => Console.log(data.entity_id)),
 );
 ```
+
+Other replies and events have schemas and readers too: `TemplateUpdate` for `render_template`, `TriggerEvent` for `subscribe_trigger`, `ConditionResult` and `ConditionUpdate` for conditions, `historyFrom` for history (with ISO times), and `logbookFrom` and `logbookEventFrom` for the logbook.
 
 ## Actions
 

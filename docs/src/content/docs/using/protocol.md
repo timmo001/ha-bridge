@@ -19,6 +19,14 @@ The socket is at the [socket path](/configuration#socket-path), in a directory o
 | `Search` | `{ "query"?: string, "target"?: Target, "kinds"?: ("entity" \| "device" \| "area")[], "domain"?: string, "deviceClass"?: string, "limit"?: number, "offset"?: number }` | `{ "results": SearchMatch[], "total": number, "unavailable": string[] }` |
 | `RenderTemplate` | `{ "template": string, "variables"?: object, "strict"?: boolean, "timeout"?: number }` | `{ "result": Json, "warnings": string[] }`, the first render |
 | `WatchTemplate` | `{ "template": string, "variables"?: object, "strict"?: boolean, "timeout"?: number }` | A stream of renders, each `{ "result": Json }` or `{ "error": string, "level": string }`, rendering again after reconnects |
+| `WatchEvents` | `{ "event_type"?: string }` | A stream of events, each with `event_type`, `data`, `origin`, `time_fired` and `context` |
+| `FireEvent` | `{ "event_type": string, "event_data"?: object }` | Nothing |
+| `GetHistory` | `{ "target": Target, "domain"?: string, "start_time": string, "end_time"?: string, "no_attributes"?: boolean, "all_changes"?: boolean }` | An object keyed by entity ID, each a list of `{ "state", "attributes"?, "last_changed", "last_updated" }` |
+| `GetLogbook` | `{ "target"?: Target, "domain"?: string, "start_time": string, "end_time"?: string }` | A list of logbook entries, each with an ISO `when` |
+| `WatchLogbook` | `{ "target"?: Target, "domain"?: string }` | A stream of new logbook entries, carrying on from each reconnect |
+| `WatchTrigger` | `{ "trigger": object \| object[], "variables"?: object }` | A stream of `{ "variables": object, "context": object \| null }`, one each time a trigger fires |
+| `TestCondition` | `{ "condition": object, "variables"?: object }` | `{ "result": boolean, "template_errors"?: string[] }` |
+| `WatchCondition` | `{ "condition": object }` | A stream of `{ "result": boolean }` or `{ "error": string }`, each with optional `template_errors`, sent when the result changes |
 
 A target is `{ "entity_id"?, "device_id"?, "area_id"?, "floor_id"?, "label_id"? }`, each a string or a list of strings, as in Home Assistant. Each value is an ID or a name, which the bridge resolves to an ID: an exact ID first, then an entity ID without the domain when there is a `domain` (or the action's domain), then a unique case-insensitive name. Home Assistant then expands the target, so an area includes entities on devices in it. `domain` keeps only entities in that domain.
 

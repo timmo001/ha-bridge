@@ -81,6 +81,10 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`google_assistant`](/commands/google-assistant) | None |
 | [`lovelace`](/commands/lovelace) | None |
 | [`template`](/commands/template) | None |
+| [`event`](/commands/event) | None |
+| [`trigger`](/commands/trigger) | None |
+| [`condition`](/commands/condition) | None |
+| [`history`](/commands/history) | None |
 | [`bayesian`](/commands/bayesian) | None |
 | [`command_line`](/commands/command-line) | None |
 | [`derivative`](/commands/derivative) | None |
@@ -189,6 +193,10 @@ SUBCOMMANDS
   google_assistant    Google Assistant actions
   lovelace            Dashboard actions
   template            Render templates and reload template entities
+  event               Watch and fire events on Home Assistant's event bus
+  trigger             Listen for automation triggers
+  condition           Check automation conditions
+  history             Read recorded entity history
   bayesian            Bayesian sensor actions
   command_line        Command line actions
   derivative          Derivative sensor actions

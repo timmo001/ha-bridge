@@ -22,6 +22,54 @@ FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
+## `ha-bridge logbook get`
+
+```text
+DESCRIPTION
+  Print logbook entries for the target, or every entry without one
+
+USAGE
+  ha-bridge logbook get [flags] [<entity_id...>]
+
+ARGUMENTS
+  entity_id... string    Entity ID, such as light.desk; repeat for more (optional)
+
+FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --start string     Start, as an ISO time or a duration before now, such as "2 hours"
+  --end string       End, as an ISO time or a duration before now; now when left out
+  --json             Print JSON
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
+```
+
+## `ha-bridge logbook watch`
+
+Alias: `ha-bridge logbook w`
+
+```text
+DESCRIPTION
+  Print new logbook entries for the target, or every entry without one
+
+USAGE
+  ha-bridge logbook watch [flags] [<entity_id...>]
+
+ARGUMENTS
+  entity_id... string    Entity ID, such as light.desk; repeat for more (optional)
+
+FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --json             Print each entry as JSON
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
+```
+
 ## `ha-bridge logbook log`
 
 ```text

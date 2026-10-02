@@ -48,6 +48,11 @@ Calls fail straight away when the bridge isn't running, rather than waiting for 
 | `CameraSnapshot({ target })` | The image from the one camera the target matches, as `contentType` and `data` bytes |
 | `RenderTemplate({ template, variables?, strict?, timeout? })` | The template's first render, as `result` and any `warnings`. Fails with `HomeAssistantError` on a render error |
 | `WatchTemplate({ template, variables?, strict?, timeout? })` | A `Stream` of renders, each `{ result }` or `{ error, level }`, as what the template reads changes. It renders again after reconnects |
+| `WatchEvents({ event_type? })` and `FireEvent({ event_type, event_data? })` | A `Stream` of events, following reconnects; firing needs an admin token |
+| `GetHistory({ target, start_time, end_time?, no_attributes?, all_changes? })` | Each entity's recorded states, keyed by entity ID, with ISO times |
+| `GetLogbook({ target?, start_time, end_time? })` and `WatchLogbook({ target? })` | Logbook entries, or a `Stream` of new ones |
+| `WatchTrigger({ trigger, variables? })` | A `Stream` of trigger firings, with their variables and context |
+| `TestCondition({ condition, variables? })` and `WatchCondition({ condition })` | Whether the condition passes, or a `Stream` of each change |
 
 A target has the same fields as an action's target in Home Assistant: `entity_id`, `device_id`, `area_id`, `floor_id` and `label_id`. Each takes an ID or a name, and the bridge resolves names to IDs. `domain` keeps only entities in that domain. [The protocol](/using/protocol#rpcs) has the full rules.
 
