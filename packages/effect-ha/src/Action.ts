@@ -1584,3 +1584,105 @@ export type YamlReloadDomain = typeof YamlReloadDomain.Type;
 
 export const reloadYaml = (domain: YamlReloadDomain) =>
   onDomain(`${domain}.reload`);
+
+// An app's slug, such as `core_ssh`.
+export const AppSlug = Schema.String.check(
+  Schema.isPattern(/^[-_.A-Za-z0-9]+$/, {
+    message: "Expected an app slug, such as core_ssh",
+  }),
+);
+
+// Folders a Supervisor backup can hold besides Home Assistant and apps.
+export const BackupFolder = Schema.Literals([
+  "share",
+  "addons/local",
+  "ssl",
+  "media",
+]);
+
+export type BackupFolder = typeof BackupFolder.Type;
+
+const backupOptionFields = {
+  name: Schema.optionalKey(Schema.String),
+  password: Schema.optionalKey(Schema.String),
+  compressed: Schema.optionalKey(Schema.Boolean),
+  location: Schema.optionalKey(Schema.String),
+  homeassistant_exclude_database: Schema.optionalKey(Schema.Boolean),
+};
+
+const partialFields = {
+  homeassistant: Schema.optionalKey(Schema.Boolean),
+  folders: Schema.optionalKey(Schema.Array(BackupFolder)),
+  apps: Schema.optionalKey(Schema.Array(AppSlug)),
+};
+
+// `hassio.backup_full` data. `name` defaults to the date and time,
+// `compressed` to true, and `location` (a backup mount) to local storage.
+export const HassioBackupFullData = Schema.Struct(backupOptionFields);
+
+export type HassioBackupFullData = typeof HassioBackupFullData.Type;
+
+// `hassio.backup_partial` data: what to back up, and the same options as a
+// full backup.
+export const HassioBackupPartialData = Schema.Struct({
+  ...backupOptionFields,
+  ...partialFields,
+});
+
+export type HassioBackupPartialData = typeof HassioBackupPartialData.Type;
+
+// `hassio.restore_partial` data besides the backup's slug.
+export const HassioRestorePartialData = Schema.Struct({
+  ...partialFields,
+  password: Schema.optionalKey(Schema.String),
+});
+
+export type HassioRestorePartialData = typeof HassioRestorePartialData.Type;
+
+const decodeBackupResponse = Schema.decodeUnknownEffect(
+  Schema.Struct({ backup: Schema.String }),
+);
+
+const appAction = (action: string) => (app: string) =>
+  onDomain(`hassio.${action}`, { app });
+
+// Supervisor actions, on installations with the Supervisor.
+export const Hassio = {
+  appStart: appAction("app_start"),
+  appStop: appAction("app_stop"),
+  appRestart: appAction("app_restart"),
+  // Writes to the app's stdin, as text or a JSON object.
+  appStdin: (
+    app: string,
+    input: string | Readonly<Record<string, Schema.Json>>,
+  ) => onDomain("hassio.app_stdin", { app, input }),
+  hostReboot: () => onDomain("hassio.host_reboot"),
+  hostShutdown: () => onDomain("hassio.host_shutdown"),
+  // Responds with the new backup's slug; read it with `backupFrom`.
+  backupFull: (data?: HassioBackupFullData): Action => ({
+    ...onDomain("hassio.backup_full", data),
+    return_response: true,
+  }),
+  backupPartial: (data: HassioBackupPartialData): Action => ({
+    ...onDomain("hassio.backup_partial", data),
+    return_response: true,
+  }),
+  // Reads the new backup's slug from a backup response.
+  backupFrom: (response: Schema.Json | null) =>
+    decodeBackupResponse(response).pipe(
+      Effect.map(({ backup }) => backup),
+      Effect.mapError(
+        (error) =>
+          new HomeAssistantError({
+            message: `decode backup: ${error.message}`,
+          }),
+      ),
+    ),
+  restoreFull: (slug: string, options?: { readonly password?: string }) =>
+    onDomain("hassio.restore_full", { slug, password: options?.password }),
+  restorePartial: (slug: string, data: HassioRestorePartialData) =>
+    onDomain("hassio.restore_partial", { slug, ...data }),
+  // Reloads a network storage mount, by its device ID.
+  mountReload: (deviceId: string) =>
+    onDomain("hassio.mount_reload", { device_id: deviceId }),
+};

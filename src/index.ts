@@ -83,6 +83,11 @@ import {
   Timer,
   Alert,
   Backup,
+  BackupFolder,
+  Hassio,
+  HassioBackupFullData,
+  HassioBackupPartialData,
+  HassioRestorePartialData,
   Frontend,
   FrontendSetThemeData,
   LogLevel,
@@ -3546,6 +3551,211 @@ const wakeOnLan = domainCommand("wake_on_lan", "wol", "Wake on LAN actions", [
   ).pipe(Command.withAlias("wake"), Command.withDescription("Wake a device")),
 ]);
 
+// The ID of the one device a device ID or name refers to.
+const resolveDevice = Effect.fn("resolveDevice")(function* (device: string) {
+  const client = yield* BridgeClient;
+
+  const found = yield* client
+    .Search({ target: { device_id: [device] }, kinds: ["device"] })
+    .pipe(
+      Effect.catchTags({
+        SearchEmpty: () => failWith("give a device"),
+        HomeAssistantError: (error) =>
+          failWith(`could not find the device: ${error.message}`),
+        TargetError: (error) => failWith(error.message),
+      }),
+    );
+
+  const [only, ...others] = found.results;
+
+  if (only === undefined || others.length > 0) {
+    return yield* failWith(`${device} matches ${found.results.length} devices`);
+  }
+
+  return only.id;
+});
+
+const appArgument = Argument.String("app").pipe(
+  Argument.withDescription("App slug, such as core_ssh"),
+);
+
+const slugArgument = Argument.String("slug").pipe(
+  Argument.withDescription("Backup slug"),
+);
+
+const backupOptionFlags = {
+  name: optionalFlag(
+    Flag.String("name"),
+    "Backup name (default: the date and time)",
+  ),
+  password: optionalFlag(
+    Flag.String("password"),
+    "Password to protect it with",
+  ),
+  compressed: optionalFlag(
+    Flag.Boolean("compressed"),
+    "Compress the backup (the default); --no-compressed doesn't",
+  ),
+  location: optionalFlag(
+    Flag.String("location"),
+    "Backup mount to save to (default: local storage)",
+  ),
+  homeassistant_exclude_database: optionalFlag(
+    Flag.Boolean("exclude-database"),
+    "Leave out the Home Assistant database",
+  ),
+};
+
+const partialFlags = {
+  homeassistant: optionalFlag(
+    Flag.Boolean("homeassistant"),
+    "Include Home Assistant's configuration",
+  ),
+  folders: Flag.Literals("folder", BackupFolder.literals).pipe(
+    Flag.withDescription("Folder to include; repeat for more"),
+    Flag.atLeast(0),
+  ),
+  apps: Flag.String("app").pipe(
+    Flag.withDescription("App slug to include; repeat for more"),
+    Flag.atLeast(0),
+  ),
+};
+
+const decodeBackupFull = Schema.decodeUnknownEffect(HassioBackupFullData);
+
+const decodeBackupPartial = Schema.decodeUnknownEffect(HassioBackupPartialData);
+
+const decodeRestorePartial = Schema.decodeUnknownEffect(
+  HassioRestorePartialData,
+);
+
+const printBackupSlug = (action: Action) =>
+  Effect.gen(function* () {
+    const response = yield* callAction(action);
+
+    const slug = yield* Hassio.backupFrom(response).pipe(
+      Effect.mapError((error) => new CommandError({ message: error.message })),
+    );
+
+    yield* Console.log(slug);
+  });
+
+const appCommand = (
+  name: string,
+  toAction: (app: string) => Action,
+  description: string,
+) =>
+  Command.make(name, { app: appArgument }, (input) =>
+    callAction(toAction(input.app)).pipe(withBridge),
+  ).pipe(Command.withDescription(description));
+
+const hassio = domainCommand("hassio", undefined, "Supervisor actions", [
+  appCommand("app-start", Hassio.appStart, "Start an app"),
+  appCommand("app-stop", Hassio.appStop, "Stop an app"),
+  appCommand("app-restart", Hassio.appRestart, "Restart an app"),
+  Command.make(
+    "app-stdin",
+    {
+      app: appArgument,
+      input: Argument.String("input").pipe(
+        Argument.withDescription("Text to write"),
+      ),
+      json: Flag.Boolean("json").pipe(
+        Flag.withDescription("Send the input as a JSON object"),
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const data = input.json
+          ? yield* parseJsonObject("input")(input.input)
+          : input.input;
+
+        yield* callAction(Hassio.appStdin(input.app, data));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Write to an app's stdin")),
+  systemCommand("host-reboot", Hassio.hostReboot, "Reboot the host"),
+  systemCommand("host-shutdown", Hassio.hostShutdown, "Shut down the host"),
+  Command.make("backup-full", backupOptionFlags, (flags) =>
+    Effect.gen(function* () {
+      const data = yield* decodeData(
+        "backup options",
+        decodeBackupFull(setFields(flags)),
+      );
+
+      yield* printBackupSlug(Hassio.backupFull(data));
+    }).pipe(withBridge),
+  ).pipe(Command.withDescription("Back up everything and print the slug")),
+  Command.make(
+    "backup-partial",
+    { ...backupOptionFlags, ...partialFlags },
+    ({ folders, apps, ...flags }) =>
+      Effect.gen(function* () {
+        const data = yield* decodeData(
+          "backup options",
+          decodeBackupPartial(
+            setFields({
+              ...flags,
+              folders: nonEmpty(folders),
+              apps: nonEmpty(apps),
+            }),
+          ),
+        );
+
+        yield* printBackupSlug(Hassio.backupPartial(data));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Back up some parts and print the slug")),
+  Command.make(
+    "restore-full",
+    {
+      slug: slugArgument,
+      password: optionalFlag(Flag.String("password"), "Backup password"),
+    },
+    (input) =>
+      callAction(
+        Hassio.restoreFull(input.slug, {
+          password: Option.getOrUndefined(input.password),
+        }),
+      ).pipe(withBridge),
+  ).pipe(Command.withDescription("Restore everything from a backup")),
+  Command.make(
+    "restore-partial",
+    {
+      slug: slugArgument,
+      password: optionalFlag(Flag.String("password"), "Backup password"),
+      ...partialFlags,
+    },
+    ({ slug, folders, apps, ...flags }) =>
+      Effect.gen(function* () {
+        const data = yield* decodeData(
+          "restore options",
+          decodeRestorePartial(
+            setFields({
+              ...flags,
+              folders: nonEmpty(folders),
+              apps: nonEmpty(apps),
+            }),
+          ),
+        );
+
+        yield* callAction(Hassio.restorePartial(slug, data));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Restore some parts from a backup")),
+  Command.make(
+    "mount-reload",
+    {
+      device: Argument.String("device").pipe(
+        Argument.withDescription("Mount device ID or name"),
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const deviceId = yield* resolveDevice(input.device);
+
+        yield* callAction(Hassio.mountReload(deviceId));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Reload a network storage mount")),
+]);
+
 const yamlReloadDescriptions: Record<YamlReloadDomain, string> = {
   bayesian: "Bayesian sensor actions",
   command_line: "Command line actions",
@@ -3906,6 +4116,7 @@ const commands = [
   frontend,
   backup,
   wakeOnLan,
+  hassio,
   ...yamlReloadCommands,
 ] as const;
 
