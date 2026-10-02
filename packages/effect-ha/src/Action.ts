@@ -59,7 +59,7 @@ const switchable = (domain: string) => ({
   toggle: (target: Target) => onTarget(`${domain}.toggle`, target),
 });
 
-// Reloads a helper domain's YAML configuration.
+// Reloads a domain's YAML configuration.
 const reload = (domain: string) => () => onDomain(`${domain}.reload`);
 
 export const InputBoolean = {
@@ -844,10 +844,6 @@ export const Group = {
   reload: reload("group"),
 };
 
-export const Zone = { reload: reload("zone") };
-
-export const Person = { reload: reload("person") };
-
 // Actions in the `homeassistant` domain. `turnOn`, `turnOff` and `toggle`
 // work on entities of any domain.
 export const HomeAssistantCore = {
@@ -1326,3 +1322,265 @@ export type DeviceTrackerSeeData = typeof DeviceTrackerSeeData.Type;
 export const DeviceTracker = {
   see: (data: DeviceTrackerSeeData) => onDomain("device_tracker.see", data),
 };
+
+export const Alert = switchable("alert");
+
+export const UtilityMeter = {
+  // Resets the meters behind these tariff selects, every tariff at once.
+  reset: (entityIds: ReadonlyArray<EntityId<"select">>) =>
+    onDomain("utility_meter.reset", { entity_id: entityIds }),
+  // Sets the meter sensors to `value`.
+  calibrate: (target: Target, value: number) =>
+    onTarget("utility_meter.calibrate", target, { value }),
+};
+
+export const Logbook = {
+  // Adds an entry, such as "Kitchen is being used". `entityId` ties the entry
+  // to an entity; `domain` picks its icon.
+  log: (
+    name: string,
+    message: string,
+    options?: { readonly entityId?: string; readonly domain?: string },
+  ) =>
+    onDomain("logbook.log", {
+      name,
+      message,
+      entity_id: options?.entityId,
+      domain: options?.domain,
+    }),
+};
+
+export const SystemLogLevel = Schema.Literals([
+  "debug",
+  "info",
+  "warning",
+  "error",
+  "critical",
+]);
+
+export type SystemLogLevel = typeof SystemLogLevel.Type;
+
+export const SystemLog = {
+  // Writes to the log and the system log. Core uses `error` and the
+  // `homeassistant.components.system_log.external` logger by default.
+  write: (
+    message: string,
+    options?: { readonly level?: SystemLogLevel; readonly logger?: string },
+  ) =>
+    onDomain("system_log.write", {
+      message,
+      level: options?.level,
+      logger: options?.logger,
+    }),
+  clear: () => onDomain("system_log.clear"),
+};
+
+export const LogLevel = Schema.Literals([
+  "debug",
+  "info",
+  "warning",
+  "error",
+  "fatal",
+  "critical",
+]);
+
+export type LogLevel = typeof LogLevel.Type;
+
+export const LoggerActions = {
+  setDefaultLevel: (level: LogLevel) =>
+    onDomain("logger.set_default_level", { level }),
+  // Sets each logger's level, keyed by logger name, such as
+  // `homeassistant.components.mqtt`.
+  setLevel: (levels: Readonly<Record<string, LogLevel>>) =>
+    onDomain("logger.set_level", levels),
+};
+
+const Days = Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 365 }));
+
+// `recorder.purge` data. `keep_days` defaults to the recorder's
+// `purge_keep_days`; `repack` frees the disk space; `apply_filter` also
+// removes what the recorder's filters now exclude.
+export const RecorderPurgeData = Schema.Struct({
+  keep_days: Schema.optionalKey(Days),
+  repack: Schema.optionalKey(Schema.Boolean),
+  apply_filter: Schema.optionalKey(Schema.Boolean),
+});
+
+export type RecorderPurgeData = typeof RecorderPurgeData.Type;
+
+// What `recorder.purge_entities` removes: entities from `target`, whole
+// domains, or entity ID globs such as `sensor.weather_*`. Set at least one.
+export interface RecorderPurgeEntitiesOptions {
+  readonly target?: Target;
+  readonly domains?: ReadonlyArray<string>;
+  readonly entityGlobs?: ReadonlyArray<string>;
+  // Keeps this many days of history; Core removes all of it by default.
+  readonly keepDays?: number;
+}
+
+export const StatisticsPeriod = Schema.Literals([
+  "5minute",
+  "hour",
+  "day",
+  "week",
+  "month",
+  "year",
+]);
+
+export type StatisticsPeriod = typeof StatisticsPeriod.Type;
+
+export const StatisticType = Schema.Literals([
+  "change",
+  "last_reset",
+  "max",
+  "mean",
+  "min",
+  "state",
+  "sum",
+]);
+
+export type StatisticType = typeof StatisticType.Type;
+
+// `recorder.get_statistics` data. `statistic_ids` are entity IDs or external
+// statistic IDs; `units` converts by unit class, such as `{ "energy": "kWh" }`.
+export const RecorderGetStatisticsData = Schema.Struct({
+  start_time: DateTimeString,
+  end_time: Schema.optionalKey(DateTimeString),
+  statistic_ids: Schema.Array(Schema.String).check(Schema.isMinLength(1)),
+  period: StatisticsPeriod,
+  types: Schema.Array(StatisticType).check(Schema.isMinLength(1)),
+  units: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+});
+
+export type RecorderGetStatisticsData = typeof RecorderGetStatisticsData.Type;
+
+// One period of a statistic. Times are UTC ISO 8601; only the requested
+// types with a value are present.
+export const StatisticRow = Schema.Struct({
+  start: Schema.String,
+  end: Schema.String,
+  last_reset: Schema.optionalKey(Schema.String),
+  state: Schema.optionalKey(Schema.Finite),
+  sum: Schema.optionalKey(Schema.Finite),
+  min: Schema.optionalKey(Schema.Finite),
+  max: Schema.optionalKey(Schema.Finite),
+  mean: Schema.optionalKey(Schema.Finite),
+  change: Schema.optionalKey(Schema.Finite),
+});
+
+export type StatisticRow = typeof StatisticRow.Type;
+
+const decodeStatisticsResponse = Schema.decodeUnknownEffect(
+  Schema.Struct({
+    statistics: Schema.Record(Schema.String, Schema.Array(StatisticRow)),
+  }),
+);
+
+export const Recorder = {
+  purge: (data?: RecorderPurgeData) => onDomain("recorder.purge", data),
+  purgeEntities: (options: RecorderPurgeEntitiesOptions): Action => {
+    const action = onDomain("recorder.purge_entities", {
+      domains: options.domains,
+      entity_globs: options.entityGlobs,
+      keep_days: options.keepDays,
+    });
+
+    return options.target === undefined
+      ? action
+      : { ...action, target: options.target };
+  },
+  // Starts recording again after `disable`.
+  enable: () => onDomain("recorder.enable"),
+  // Stops recording until `enable` or a restart.
+  disable: () => onDomain("recorder.disable"),
+  getStatistics: (data: RecorderGetStatisticsData): Action => ({
+    ...onDomain("recorder.get_statistics", data),
+    return_response: true,
+  }),
+  // Reads each statistic's rows, keyed by statistic ID, from a
+  // `recorder.get_statistics` response.
+  statisticsFrom: (response: Schema.Json | null) =>
+    decodeStatisticsResponse(response).pipe(
+      Effect.map(({ statistics }) => statistics),
+      Effect.mapError(
+        (error) =>
+          new HomeAssistantError({
+            message: `decode statistics: ${error.message}`,
+          }),
+      ),
+    ),
+};
+
+const FrontendSetThemeFields = Schema.Struct({
+  name: Schema.optionalKey(Schema.String),
+  name_dark: Schema.optionalKey(Schema.String),
+  mode: Schema.optionalKey(Schema.Literals(["light", "dark"])),
+});
+
+type FrontendSetThemeFields = typeof FrontendSetThemeFields.Type;
+
+// `frontend.set_theme` data. `name` sets the default theme, or with `mode`
+// the default for that mode; `name_dark` sets the dark mode default. The
+// theme name `none` goes back to Home Assistant's own theme.
+export const FrontendSetThemeData = FrontendSetThemeFields.check(
+  atLeastOne<FrontendSetThemeFields>(["name", "name_dark"]),
+  exclusive<FrontendSetThemeFields>("dark mode", ["name_dark", "mode"]),
+);
+
+export type FrontendSetThemeData = typeof FrontendSetThemeData.Type;
+
+export const Frontend = {
+  setTheme: (data: FrontendSetThemeData) =>
+    onDomain("frontend.set_theme", data),
+  reloadThemes: () => onDomain("frontend.reload_themes"),
+};
+
+// Without the Supervisor only; with it, back up through `Hassio`.
+export const Backup = {
+  // Backs up Home Assistant to the default backup location.
+  create: () => onDomain("backup.create"),
+  // Backs up with the automatic backup settings.
+  createAutomatic: () => onDomain("backup.create_automatic"),
+};
+
+// `wake_on_lan.send_magic_packet` data. Core broadcasts on port 9 to the
+// whole network by default.
+export const WakeOnLanData = Schema.Struct({
+  mac: Schema.String,
+  secureon_password: Schema.optionalKey(Schema.String),
+  broadcast_address: Schema.optionalKey(Schema.String),
+  broadcast_port: Schema.optionalKey(
+    Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 65535 })),
+  ),
+});
+
+export type WakeOnLanData = typeof WakeOnLanData.Type;
+
+export const WakeOnLan = {
+  sendMagicPacket: (data: WakeOnLanData) =>
+    onDomain("wake_on_lan.send_magic_packet", data),
+};
+
+// Domains whose only action reloads their YAML configuration.
+export const YamlReloadDomain = Schema.Literals([
+  "bayesian",
+  "command_line",
+  "derivative",
+  "filter",
+  "generic_thermostat",
+  "history_stats",
+  "intent_script",
+  "min_max",
+  "person",
+  "rest",
+  "statistics",
+  "template",
+  "trend",
+  "universal",
+  "zone",
+]);
+
+export type YamlReloadDomain = typeof YamlReloadDomain.Type;
+
+export const reloadYaml = (domain: YamlReloadDomain) =>
+  onDomain(`${domain}.reload`);

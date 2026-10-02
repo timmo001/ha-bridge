@@ -64,7 +64,6 @@ import {
   Notify,
   NumberEntity,
   PersistentNotification,
-  Person,
   Scene,
   SceneCreateData,
   SceneEntities,
@@ -82,7 +81,25 @@ import {
   Weather,
   WaterHeater,
   Timer,
-  Zone,
+  Alert,
+  Backup,
+  Frontend,
+  FrontendSetThemeData,
+  LogLevel,
+  Logbook,
+  LoggerActions,
+  Recorder,
+  RecorderGetStatisticsData,
+  RecorderPurgeData,
+  StatisticType,
+  StatisticsPeriod,
+  SystemLog,
+  SystemLogLevel,
+  UtilityMeter,
+  WakeOnLan,
+  WakeOnLanData,
+  YamlReloadDomain,
+  reloadYaml,
   Remote,
   RemoteLearnCommandData,
   RemoteSendCommandData,
@@ -279,7 +296,7 @@ const toggleCommands = (
 const reloadCommand = (domain: string, toAction: () => Action) =>
   Command.make("reload", {}, () =>
     callAction(toAction()).pipe(withBridge),
-  ).pipe(Command.withDescription(`Reload ${domain} helpers from YAML`));
+  ).pipe(Command.withDescription(`Reload the ${domain} YAML configuration`));
 
 const optionalFlag = <A>(flag: Flag.Flag<A>, description: string) =>
   flag.pipe(Flag.withDescription(description), Flag.optional);
@@ -1825,8 +1842,8 @@ const schedule = domainCommand("schedule", undefined, "Schedule actions", [
 const entityIdsFlag = (name: string, description: string) =>
   Flag.String(name).pipe(Flag.withDescription(description), Flag.atLeast(0));
 
-const nonEmpty = (ids: ReadonlyArray<string>) =>
-  Option.some(ids).pipe(Option.filter((list) => list.length > 0));
+const nonEmpty = <A>(items: ReadonlyArray<A>) =>
+  Option.some(items).pipe(Option.filter((list) => list.length > 0));
 
 const decodeGroupSet = Schema.decodeUnknownEffect(GroupSetData);
 
@@ -1873,14 +1890,6 @@ const group = domainCommand("group", undefined, "Group actions", [
     callAction(Group.remove(input.objectId)).pipe(withBridge),
   ).pipe(Command.withDescription("Remove a group made with set")),
   reloadCommand("group", Group.reload),
-]);
-
-const zone = domainCommand("zone", undefined, "Zone actions", [
-  reloadCommand("zone", Zone.reload),
-]);
-
-const person = domainCommand("person", undefined, "Person actions", [
-  reloadCommand("person", Person.reload),
 ]);
 
 const entityIdsArgument = Argument.String("entity_id").pipe(
@@ -3149,6 +3158,418 @@ const deviceTracker = domainCommand(
   ],
 );
 
+const alert = domainCommand(
+  "alert",
+  undefined,
+  "Alert actions",
+  toggleCommands("alert", Alert),
+);
+
+const utilityMeter = domainCommand(
+  "utility_meter",
+  undefined,
+  "Utility meter actions",
+  [
+    Command.make("reset", { target: targetConfig("select") }, (input) =>
+      Effect.gen(function* () {
+        const updates = yield* getEntities(
+          toTarget("select", input.target),
+          "select",
+        );
+
+        const entityIds = updates
+          .map(({ state }) => state.entity_id)
+          .filter(isEntityIdIn("select"));
+
+        if (entityIds.length === 0) {
+          return yield* failWith("the target matches no tariff selects");
+        }
+
+        yield* callAction(UtilityMeter.reset(entityIds));
+      }).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Reset the meters behind tariff selects, such as select.energy",
+      ),
+    ),
+    valueCommand(
+      "sensor",
+      "calibrate",
+      { name: "value", description: "New meter reading" },
+      finiteNumber,
+      UtilityMeter.calibrate,
+      "Set a meter sensor's reading",
+    ),
+  ],
+);
+
+const logbook = domainCommand("logbook", undefined, "Logbook actions", [
+  Command.make(
+    "log",
+    {
+      name: Argument.String("name").pipe(
+        Argument.withDescription(
+          "Who or what the entry is about, such as Kitchen",
+        ),
+      ),
+      message: Argument.String("message").pipe(
+        Argument.withDescription("What happened, such as is being used"),
+      ),
+      entityId: optionalFlag(
+        Flag.String("entity-id"),
+        "Full entity ID to tie the entry to",
+      ),
+      domain: optionalFlag(
+        Flag.String("domain"),
+        "Domain whose icon the entry shows",
+      ),
+    },
+    (input) =>
+      callAction(
+        Logbook.log(input.name, input.message, {
+          entityId: Option.getOrUndefined(input.entityId),
+          domain: Option.getOrUndefined(input.domain),
+        }),
+      ).pipe(withBridge),
+  ).pipe(Command.withDescription("Add a logbook entry")),
+]);
+
+const systemLog = domainCommand("system_log", undefined, "System log actions", [
+  Command.make(
+    "write",
+    {
+      message: messageArgument,
+      level: optionalFlag(
+        Flag.Literals("level", SystemLogLevel.literals),
+        "Log level (default: error)",
+      ),
+      logger: optionalFlag(
+        Flag.String("logger"),
+        "Logger name, such as mycomponent.myplatform",
+      ),
+    },
+    (input) =>
+      callAction(
+        SystemLog.write(input.message, {
+          level: Option.getOrUndefined(input.level),
+          logger: Option.getOrUndefined(input.logger),
+        }),
+      ).pipe(withBridge),
+  ).pipe(Command.withDescription("Write to the system log")),
+  systemCommand("clear", SystemLog.clear, "Clear the system log"),
+]);
+
+// Splits `key=value`, at the first `=`.
+const parsePair = (label: string) => (pair: string) => {
+  const index = pair.indexOf("=");
+
+  return index > 0 && index < pair.length - 1
+    ? Effect.succeed([pair.slice(0, index), pair.slice(index + 1)] as const)
+    : failWith(`${label} must look like name=value, not ${pair}`);
+};
+
+const decodeLogLevel = Schema.decodeUnknownEffect(LogLevel);
+
+const parseLogLevel = (level: string) =>
+  decodeData("log level", decodeLogLevel(level.toLowerCase()));
+
+const logger = domainCommand("logger", undefined, "Logger actions", [
+  Command.make(
+    "default-level",
+    {
+      level: Argument.String("level").pipe(
+        Argument.withDescription(
+          `Level for loggers without their own: ${LogLevel.literals.join(", ")}`,
+        ),
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const level = yield* parseLogLevel(input.level);
+
+        yield* callAction(LoggerActions.setDefaultLevel(level));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Set the default log level")),
+  Command.make(
+    "level",
+    {
+      levels: Argument.String("logger=level").pipe(
+        Argument.withDescription(
+          "Logger and level, such as homeassistant.components.mqtt=debug; repeat for more",
+        ),
+        Argument.atLeast(1),
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const levels = yield* Effect.forEach(input.levels, (pair) =>
+          Effect.flatMap(parsePair("a logger level")(pair), ([name, level]) =>
+            Effect.map(
+              parseLogLevel(level),
+              (parsed) => [name, parsed] as const,
+            ),
+          ),
+        );
+
+        yield* callAction(LoggerActions.setLevel(Object.fromEntries(levels)));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Set the level of particular loggers")),
+]);
+
+const keepDaysFlag = (description: string) =>
+  optionalFlag(Flag.Int("keep-days"), description);
+
+const decodeRecorderPurge = Schema.decodeUnknownEffect(RecorderPurgeData);
+
+const decodeGetStatistics = Schema.decodeUnknownEffect(
+  RecorderGetStatisticsData,
+);
+
+const recorder = domainCommand("recorder", undefined, "Recorder actions", [
+  Command.make(
+    "purge",
+    {
+      keep_days: keepDaysFlag(
+        "Days of history to keep, up to 365 (default: the recorder's purge_keep_days)",
+      ),
+      repack: optionalFlag(
+        Flag.Boolean("repack"),
+        "Free the disk space afterwards, which can take a while",
+      ),
+      apply_filter: optionalFlag(
+        Flag.Boolean("apply-filter"),
+        "Also remove what the recorder's filters now exclude",
+      ),
+    },
+    (flags) =>
+      Effect.gen(function* () {
+        const data = yield* decodeData(
+          "purge options",
+          decodeRecorderPurge(setFields(flags)),
+        );
+
+        yield* callAction(Recorder.purge(data));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Remove old history")),
+  Command.make(
+    "purge-entities",
+    {
+      domains: Flag.String("domain").pipe(
+        Flag.withDescription(
+          "Purge every entity in this domain; repeat for more",
+        ),
+        Flag.atLeast(0),
+      ),
+      globs: Flag.String("glob").pipe(
+        Flag.withDescription(
+          "Purge entity IDs matching this glob, such as sensor.weather_*; repeat for more",
+        ),
+        Flag.atLeast(0),
+      ),
+      keepDays: keepDaysFlag("Days of history to keep (default: none)"),
+      target: targetConfig(undefined),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const target = toTarget(undefined, input.target);
+
+        if (
+          isEmptyTarget(target) &&
+          input.domains.length === 0 &&
+          input.globs.length === 0
+        ) {
+          return yield* failWith(
+            "give entities to purge, or --domain or --glob",
+          );
+        }
+
+        yield* callAction(
+          Recorder.purgeEntities({
+            target: isEmptyTarget(target) ? undefined : target,
+            domains: input.domains,
+            entityGlobs: input.globs,
+            keepDays: Option.getOrUndefined(input.keepDays),
+          }),
+        );
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Remove history for particular entities")),
+  systemCommand("enable", Recorder.enable, "Start recording again"),
+  systemCommand(
+    "disable",
+    Recorder.disable,
+    "Stop recording until enabled or Home Assistant restarts",
+  ),
+  Command.make(
+    "statistics",
+    {
+      startTime: Argument.String("start").pipe(
+        Argument.withDescription(
+          "Start, such as 2026-10-01 00:00, in Home Assistant's time zone",
+        ),
+      ),
+      statisticIds: Argument.String("statistic_id").pipe(
+        Argument.withDescription(
+          "Entity ID or external statistic ID; repeat for more",
+        ),
+        Argument.atLeast(1),
+      ),
+      endTime: optionalFlag(Flag.String("end"), "End (default: now)"),
+      period: Flag.Literals("period", StatisticsPeriod.literals).pipe(
+        Flag.withDescription("Length of each row"),
+      ),
+      types: Flag.Literals("type", StatisticType.literals).pipe(
+        Flag.withDescription("Value to include; repeat for more"),
+        Flag.atLeast(1),
+      ),
+      units: Flag.String("unit").pipe(
+        Flag.withDescription(
+          "Unit to convert a unit class to, such as energy=kWh; repeat for more",
+        ),
+        Flag.atLeast(0),
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const units = yield* Effect.forEach(input.units, parsePair("--unit"));
+
+        const data = yield* decodeData(
+          "statistics request",
+          decodeGetStatistics({
+            start_time: input.startTime,
+            statistic_ids: input.statisticIds,
+            period: input.period,
+            types: input.types,
+            ...setFields({
+              end_time: input.endTime,
+              units: nonEmpty(units).pipe(Option.map(Object.fromEntries)),
+            }),
+          }),
+        );
+
+        const response = yield* callAction(Recorder.getStatistics(data));
+
+        const statistics = yield* Recorder.statisticsFrom(response).pipe(
+          Effect.mapError(
+            (error) => new CommandError({ message: error.message }),
+          ),
+        );
+
+        yield* printJson(statistics);
+      }).pipe(withBridge),
+  ).pipe(
+    Command.withDescription(
+      "Print long-term statistics as JSON, keyed by statistic ID",
+    ),
+  ),
+]);
+
+const decodeSetTheme = Schema.decodeUnknownEffect(FrontendSetThemeData);
+
+const frontend = domainCommand("frontend", undefined, "Frontend actions", [
+  Command.make(
+    "set-theme",
+    {
+      name: optionalFlag(
+        Flag.String("name"),
+        "Default theme, or with --mode that mode's default; none goes back to Home Assistant's theme",
+      ),
+      name_dark: optionalFlag(
+        Flag.String("name-dark"),
+        "Default theme in dark mode",
+      ),
+      mode: optionalFlag(
+        Flag.Literals("mode", ["light", "dark"]),
+        "Mode that --name sets the default for",
+      ),
+    },
+    (flags) =>
+      Effect.gen(function* () {
+        const data = yield* decodeData(
+          "theme",
+          decodeSetTheme(setFields(flags)),
+        );
+
+        yield* callAction(Frontend.setTheme(data));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Set the default theme")),
+  systemCommand(
+    "reload-themes",
+    Frontend.reloadThemes,
+    "Reload themes from YAML",
+  ),
+]);
+
+const backup = domainCommand("backup", undefined, "Backup actions", [
+  systemCommand(
+    "create",
+    Backup.create,
+    "Back up to the default location, without the Supervisor",
+  ),
+  systemCommand(
+    "create-automatic",
+    Backup.createAutomatic,
+    "Back up with the automatic backup settings",
+  ),
+]);
+
+const decodeWakeOnLan = Schema.decodeUnknownEffect(WakeOnLanData);
+
+const wakeOnLan = domainCommand("wake_on_lan", "wol", "Wake on LAN actions", [
+  Command.make(
+    "send-magic-packet",
+    {
+      mac: Argument.String("mac").pipe(
+        Argument.withDescription("MAC address, such as aa:bb:cc:dd:ee:ff"),
+      ),
+      secureon_password: optionalFlag(
+        Flag.String("secureon-password"),
+        "SecureOn password",
+      ),
+      broadcast_address: optionalFlag(
+        Flag.String("broadcast-address"),
+        "Address to send to (default: the whole network)",
+      ),
+      broadcast_port: optionalFlag(
+        Flag.Int("broadcast-port"),
+        "Port to send to (default: 9)",
+      ),
+    },
+    ({ mac, ...flags }) =>
+      Effect.gen(function* () {
+        const data = yield* decodeData(
+          "magic packet",
+          decodeWakeOnLan({ mac, ...setFields(flags) }),
+        );
+
+        yield* callAction(WakeOnLan.sendMagicPacket(data));
+      }).pipe(withBridge),
+  ).pipe(Command.withAlias("wake"), Command.withDescription("Wake a device")),
+]);
+
+const yamlReloadDescriptions: Record<YamlReloadDomain, string> = {
+  bayesian: "Bayesian sensor actions",
+  command_line: "Command line actions",
+  derivative: "Derivative sensor actions",
+  filter: "Filter sensor actions",
+  generic_thermostat: "Generic thermostat actions",
+  history_stats: "History stats actions",
+  intent_script: "Intent script actions",
+  min_max: "Min/max sensor actions",
+  person: "Person actions",
+  rest: "RESTful actions",
+  statistics: "Statistics sensor actions",
+  template: "Template actions",
+  trend: "Trend sensor actions",
+  universal: "Universal media player actions",
+  zone: "Zone actions",
+};
+
+const yamlReloadCommands = YamlReloadDomain.literals.map((domain) =>
+  domainCommand(domain, undefined, yamlReloadDescriptions[domain], [
+    reloadCommand(domain, () => reloadYaml(domain)),
+  ]),
+);
+
 const serve = Command.make("serve", {}, () =>
   Effect.flatMap(socketPath, serveBridge).pipe(
     Effect.provide(
@@ -3456,8 +3877,6 @@ const commands = [
   timer,
   schedule,
   group,
-  zone,
-  person,
   homeAssistant,
   fan,
   humidifier,
@@ -3478,6 +3897,16 @@ const commands = [
   image,
   imageProcessing,
   deviceTracker,
+  alert,
+  utilityMeter,
+  logbook,
+  systemLog,
+  logger,
+  recorder,
+  frontend,
+  backup,
+  wakeOnLan,
+  ...yamlReloadCommands,
 ] as const;
 
 const searchKinds = ["entity", "device", "area", "command"] as const;
