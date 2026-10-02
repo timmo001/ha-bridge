@@ -91,17 +91,18 @@ bun add @timmo001/effect-ha effect
 
 ### Connecting
 
-`connect({ url, token, onState })` opens a WebSocket to Home Assistant's `/api/websocket`, using `wss` for `https` URLs, and logs in with a long-lived access token. It needs a `Scope`, which closes the connection, and a `Socket.WebSocketConstructor`, such as `BunSocket.layerWebSocketConstructor`.
+`connect({ url, token })` opens a WebSocket to Home Assistant's `/api/websocket`, using `wss` for `https` URLs, and logs in with a long-lived access token. It needs a `Scope`, which closes the connection, and a `Socket.WebSocketConstructor`, such as `BunSocket.layerWebSocketConstructor`.
 
 It returns a session with:
 
 - `callAction(action)`: runs an action and returns its response, or `null`.
 - `getConfig`: reads Home Assistant's config.
-- `request(command)`: sends a supported raw command, such as `get_states`, `subscribe_events` or the entity and device registry lists. The session adds the message id and matches up the reply.
+- `request(command)`: sends a supported raw command, such as `get_states` or the entity and device registry lists. The session adds the message id and matches up the reply.
+- `subscribe(subscription)`: sends a subscription, such as `subscribe_events`, and succeeds once Home Assistant accepts it with a `Stream` of its events. Events for each subscription are routed to its own stream by message id, and closing the scope unsubscribes.
 - `extractTarget(target)`: asks Home Assistant which entities, devices and areas a target refers to, through `extract_from_target`.
 - `closed`: fails once the connection drops. The library doesn't reconnect on its own; race your work against `closed` and retry with a `Schedule`, as the bridge does.
 
-`connect` doesn't subscribe to anything by itself. Send `subscribe_events` for `state_changed` and each new state is passed to `onState`.
+`connect` doesn't subscribe to anything by itself. Subscribe to `state_changed` and decode each event with `StateChangedEvent`; its `new_state` is `null` when an entity is removed. `HomeAssistantEvent` decodes any other event.
 
 ### Actions
 

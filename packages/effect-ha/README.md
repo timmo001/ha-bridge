@@ -27,7 +27,6 @@ const program = Effect.gen(function* () {
   const session = yield* connect({
     url: "http://homeassistant.local:8123",
     token: Redacted.make(process.env.HA_TOKEN ?? ""),
-    onState: () => Effect.void,
   });
 
   const config = yield* session.getConfig;
@@ -49,11 +48,24 @@ The session has:
 
 - `callAction(action)`: runs an action. It succeeds with the action's response when `return_response` is set, otherwise `null`.
 - `getConfig`: the instance's configuration, such as its time zone and version.
-- `request(command)`: sends a raw WebSocket command, such as `get_states` or `subscribe_events`.
+- `request(command)`: sends a raw WebSocket command, such as `get_states`.
+- `subscribe(subscription)`: sends a subscription, such as `subscribe_events`, and succeeds once Home Assistant accepts it with a `Stream` of its events. Closing the scope unsubscribes.
 - `extractTarget(target)`: asks Home Assistant which entities, devices and areas a target refers to, with `extract_from_target`. It takes IDs only.
 - `closed`: fails once the connection is lost.
 
-`onState` receives each new entity state from `state_changed` events after you subscribe to them with `request`. The optional `onRemove` receives the ID of an entity removed from Home Assistant, and `onEvent` receives the type of every other subscribed event, such as `entity_registry_updated`.
+Decode `state_changed` events with `StateChangedEvent`, and other events with `HomeAssistantEvent`:
+
+```ts
+const events = yield* session.subscribe({
+  type: "subscribe_events",
+  event_type: "state_changed",
+});
+
+yield* events.pipe(
+  Stream.mapEffect(Schema.decodeUnknownEffect(StateChangedEvent)),
+  Stream.runForEach(({ data }) => Console.log(data.entity_id)),
+);
+```
 
 ## Actions
 
