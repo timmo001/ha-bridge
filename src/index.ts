@@ -84,7 +84,11 @@ import {
   Alert,
   Backup,
   BackupFolder,
+  Cloud,
+  Ffmpeg,
+  GoogleAssistant,
   Hassio,
+  Lovelace,
   HomeAssistantError,
   PythonScript,
   RestCommand,
@@ -3838,6 +3842,90 @@ const pythonScript = configuredCommandGroup(
   Effect.succeed,
 );
 
+const cloud = domainCommand(
+  "cloud",
+  undefined,
+  "Home Assistant Cloud actions",
+  [
+    systemCommand(
+      "remote-connect",
+      Cloud.remoteConnect,
+      "Turn on remote access through the cloud",
+    ),
+    systemCommand(
+      "remote-disconnect",
+      Cloud.remoteDisconnect,
+      "Turn off remote access through the cloud",
+    ),
+  ],
+);
+
+const ffmpegCommand = (
+  name: string,
+  toAction: (entityIds?: ReadonlyArray<`binary_sensor.${string}`>) => Action,
+  description: string,
+) =>
+  Command.make(name, { target: targetConfig("binary_sensor") }, (input) =>
+    Effect.gen(function* () {
+      const target = toTarget("binary_sensor", input.target);
+
+      if (isEmptyTarget(target)) {
+        return yield* callAction(toAction());
+      }
+
+      const updates = yield* getEntities(target, "binary_sensor");
+
+      const entityIds = updates
+        .map(({ state }) => state.entity_id)
+        .filter(isEntityIdIn("binary_sensor"));
+
+      if (entityIds.length === 0) {
+        return yield* failWith("the target matches no binary sensors");
+      }
+
+      return yield* callAction(toAction(entityIds));
+    }).pipe(withBridge),
+  ).pipe(
+    Command.withDescription(`${description}; without a target, every one`),
+  );
+
+const ffmpeg = domainCommand("ffmpeg", undefined, "FFmpeg sensor actions", [
+  ffmpegCommand("start", Ffmpeg.start, "Start FFmpeg sensors"),
+  ffmpegCommand("stop", Ffmpeg.stop, "Stop FFmpeg sensors"),
+  ffmpegCommand("restart", Ffmpeg.restart, "Restart FFmpeg sensors"),
+]);
+
+const googleAssistant = domainCommand(
+  "google_assistant",
+  undefined,
+  "Google Assistant actions",
+  [
+    Command.make(
+      "request-sync",
+      {
+        agentUserId: optionalFlag(
+          Flag.String("agent-user-id"),
+          "Google agent user ID (default: the token's user)",
+        ),
+      },
+      (input) =>
+        callAction(
+          GoogleAssistant.requestSync({
+            agentUserId: Option.getOrUndefined(input.agentUserId),
+          }),
+        ).pipe(withBridge),
+    ).pipe(Command.withDescription("Ask Google to sync its devices")),
+  ],
+);
+
+const lovelace = domainCommand("lovelace", undefined, "Dashboard actions", [
+  systemCommand(
+    "reload-resources",
+    Lovelace.reloadResources,
+    "Reload dashboard resources from YAML",
+  ),
+]);
+
 const yamlReloadDescriptions: Record<YamlReloadDomain, string> = {
   bayesian: "Bayesian sensor actions",
   command_line: "Command line actions",
@@ -4202,6 +4290,10 @@ const commands = [
   shellCommand,
   restCommand,
   pythonScript,
+  cloud,
+  ffmpeg,
+  googleAssistant,
+  lovelace,
   ...yamlReloadCommands,
 ] as const;
 

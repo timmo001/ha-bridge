@@ -1691,9 +1691,12 @@ export const Hassio = {
 export type CommandVariables = Readonly<Record<string, Schema.Json>>;
 
 const decodeResponse =
-  <S extends Schema.Top>(schema: S, label: string) =>
+  <A>(
+    decode: (input: Schema.Json | null) => Effect.Effect<A, Schema.SchemaError>,
+    label: string,
+  ) =>
   (response: Schema.Json | null) =>
-    Schema.decodeUnknownEffect(schema)(response).pipe(
+    decode(response).pipe(
       Effect.mapError(
         (error) =>
           new HomeAssistantError({
@@ -1729,7 +1732,10 @@ export type ShellCommandResponse = typeof ShellCommandResponse.Type;
 
 export const ShellCommand = {
   ...configuredCommand("shell_command"),
-  responseFrom: decodeResponse(ShellCommandResponse, "shell command response"),
+  responseFrom: decodeResponse(
+    Schema.decodeUnknownEffect(ShellCommandResponse),
+    "shell command response",
+  ),
 };
 
 // `content` is parsed JSON for JSON responses, otherwise text.
@@ -1746,8 +1752,42 @@ export type RestCommandResponse = typeof RestCommandResponse.Type;
 
 export const RestCommand = {
   ...configuredCommand("rest_command"),
-  responseFrom: decodeResponse(RestCommandResponse, "REST command response"),
+  responseFrom: decodeResponse(
+    Schema.decodeUnknownEffect(RestCommandResponse),
+    "REST command response",
+  ),
 };
 
 // A script's response is whatever it puts in `output`.
 export const PythonScript = configuredCommand("python_script");
+
+export const Cloud = {
+  // Turns remote access through Home Assistant Cloud on or off.
+  remoteConnect: () => onDomain("cloud.remote_connect"),
+  remoteDisconnect: () => onDomain("cloud.remote_disconnect"),
+};
+
+const ffmpegAction =
+  (action: string) => (entityIds?: ReadonlyArray<EntityId<"binary_sensor">>) =>
+    onDomain(`ffmpeg.${action}`, { entity_id: entityIds });
+
+// Controls FFmpeg sensors, such as noise and motion sensors. Without entity
+// IDs, every one.
+export const Ffmpeg = {
+  start: ffmpegAction("start"),
+  stop: ffmpegAction("stop"),
+  restart: ffmpegAction("restart"),
+};
+
+export const GoogleAssistant = {
+  // Asks Google to sync its devices, for `agentUserId` or the caller.
+  requestSync: (options?: { readonly agentUserId?: string }) =>
+    onDomain("google_assistant.request_sync", {
+      agent_user_id: options?.agentUserId,
+    }),
+};
+
+export const Lovelace = {
+  // Reloads dashboard resources from YAML.
+  reloadResources: () => onDomain("lovelace.reload_resources"),
+};
