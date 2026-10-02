@@ -76,7 +76,7 @@ import {
   unavailableRegistries,
   type Registries,
 } from "./registries.js";
-import { exactlyOne, resolveTarget } from "./target.js";
+import { exactlyOne, resolveTarget, valuesOf } from "./target.js";
 
 const searchKinds = ["entity", "device", "area"] as const;
 
@@ -254,6 +254,10 @@ const actionDomain = (action: string) => {
 
 const inDomain = (domain: string | undefined) => (entityId: string) =>
   domain === undefined || entityId.startsWith(`${domain}.`);
+
+// Entries about an entity in the domain, or every entry without a domain.
+const logbookInDomain = (domain: string | undefined) => (entry: LogbookEntry) =>
+  inDomain(domain)(entry.entity_id ?? "");
 
 export class HomeAssistant extends Context.Service<
   HomeAssistant,
@@ -535,10 +539,25 @@ export class HomeAssistant extends Context.Service<
           return state === undefined ? [] : [state];
         });
 
+      // Fails for an entity ID the target names that has no state, which
+      // reads can't show; areas and other targets just skip such entities.
       const getEntities = Effect.fn("HomeAssistant.getEntities")(function* (
         request: TargetRequest,
       ) {
-        const entityIds = yield* expandEntities(yield* connected, request);
+        const current = yield* connected;
+        const resolved = yield* resolve(request.target, request.domain);
+
+        const unknown = valuesOf(resolved.entity_id ?? []).filter(
+          (entityId) => !states.has(entityId),
+        );
+
+        if (unknown.length > 0) {
+          return yield* new TargetError({
+            message: `Home Assistant has no entity ${unknown.join(", ")}`,
+          });
+        }
+
+        const entityIds = yield* expandEntities(current, request);
 
         return yield* Effect.forEach(knownStates(entityIds), withName);
       });
@@ -755,20 +774,50 @@ export class HomeAssistant extends Context.Service<
           ...(yield* logbookScope(current, request)),
         });
 
-        return yield* logbookFrom(result);
+        const entries = yield* logbookFrom(result);
+
+        return entries.filter(logbookInDomain(request.domain));
       });
 
+      // Each subscription starts a minute before the last entry sent, or
+      // before the watch began, so Home Assistant never sees a start time
+      // after its own clock. Past entries up to that point are skipped, so
+      // entries logged while disconnected still arrive, once.
       const watchLogbook = (request: WatchLogbookRequest) =>
-        followSessions((current) =>
-          Effect.map(
-            logbookScope(current, request),
-            (scope): HomeAssistantSubscription => ({
-              type: "logbook/event_stream",
-              start_time: new Date().toISOString(),
-              ...scope,
-            }),
+        Stream.unwrap(
+          Effect.map(Ref.make(Date.now()), (lastSent) =>
+            followSessions((current) =>
+              Effect.all([
+                logbookScope(current, request),
+                Ref.get(lastSent),
+              ]).pipe(
+                Effect.map(([scope, last]): HomeAssistantSubscription => ({
+                  type: "logbook/event_stream",
+                  start_time: new Date(last - 60_000).toISOString(),
+                  ...scope,
+                })),
+              ),
+            ).pipe(
+              Stream.mapEffect(logbookEventFrom),
+              Stream.mapEffect(({ past, entries }) =>
+                Ref.modify(lastSent, (last) => {
+                  const fresh = past
+                    ? entries.filter((entry) => Date.parse(entry.when) > last)
+                    : entries;
+
+                  const newest = fresh.at(-1);
+
+                  return [
+                    fresh,
+                    newest === undefined ? last : Date.parse(newest.when),
+                  ];
+                }),
+              ),
+              Stream.flattenIterable,
+              Stream.filter(logbookInDomain(request.domain)),
+            ),
           ),
-        ).pipe(Stream.mapEffect(logbookEventFrom), Stream.flattenIterable);
+        );
 
       const watchTrigger = (request: TriggerRequest) =>
         followSessions(() =>

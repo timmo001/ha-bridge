@@ -63,7 +63,7 @@ const LogbookFields = {
   domain: Schema.optionalKey(Schema.String),
   icon: Schema.optionalKey(Schema.String),
   // What caused the entry, such as an automation's trigger.
-  source: Schema.optionalKey(Schema.String),
+  source: Schema.optionalKey(Schema.NullOr(Schema.String)),
   context_id: Schema.optionalKey(Schema.String),
   context_user_id: Schema.optionalKey(Schema.NullOr(Schema.String)),
   context_event_type: Schema.optionalKey(Schema.String),
@@ -74,7 +74,7 @@ const LogbookFields = {
   context_name: Schema.optionalKey(Schema.String),
   context_message: Schema.optionalKey(Schema.String),
   context_state: Schema.optionalKey(Schema.String),
-  context_source: Schema.optionalKey(Schema.String),
+  context_source: Schema.optionalKey(Schema.NullOr(Schema.String)),
 };
 
 const WireLogbookEntry = Schema.Struct({
@@ -100,7 +100,11 @@ const decodeLogbook = Schema.decodeUnknownEffect(
 );
 
 const decodeLogbookEvent = Schema.decodeUnknownEffect(
-  Schema.Struct({ events: Schema.Array(WireLogbookEntry) }),
+  Schema.Struct({
+    events: Schema.Array(WireLogbookEntry),
+    // Only batches of past entries have a range; live ones don't.
+    start_time: Schema.optionalKey(Schema.Finite),
+  }),
 );
 
 const logbookError = (error: Schema.SchemaError) =>
@@ -113,9 +117,13 @@ export const logbookFrom = (result: Schema.Json | null) =>
     Effect.mapError(logbookError),
   );
 
-// Reads the entries from a `logbook/event_stream` event.
+// Reads a `logbook/event_stream` event: its entries, and whether they are
+// past entries sent before the live ones.
 export const logbookEventFrom = (event: Schema.Json) =>
   decodeLogbookEvent(event).pipe(
-    Effect.map(({ events }) => events.map(toLogbookEntry)),
+    Effect.map(({ events, start_time }) => ({
+      past: start_time !== undefined,
+      entries: events.map(toLogbookEntry),
+    })),
     Effect.mapError(logbookError),
   );

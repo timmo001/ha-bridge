@@ -130,7 +130,8 @@ const resolveValue = (
   );
 };
 
-const valuesOf = (value: string | ReadonlyArray<string>) => Arr.ensure(value);
+export const valuesOf = (value: string | ReadonlyArray<string>) =>
+  Arr.ensure(value);
 
 // Replaces names in the target with IDs: an exact ID first, then an entity
 // object ID in `domain`, then a unique case-insensitive name. `domain` also
@@ -197,12 +198,19 @@ export const exactlyOne = <A>(
     return Effect.succeed(only);
   }
 
+  const ids = items.map(idOf);
+
+  const listed =
+    ids.length > 5
+      ? `${ids.slice(0, 5).join(", ")} and ${ids.length - 5} more`
+      : ids.join(", ");
+
   return Effect.fail(
     new TargetError({
       message:
         items.length === 0
           ? `The target matches no ${what}`
-          : `The target matches more than one ${what}: ${items.map(idOf).join(", ")}`,
+          : `The target needs to match one ${what} but matches ${items.length}: ${listed}`,
     }),
   );
 };

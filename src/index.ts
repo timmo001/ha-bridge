@@ -10,7 +10,6 @@ import {
   Logger,
   Option,
   Predicate,
-  Ref,
   Schema,
   Stream,
 } from "effect";
@@ -359,26 +358,6 @@ const percentArgument = Argument.String("position").pipe(
   Argument.withDescription("Position from 0 to 100"),
 );
 
-// For output that only fits one entity: fails once a second entity appears.
-const singleEntity = <E, R>(updates: Stream.Stream<EntityUpdate, E, R>) =>
-  Stream.unwrap(
-    Effect.map(Ref.make<string | undefined>(undefined), (first) =>
-      updates.pipe(
-        Stream.mapEffect((update) =>
-          Effect.flatMap(
-            Ref.getAndUpdate(first, (seen) => seen ?? update.state.entity_id),
-            (seen) =>
-              seen === undefined || seen === update.state.entity_id
-                ? Effect.succeed(update)
-                : failWith(
-                    `the target matches more than one entity (${seen}, ${update.state.entity_id}); this output shows one`,
-                  ),
-          ),
-        ),
-      ),
-    ),
-  );
-
 const watchUpdates = (target: Target, domain?: string) =>
   Stream.unwrap(
     Effect.gen(function* () {
@@ -397,13 +376,18 @@ const stateWatchCommand = (
   toText: (state: EntityUpdate["state"]) => string,
 ) =>
   Command.make("watch", { target: targetConfig(domain) }, (input) =>
-    watchUpdates(toTarget(domain, input.target), domain).pipe(
-      singleEntity,
-      Stream.runForEach(({ state, name }) =>
-        Console.log(stateTextBar(state, name, toText)),
-      ),
-      withBridge,
-    ),
+    Effect.gen(function* () {
+      const entityId = yield* resolveOne(
+        domain,
+        toTarget(domain, input.target),
+      );
+
+      yield* watchUpdates({ entity_id: entityId }, domain).pipe(
+        Stream.runForEach(({ state, name }) =>
+          Console.log(stateTextBar(state, name, toText)),
+        ),
+      );
+    }).pipe(withBridge),
   ).pipe(
     Command.withAlias("w"),
     Command.withDescription("Print bar JSON now and on every change"),
@@ -2270,8 +2254,26 @@ const simpleCommands = (
     entityActionCommand(domain, name, toAction, description),
   );
 
+// Checks the target matches something first: Home Assistant only says an
+// action with a response matched no entities, not why.
+const callResponseAction = Effect.fn("callResponseAction")(function* (
+  action: Action,
+) {
+  const [domain = ""] = action.action.split(".");
+
+  if (action.target !== undefined) {
+    const updates = yield* getEntities(action.target, domain);
+
+    if (updates.length === 0) {
+      return yield* failWith(`The target matches no ${domain} entity`);
+    }
+  }
+
+  return yield* callAction(action);
+});
+
 const printResponse = (action: Action) =>
-  callAction(action).pipe(Effect.flatMap(printJson));
+  callResponseAction(action).pipe(Effect.flatMap(printJson));
 
 const decodePlayMedia = Schema.decodeUnknownEffect(MediaPlayerPlayMediaData);
 
@@ -2911,7 +2913,7 @@ const calendar = domainCommand("calendar", undefined, "Calendar actions", [
 
         const start = new Date();
 
-        const response = yield* callAction(
+        const response = yield* callResponseAction(
           Calendar.getEvents(toTarget("calendar", input.target), {
             start,
             end: new Date(start.getTime() + input.days * 86_400_000),
@@ -3245,6 +3247,11 @@ const parseTime = (label: string) => (value: string) =>
     },
   });
 
+const domainFilterFlag = optionalFlag(
+  Flag.String("domain"),
+  "Only entities in this domain, such as light",
+);
+
 const timeRangeConfig = {
   start: Flag.String("start").pipe(
     Flag.withDescription(
@@ -3292,6 +3299,7 @@ const historyCommand = domainCommand(
       "get",
       {
         ...timeRangeConfig,
+        domain: domainFilterFlag,
         noAttributes: Flag.Boolean("no-attributes").pipe(
           Flag.withDescription("Leave out attributes"),
           Flag.withDefault(false),
@@ -3318,6 +3326,7 @@ const historyCommand = domainCommand(
           const history = yield* client
             .GetHistory({
               target,
+              domain: Option.getOrUndefined(input.domain),
               ...range,
               no_attributes: input.noAttributes,
               all_changes: input.allChanges,
@@ -3353,7 +3362,11 @@ const historyCommand = domainCommand(
 const logbook = domainCommand("logbook", undefined, "Logbook actions", [
   Command.make(
     "get",
-    { ...timeRangeConfig, target: targetConfig(undefined) },
+    {
+      ...timeRangeConfig,
+      domain: domainFilterFlag,
+      target: targetConfig(undefined),
+    },
     (input) =>
       Effect.gen(function* () {
         const range = yield* parseTimeRange(input);
@@ -3362,6 +3375,7 @@ const logbook = domainCommand("logbook", undefined, "Logbook actions", [
         const entries = yield* client
           .GetLogbook({
             target: optionalTarget(toTarget(undefined, input.target)),
+            domain: Option.getOrUndefined(input.domain),
             ...range,
           })
           .pipe(
@@ -3388,6 +3402,7 @@ const logbook = domainCommand("logbook", undefined, "Logbook actions", [
         Flag.withDescription("Print each entry as JSON"),
         Flag.withDefault(false),
       ),
+      domain: domainFilterFlag,
       target: targetConfig(undefined),
     },
     (input) =>
@@ -3397,6 +3412,7 @@ const logbook = domainCommand("logbook", undefined, "Logbook actions", [
         yield* client
           .WatchLogbook({
             target: optionalTarget(toTarget(undefined, input.target)),
+            domain: Option.getOrUndefined(input.domain),
           })
           .pipe(
             Stream.catchTags({
@@ -4653,14 +4669,61 @@ const entityReadConfig = {
     Flag.String("domain"),
     "Only entities in this domain, such as light",
   ),
+  deviceClass: optionalFlag(
+    Flag.String("device-class"),
+    "Only entities with this device class, such as temperature",
+  ),
   ...entityOutputFlags,
   target: targetConfig(undefined),
 };
 
+const withDeviceClass =
+  (deviceClass: Option.Option<string>) => (update: EntityUpdate) =>
+    Option.match(deviceClass, {
+      onNone: () => true,
+      onSome: (wanted) => update.state.attributes?.device_class === wanted,
+    });
+
+// The entities a read matches now, failing when there are none, or when
+// --bar-json needs exactly one and there are more.
+const matchedEntities = Effect.fn("matchedEntities")(function* (
+  target: Target,
+  domain: Option.Option<string>,
+  deviceClass: Option.Option<string>,
+  barJson: boolean,
+) {
+  const updates = (yield* getEntities(
+    target,
+    Option.getOrUndefined(domain),
+  )).filter(withDeviceClass(deviceClass));
+
+  if (updates.length === 0) {
+    return yield* failWith("The target matches no entity");
+  }
+
+  if (!barJson) {
+    return updates;
+  }
+
+  const update = yield* exactlyOne(
+    updates,
+    ({ state }) => state.entity_id,
+  ).pipe(
+    Effect.mapError(
+      (error) =>
+        new CommandError({
+          message: `${error.message}; --bar-json shows one entity`,
+        }),
+    ),
+  );
+
+  return [update];
+});
+
 const watch = Command.make(
   "watch",
   entityReadConfig,
-  ({ domain, target, ...output }) =>
+  ({ domain, deviceClass, target, ...output }) =>
     Effect.gen(function* () {
       const format = yield* entityFormatter(output);
 
@@ -4672,7 +4735,18 @@ const watch = Command.make(
 
       const entityTarget = toTarget(undefined, target);
 
-      const updates = watchUpdates(entityTarget, Option.getOrUndefined(domain));
+      const matched = yield* matchedEntities(
+        entityTarget,
+        domain,
+        deviceClass,
+        output.barJson,
+      );
+
+      const updates = (
+        output.barJson
+          ? watchUpdates({ entity_id: matched[0].state.entity_id })
+          : watchUpdates(entityTarget, Option.getOrUndefined(domain))
+      ).pipe(Stream.filter(withDeviceClass(deviceClass)));
 
       yield* (
         format.keyed
@@ -4685,12 +4759,14 @@ const watch = Command.make(
                   ] as const,
               ),
             )
-          : (output.barJson ? singleEntity(updates) : updates).pipe(
+          : updates.pipe(
               Stream.map(
                 (update) =>
                   [
                     update.state.entity_id,
-                    plainLine(entityTarget, format.line)(update),
+                    output.barJson
+                      ? format.line(update)
+                      : plainLine(entityTarget, format.line)(update),
                   ] as const,
               ),
             )
@@ -4709,15 +4785,17 @@ const watch = Command.make(
 const get = Command.make(
   "get",
   entityReadConfig,
-  ({ domain, target, ...output }) =>
+  ({ domain, deviceClass, target, ...output }) =>
     Effect.gen(function* () {
       const format = yield* entityFormatter(output);
 
       const entityTarget = toTarget(undefined, target);
 
-      const updates = yield* getEntities(
+      const updates = yield* matchedEntities(
         entityTarget,
-        Option.getOrUndefined(domain),
+        domain,
+        deviceClass,
+        output.barJson,
       );
 
       if (format.keyed) {
@@ -4726,27 +4804,13 @@ const get = Command.make(
         return;
       }
 
-      if (!output.barJson) {
-        yield* Effect.forEach(updates, (update) =>
-          Console.log(plainLine(entityTarget, format.line)(update)),
-        );
-
-        return;
-      }
-
-      const update = yield* exactlyOne(
-        updates,
-        ({ state }) => state.entity_id,
-      ).pipe(
-        Effect.mapError(
-          (error) =>
-            new CommandError({
-              message: `${error.message}; --bar-json shows one entity`,
-            }),
+      yield* Effect.forEach(updates, (update) =>
+        Console.log(
+          output.barJson
+            ? format.line(update)
+            : plainLine(entityTarget, format.line)(update),
         ),
       );
-
-      yield* Console.log(format.line(update));
     }).pipe(withBridge),
 ).pipe(
   Command.withAlias("g"),
