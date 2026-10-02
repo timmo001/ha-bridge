@@ -147,6 +147,8 @@ class FakeWebSocket implements Socket.WebSocketLike {
         entities: [],
       })),
       Match.when("config/device_registry/list", () => []),
+      Match.when("config/area_registry/list", () => []),
+      Match.when("config/floor_registry/list", () => []),
       Match.when("get_config", () => configResult),
       Match.orElse(() => null),
     );

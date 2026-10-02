@@ -5,6 +5,8 @@ import {
   stringAttribute,
   type EntityState,
 } from "@timmo001/effect-ha";
+import type { SearchMatch } from "@timmo001/effect-ha-bridge";
+import type { CommandMatch } from "../search/commands.js";
 
 export interface EntityBarOptions {
   readonly icon: string;
@@ -189,4 +191,28 @@ export const stateTextBar = (
   const text = toText(state);
 
   return encodeBar({ text, tooltip: text, className: state.state, name });
+};
+
+// Tab-separated kind, ID, name and context, one result per line.
+export const searchLine = (result: SearchMatch | CommandMatch) => {
+  const columns =
+    result.kind === "command"
+      ? [
+          `ha-bridge ${result.id}`,
+          result.description,
+          result.alias === undefined ? "" : `ha-bridge ${result.alias}`,
+        ]
+      : [
+          result.id,
+          result.name,
+          [
+            result.kind === "device" ? result.parentDevice : undefined,
+            result.area,
+            result.floor,
+          ]
+            .filter((part) => part !== undefined)
+            .join(", "),
+        ];
+
+  return [result.kind, ...columns].join("\t").trimEnd();
 };

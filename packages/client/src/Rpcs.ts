@@ -7,6 +7,7 @@ import {
   HomeAssistantError,
 } from "@timmo001/effect-ha";
 import { EntityUpdate } from "./Entity.js";
+import { SearchQueryEmpty, SearchRequest, SearchResults } from "./Search.js";
 
 const EntityPayload = { entityId: Schema.String };
 
@@ -36,5 +37,11 @@ export class BridgeRpcs extends RpcGroup.make(
     },
     success: CameraSnapshot,
     error: HomeAssistantError,
+  }),
+  // Fuzzy search over cached entities, devices and areas.
+  Rpc.make("Search", {
+    payload: SearchRequest,
+    success: SearchResults,
+    error: SearchQueryEmpty,
   }),
 ) {}

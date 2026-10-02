@@ -25,6 +25,7 @@ const Handlers = BridgeRpcs.toLayer(
       CallAction: (action) => homeAssistant.callAction(action),
       GetConfig: () => homeAssistant.getConfig,
       CameraSnapshot: ({ entityId }) => homeAssistant.cameraSnapshot(entityId),
+      Search: (request) => homeAssistant.search(request),
     });
   }),
 );

@@ -14,6 +14,7 @@ import {
 import { HttpClient } from "effect/http";
 import { BridgeConfig } from "../config/Config.js";
 import {
+  AreaRegistry,
   cameraSnapshot,
   connect,
   DeviceRegistry,
@@ -21,16 +22,33 @@ import {
   EntityRegistryDisplay,
   EntityState,
   entityNamerFrom,
+  FloorRegistry,
   friendlyName,
   HomeAssistantError,
   type Action,
   type CameraSnapshot,
   type EntityId,
-  type EntityNamer,
   type HomeAssistantConfig,
   type HomeAssistantSession,
 } from "@timmo001/effect-ha";
-import type { EntityUpdate } from "@timmo001/effect-ha-bridge";
+import type {
+  EntityUpdate,
+  SearchQueryEmpty,
+  SearchRequest,
+  SearchResults,
+} from "@timmo001/effect-ha-bridge";
+import { Search, selectResults } from "../search/Search.js";
+import {
+  emptyRegistries,
+  matchesFilters,
+  searchItems,
+  searchKeys,
+  toSearchMatch,
+  unavailableRegistries,
+  type Registries,
+} from "../search/items.js";
+
+const searchKinds = ["entity", "device", "area"] as const;
 
 export interface HomeAssistantService {
   readonly getEntity: (entityId: string) => Effect.Effect<EntityUpdate | null>;
@@ -43,12 +61,21 @@ export interface HomeAssistantService {
   readonly cameraSnapshot: (
     entityId: EntityId<"camera">,
   ) => Effect.Effect<CameraSnapshot, HomeAssistantError>;
+  // Searches the cached states and registries; never asks Home Assistant.
+  readonly search: (
+    request: SearchRequest,
+  ) => Effect.Effect<SearchResults, SearchQueryEmpty>;
 }
 
 const reconnectDelay = "5 seconds";
 
-// Both are allowed for non-admin tokens. The frontend waits the same 500 ms.
-const registryEvents = ["entity_registry_updated", "device_registry_updated"];
+// All are allowed for non-admin tokens. The frontend waits the same 500 ms.
+const registryEvents = [
+  "entity_registry_updated",
+  "device_registry_updated",
+  "area_registry_updated",
+  "floor_registry_updated",
+];
 
 const registryRefreshDelay = "500 millis";
 
@@ -69,6 +96,10 @@ const decodeDisplay = Schema.decodeUnknownEffect(EntityRegistryDisplay);
 
 const decodeDevices = Schema.decodeUnknownEffect(DeviceRegistry);
 
+const decodeAreas = Schema.decodeUnknownEffect(AreaRegistry);
+
+const decodeFloors = Schema.decodeUnknownEffect(FloorRegistry);
+
 export class HomeAssistant extends Context.Service<
   HomeAssistant,
   HomeAssistantService
@@ -77,17 +108,18 @@ export class HomeAssistant extends Context.Service<
     HomeAssistant,
     Effect.gen(function* () {
       const config = yield* (yield* BridgeConfig).load;
+      const search = yield* Search;
       // Hot cache of every entity, written on each state_changed event.
       const states = new Map<string, EntityState>();
-      const namer = yield* Ref.make<EntityNamer | undefined>(undefined);
+      const registries = yield* Ref.make<Registries>(emptyRegistries);
       const session = yield* Ref.make(Option.none<HomeAssistantSession>());
       const changes = yield* PubSub.sliding<CacheEvent>(4096);
 
-      const nameWith = (names: EntityNamer | undefined, state: EntityState) =>
-        displayName(names, state.entity_id, friendlyName(state));
+      const nameWith = (current: Registries, state: EntityState) =>
+        displayName(current.namer, state.entity_id, friendlyName(state));
 
       const withName = (state: EntityState) =>
-        Effect.map(Ref.get(namer), (current) => ({
+        Effect.map(Ref.get(registries), (current) => ({
           state,
           name: nameWith(current, state),
         }));
@@ -97,45 +129,103 @@ export class HomeAssistant extends Context.Service<
           Effect.andThen(PubSub.publish(changes, stateEvent({ state }))),
         );
 
-      const refreshNamer = Effect.fn("HomeAssistant.refreshNamer")(function* (
-        current: HomeAssistantSession,
-      ) {
-        const display = yield* current
-          .request({ type: "config/entity_registry/list_for_display" })
-          .pipe(Effect.flatMap(decodeDisplay));
+      const remove = (entityId: string) =>
+        Effect.sync(() => {
+          states.delete(entityId);
+        });
 
-        const devices = yield* current
-          .request({ type: "config/device_registry/list" })
-          .pipe(Effect.flatMap(decodeDevices));
-
-        yield* Ref.set(namer, entityNamerFrom(display, devices));
-        yield* Effect.logInfo(
-          "Cached entity naming",
-          `${display.entities.length} entities`,
+      // Each registry is best-effort and keeps its last value when it can't
+      // be fetched; friendly names are the naming fallback.
+      const load = <A, E extends { readonly message: string }>(
+        name: string,
+        fetch: Effect.Effect<A, E>,
+        fallback: A | undefined,
+      ) =>
+        fetch.pipe(
+          Effect.map((value): A | undefined => value),
+          Effect.catch((error) =>
+            Effect.logWarning(
+              `Could not fetch the ${name}`,
+              error.message,
+            ).pipe(Effect.as(fallback)),
+          ),
         );
-      });
+
+      const refreshRegistries = Effect.fn("HomeAssistant.refreshRegistries")(
+        function* (current: HomeAssistantSession) {
+          const previous = yield* Ref.get(registries);
+
+          const [entities, devices, areas, floors] = yield* Effect.all(
+            [
+              load(
+                "entity registry",
+                current
+                  .request({ type: "config/entity_registry/list_for_display" })
+                  .pipe(Effect.flatMap(decodeDisplay)),
+                previous.entities,
+              ),
+              load(
+                "device registry",
+                current
+                  .request({ type: "config/device_registry/list" })
+                  .pipe(Effect.flatMap(decodeDevices)),
+                previous.devices,
+              ),
+              load(
+                "area registry",
+                current
+                  .request({ type: "config/area_registry/list" })
+                  .pipe(Effect.flatMap(decodeAreas)),
+                previous.areas,
+              ),
+              load(
+                "floor registry",
+                current
+                  .request({ type: "config/floor_registry/list" })
+                  .pipe(Effect.flatMap(decodeFloors)),
+                previous.floors,
+              ),
+            ],
+            { concurrency: "unbounded" },
+          );
+
+          const next: Registries = {
+            entities,
+            devices,
+            areas,
+            floors,
+            namer:
+              entities !== undefined && devices !== undefined
+                ? entityNamerFrom(entities, devices)
+                : undefined,
+          };
+
+          yield* Ref.set(registries, next);
+          yield* Effect.logInfo(
+            "Cached registries",
+            `${entities?.entities.length ?? 0} entities, ${devices?.length ?? 0} devices, ${areas?.length ?? 0} areas`,
+          );
+
+          return { previous, next };
+        },
+      );
 
       // Re-sends only the states whose display name changed, so watchers
       // print the new name.
-      const refreshNames = Effect.fn("HomeAssistant.refreshNames")(
-        function* (current: HomeAssistantSession) {
-          const previous = yield* Ref.get(namer);
-          yield* refreshNamer(current);
-          const next = yield* Ref.get(namer);
+      const refreshNames = Effect.fn("HomeAssistant.refreshNames")(function* (
+        current: HomeAssistantSession,
+      ) {
+        const { previous, next } = yield* refreshRegistries(current);
 
-          yield* PubSub.publishAll(
-            changes,
-            Array.from(states.values())
-              .filter(
-                (state) => nameWith(previous, state) !== nameWith(next, state),
-              )
-              .map((state) => stateEvent({ state })),
-          );
-        },
-        Effect.catch((error) =>
-          Effect.logWarning("Could not refresh entity names", error.message),
-        ),
-      );
+        yield* PubSub.publishAll(
+          changes,
+          Array.from(states.values())
+            .filter(
+              (state) => nameWith(previous, state) !== nameWith(next, state),
+            )
+            .map((state) => stateEvent({ state })),
+        );
+      });
 
       const runSession = Effect.gen(function* () {
         const registryChanges = yield* Queue.sliding<void>(1);
@@ -143,6 +233,7 @@ export class HomeAssistant extends Context.Service<
         const current = yield* connect({
           ...config,
           onState: store,
+          onRemove: remove,
           // Only mark the change; the reader must keep up with Home Assistant.
           onEvent: (eventType) =>
             registryEvents.includes(eventType)
@@ -158,26 +249,21 @@ export class HomeAssistant extends Context.Service<
         yield* Effect.forEach(
           registryEvents,
           (event_type) =>
-            current.request({ type: "subscribe_events", event_type }),
+            current
+              .request({ type: "subscribe_events", event_type })
+              .pipe(
+                Effect.catch((error) =>
+                  Effect.logWarning(
+                    `Could not subscribe to ${event_type}`,
+                    error.message,
+                  ),
+                ),
+              ),
           { discard: true },
-        ).pipe(
-          Effect.catch((error) =>
-            Effect.logWarning(
-              "Could not subscribe to registry changes",
-              error.message,
-            ),
-          ),
         );
-        // Naming is best-effort; friendly names are the fallback. It runs
-        // before the snapshot so the first states already use registry names.
-        yield* refreshNamer(current).pipe(
-          Effect.catch((error) =>
-            Effect.logWarning(
-              "Could not fetch registries for naming",
-              error.message,
-            ),
-          ),
-        );
+        // Runs before the snapshot so the first states already use registry
+        // names.
+        yield* refreshRegistries(current);
 
         const snapshot = yield* current.request({ type: "get_states" }).pipe(
           Effect.flatMap(decodeStates),
@@ -273,13 +359,48 @@ export class HomeAssistant extends Context.Service<
           Effect.provideService(HttpClient.HttpClient, http),
         );
 
+      const runSearch = Effect.fn("HomeAssistant.search")(function* (
+        request: SearchRequest,
+      ) {
+        const current = yield* Ref.get(registries);
+
+        const items = searchItems(states.values(), current).filter(
+          matchesFilters(request),
+        );
+
+        const perKind = yield* Effect.forEach(searchKinds, (kind) =>
+          search.fuzzy({
+            items: items.filter((item) => item.kind === kind),
+            query: request.query,
+            keys: searchKeys[kind],
+            primary: (item) => item.name,
+            overrides: { limit: Number.POSITIVE_INFINITY },
+          }),
+        );
+
+        const { results, total } = selectResults(
+          perKind.flatMap(({ results }) => results),
+          (item) => item.name,
+          { limit: request.limit, offset: request.offset },
+        );
+
+        return {
+          results: results.map(({ item, score, matched }) =>
+            toSearchMatch(item, score, matched),
+          ),
+          total,
+          unavailable: unavailableRegistries(current),
+        } satisfies SearchResults;
+      });
+
       return HomeAssistant.of({
         getEntity,
         watchEntity,
         callAction,
         getConfig,
         cameraSnapshot: snapshot,
+        search: runSearch,
       });
     }),
-  );
+  ).pipe(Layer.provide(Search.layer));
 }

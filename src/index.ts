@@ -103,6 +103,8 @@ import {
   BridgeClient,
   resolveSocketPath,
   type EntityUpdate,
+  type SearchMatch,
+  type SearchResults,
 } from "@timmo001/effect-ha-bridge";
 import { serve as serveBridge } from "./bridge/Server.js";
 import {
@@ -114,6 +116,7 @@ import {
   coverStateText,
   entityBar,
   entityFields,
+  searchLine,
   stateTextBar,
 } from "./cli/output.js";
 import { BridgeConfig } from "./config/Config.js";
@@ -122,6 +125,13 @@ import {
   parseInputNumberValue,
 } from "./homeassistant/inputNumber.js";
 import { lightData } from "./homeassistant/light.js";
+import {
+  commandItems,
+  commandKeys,
+  toCommandMatch,
+  type CommandMatch,
+} from "./search/commands.js";
+import { Search, selectResults } from "./search/Search.js";
 
 const haBridge = Command.make("ha-bridge").pipe(
   Command.withSharedFlags({
@@ -3194,72 +3204,268 @@ const reportCliCause = (cause: Cause.Cause<unknown>) => {
   );
 };
 
-haBridge.pipe(
-  Command.withSubcommands([
-    serve,
-    setup,
-    watch,
-    assistSatellite,
-    domainCommand("input_boolean", "ib", "Input boolean actions", [
-      ...toggleCommands("input_boolean", InputBoolean),
-      reloadCommand("input_boolean", InputBoolean.reload),
-    ]),
-    inputNumber,
-    light,
-    domainCommand(
-      "switch",
-      "s",
-      "Switch actions",
-      toggleCommands("switch", Switch),
-    ),
-    cover,
-    climate,
-    camera,
-    button,
-    inputButton,
-    lock,
-    valve,
-    siren,
-    remote,
-    select,
-    inputSelect,
-    number,
-    text,
-    inputText,
-    date,
-    time,
-    dateTime,
-    inputDateTime,
-    counter,
-    script,
-    automation,
-    scene,
-    timer,
-    schedule,
-    group,
-    zone,
-    person,
-    homeAssistant,
-    fan,
-    humidifier,
-    waterHeater,
-    mediaPlayer,
-    vacuum,
-    lawnMower,
-    alarm,
-    update,
-    notify,
-    persistentNotification,
-    tts,
-    todo,
-    calendar,
-    weather,
-    conversation,
-    aiTask,
-    image,
-    imageProcessing,
-    deviceTracker,
+const commands = [
+  serve,
+  setup,
+  watch,
+  assistSatellite,
+  domainCommand("input_boolean", "ib", "Input boolean actions", [
+    ...toggleCommands("input_boolean", InputBoolean),
+    reloadCommand("input_boolean", InputBoolean.reload),
   ]),
+  inputNumber,
+  light,
+  domainCommand(
+    "switch",
+    "s",
+    "Switch actions",
+    toggleCommands("switch", Switch),
+  ),
+  cover,
+  climate,
+  camera,
+  button,
+  inputButton,
+  lock,
+  valve,
+  siren,
+  remote,
+  select,
+  inputSelect,
+  number,
+  text,
+  inputText,
+  date,
+  time,
+  dateTime,
+  inputDateTime,
+  counter,
+  script,
+  automation,
+  scene,
+  timer,
+  schedule,
+  group,
+  zone,
+  person,
+  homeAssistant,
+  fan,
+  humidifier,
+  waterHeater,
+  mediaPlayer,
+  vacuum,
+  lawnMower,
+  alarm,
+  update,
+  notify,
+  persistentNotification,
+  tts,
+  todo,
+  calendar,
+  weather,
+  conversation,
+  aiTask,
+  image,
+  imageProcessing,
+  deviceTracker,
+] as const;
+
+const searchKinds = ["entity", "device", "area", "command"] as const;
+
+const search = Command.make(
+  "search",
+  {
+    query: Argument.String("query").pipe(
+      Argument.withDescription("Words to search for, such as kitchen lamp"),
+      Argument.atLeast(1),
+    ),
+    kinds: Flag.Literals("kind", searchKinds).pipe(
+      Flag.withDescription(
+        "Only return this kind; repeat for more (default: all)",
+      ),
+      Flag.atLeast(0),
+    ),
+    domain: optionalFlag(
+      Flag.String("domain"),
+      "Only entities in this domain, such as light, and the devices, areas and commands for it",
+    ),
+    area: optionalFlag(
+      Flag.String("area"),
+      "Only entities, devices and areas in this area, by ID or name",
+    ),
+    deviceClass: optionalFlag(
+      Flag.String("device-class"),
+      "Only entities with this device class, such as temperature, and their devices and areas",
+    ),
+    limit: Flag.Int("limit").pipe(
+      Flag.withDescription("Most results to show"),
+      Flag.withDefault(20),
+    ),
+    page: optionalFlag(
+      Flag.Int("page"),
+      "Show this page of --limit results, starting at 1",
+    ),
+    json: Flag.Boolean("json").pipe(
+      Flag.withDescription("Print the results as JSON"),
+      Flag.withDefault(false),
+    ),
+  },
+  (input) =>
+    Effect.gen(function* () {
+      const query = input.query.join(" ").trim();
+
+      if (query === "") {
+        return yield* failWith("enter something to search for");
+      }
+
+      if (input.limit < 1) {
+        return yield* failWith("--limit must be at least 1");
+      }
+
+      const page = Option.getOrUndefined(input.page);
+
+      if (page !== undefined && page < 1) {
+        return yield* failWith("--page must be at least 1");
+      }
+
+      const offset = page === undefined ? 0 : (page - 1) * input.limit;
+      const kinds = input.kinds.length === 0 ? searchKinds : input.kinds;
+      const haKinds = kinds.filter((kind) => kind !== "command");
+      const domain = Option.getOrUndefined(input.domain);
+
+      // Commands have no area or device class.
+      const includeCommands =
+        kinds.includes("command") &&
+        Option.isNone(input.area) &&
+        Option.isNone(input.deviceClass);
+
+      const searchBridge = (limit: number, offset: number) =>
+        Effect.gen(function* () {
+          const client = yield* BridgeClient;
+
+          return yield* client
+            .Search({
+              query,
+              kinds: haKinds,
+              domain,
+              area: Option.getOrUndefined(input.area),
+              deviceClass: Option.getOrUndefined(input.deviceClass),
+              limit,
+              offset,
+            })
+            .pipe(
+              Effect.catchTag("SearchQueryEmpty", () =>
+                failWith("enter something to search for"),
+              ),
+            );
+        }).pipe(withBridge);
+
+      const noResults: SearchResults = {
+        results: [],
+        total: 0,
+        unavailable: [],
+      };
+
+      const found = yield* Effect.gen(function* () {
+        if (!includeCommands) {
+          return yield* searchBridge(input.limit, offset);
+        }
+
+        const fromBridge =
+          haKinds.length === 0
+            ? noResults
+            : yield* searchBridge(Number.MAX_SAFE_INTEGER, 0);
+
+        const fromCommands = yield* (yield* Search)
+          .fuzzy({
+            items: commandItems(commands).filter(
+              (item) =>
+                domain === undefined || item.path.split(" ")[0] === domain,
+            ),
+            query,
+            keys: commandKeys,
+            primary: (item) => item.path,
+            overrides: { limit: Number.POSITIVE_INFINITY },
+          })
+          .pipe(
+            Effect.catchTag("SearchQueryEmpty", () =>
+              failWith("enter something to search for"),
+            ),
+          );
+
+        const merged = selectResults<SearchMatch | CommandMatch, string>(
+          [
+            ...fromBridge.results.map((result) => ({
+              item: result,
+              score: result.score,
+              matched: result.matched,
+            })),
+            ...fromCommands.results.map(({ item, score, matched }) => ({
+              item: toCommandMatch(item, score, matched),
+              score,
+              matched,
+            })),
+          ],
+          (result) => result.name,
+          { limit: input.limit, offset },
+        );
+
+        return {
+          results: merged.results.map(({ item }) => item),
+          total: merged.total,
+          unavailable: fromBridge.unavailable,
+        };
+      });
+
+      if (found.unavailable.length > 0) {
+        yield* Effect.logWarning(
+          `Results may be incomplete; the bridge could not load the ${found.unavailable.join(", ")}`,
+        );
+      }
+
+      const pages = Math.ceil(found.total / input.limit);
+
+      if (input.json) {
+        // JSON.stringify leaves out page and pages without --page.
+        yield* Console.log(
+          JSON.stringify({
+            ...found,
+            page,
+            pages: page === undefined ? undefined : pages,
+          }),
+        );
+
+        return;
+      }
+
+      yield* Effect.forEach(
+        found.results,
+        (result) => Console.log(searchLine(result)),
+        { discard: true },
+      );
+
+      if (found.results.length === 0) {
+        yield* Console.error(
+          found.total === 0 ? "No matches" : `No matches on page ${page}`,
+        );
+      } else if (page !== undefined || found.results.length < found.total) {
+        yield* Console.error(
+          `Showing ${offset + 1}-${offset + found.results.length} of ${found.total}${
+            page === undefined
+              ? "; use --limit or --page for more"
+              : `, page ${page} of ${pages}`
+          }`,
+        );
+      }
+    }).pipe(Effect.provide(Search.layer)),
+).pipe(
+  Command.withDescription(
+    "Search Home Assistant entities, devices and areas, and ha-bridge commands",
+  ),
+);
+
+haBridge.pipe(
+  Command.withSubcommands([...commands, search]),
   Command.run({ version: packageJson.version }),
   Effect.catchCause(reportCliCause),
   Effect.provide(
