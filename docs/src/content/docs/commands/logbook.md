@@ -39,6 +39,7 @@ FLAGS
   --start string     Start, as an ISO time or a duration before now, such as "2 hours"
   --end string       End, as an ISO time or a duration before now; now when left out
   --json             Print JSON
+  --domain string    Only entities in this domain, such as light
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
@@ -63,6 +64,7 @@ ARGUMENTS
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json             Print each entry as JSON
+  --domain string    Only entities in this domain, such as light
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more

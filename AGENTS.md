@@ -32,3 +32,5 @@ mise run check
 mise run test
 mise run build
 ```
+
+`mise run docs:gen` regenerates the command reference from the CLI's help and is slow. Only run it when a change touches commands, flags, arguments or their descriptions, and only once, at the end of the changeset. In a large change, leave it as its own final step.
