@@ -211,3 +211,32 @@ export const searchLine = (result: SearchMatch | CommandMatch) => {
 
   return [result.kind, ...columns].join("\t").trimEnd();
 };
+
+// Text results print as they are; numbers, lists and objects as JSON.
+export const templateText = (result: Schema.Json) =>
+  Predicate.isString(result) ? result : JSON.stringify(result);
+
+const TemplateBarFields = Schema.Struct({
+  text: Schema.String,
+  tooltip: Schema.optionalKey(Schema.String),
+  class: Schema.optionalKey(Schema.String),
+});
+
+const isTemplateBarFields = Schema.is(TemplateBarFields);
+
+// A result with `text`, and optionally `tooltip` and `class`, sets those;
+// any other result is the text.
+export const templateBar = (result: Schema.Json) =>
+  isTemplateBarFields(result)
+    ? encodeBar({
+        text: result.text,
+        tooltip: result.tooltip ?? "",
+        className: result.class ?? "",
+        name: "",
+      })
+    : encodeBar({
+        text: templateText(result),
+        tooltip: "",
+        className: "",
+        name: "",
+      });

@@ -7,6 +7,7 @@ import {
   entityField,
   entityFieldValues,
   stateTextBar,
+  templateBar,
 } from "./output.js";
 
 const noOptions = {
@@ -177,6 +178,26 @@ describe("coverStateText", () => {
   test("reports unavailable", () => {
     expect(coverStateText({ ...cover, state: "unavailable" })).toBe(
       "unavailable",
+    );
+  });
+});
+
+describe("templateBar", () => {
+  test("uses a text result as the text", () => {
+    expect(templateBar("21 °C")).toBe(
+      '{"class":"","text":"21 °C","tooltip":""}',
+    );
+  });
+
+  test("takes text, tooltip and class from an object result", () => {
+    expect(
+      templateBar({ text: "3", tooltip: "3 updates", class: "warning" }),
+    ).toBe('{"class":"warning","text":"3","tooltip":"3 updates"}');
+  });
+
+  test("prints other results as JSON text", () => {
+    expect(templateBar({ count: 3 })).toBe(
+      '{"class":"","text":"{\\"count\\":3}","tooltip":""}',
     );
   });
 });

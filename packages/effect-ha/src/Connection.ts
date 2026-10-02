@@ -13,6 +13,7 @@ import { Socket } from "effect/socket";
 import type { Action } from "./Action.js";
 import { HomeAssistantConfig } from "./HomeAssistantConfig.js";
 import { HomeAssistantError } from "./HomeAssistantError.js";
+import type { TemplateRequest } from "./Template.js";
 import {
   ExtractedTarget,
   type ExtractTargetOptions,
@@ -75,11 +76,21 @@ export type HomeAssistantCommand =
     };
 
 // Requests that stream events until they are unsubscribed.
-export type HomeAssistantSubscription = {
-  readonly type: "subscribe_events";
-  // Every event when left out; needs an admin token for most types.
-  readonly event_type?: string | undefined;
-};
+export type HomeAssistantSubscription =
+  | {
+      readonly type: "subscribe_events";
+      // Every event when left out; needs an admin token for most types.
+      readonly event_type?: string | undefined;
+    }
+  | {
+      readonly type: "render_template";
+      readonly template: string;
+      readonly variables?: TemplateRequest["variables"] | undefined;
+      readonly strict?: boolean | undefined;
+      readonly timeout?: number | undefined;
+      // Sends render errors and warnings as events.
+      readonly report_errors?: boolean | undefined;
+    };
 
 type OutgoingMessage =
   | ((HomeAssistantCommand | HomeAssistantSubscription) & {

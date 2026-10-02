@@ -6,6 +6,9 @@ import {
   HomeAssistantConfig,
   HomeAssistantError,
   Target,
+  TemplateRender,
+  TemplateRequest,
+  TemplateUpdate,
 } from "@timmo001/effect-ha";
 import { EntityUpdate } from "./Entity.js";
 import { SearchEmpty, SearchRequest, SearchResults } from "./Search.js";
@@ -44,6 +47,20 @@ export class BridgeRpcs extends RpcGroup.make(
     payload: { target: Target },
     success: CameraSnapshot,
     error: TargetFailure,
+  }),
+  // The template's first render. Fails on a render error.
+  Rpc.make("RenderTemplate", {
+    payload: TemplateRequest,
+    success: TemplateRender,
+    error: HomeAssistantError,
+  }),
+  // Every render, including errors and warnings, as what the template
+  // depends on changes. Renders again after reconnects.
+  Rpc.make("WatchTemplate", {
+    payload: TemplateRequest,
+    success: TemplateUpdate,
+    error: HomeAssistantError,
+    stream: true,
   }),
   // Fuzzy search over cached entities, devices and areas, or a list of
   // them without a query. Only a target needs Home Assistant.

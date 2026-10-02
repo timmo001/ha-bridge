@@ -9,6 +9,7 @@ import {
   Ref,
   Schema,
   Stream,
+  SubscriptionRef,
 } from "effect";
 import { HttpClient } from "effect/http";
 import { BridgeConfig } from "../config/Config.js";
@@ -32,6 +33,10 @@ import {
   type HomeAssistantConfig,
   type HomeAssistantSession,
   type Target,
+  type TemplateRender,
+  type TemplateRequest,
+  TemplateUpdate,
+  type HomeAssistantSubscription,
 } from "@timmo001/effect-ha";
 import {
   TargetError,
@@ -78,6 +83,15 @@ export interface HomeAssistantService {
   readonly cameraSnapshot: (
     target: Target,
   ) => Effect.Effect<CameraSnapshot, HomeAssistantError | TargetError>;
+  // The template's first render. Fails on a render error.
+  readonly renderTemplate: (
+    request: TemplateRequest,
+  ) => Effect.Effect<TemplateRender, HomeAssistantError>;
+  // Every render as what the template depends on changes, rendering again
+  // after reconnects. Fails when Home Assistant refuses the template.
+  readonly watchTemplate: (
+    request: TemplateRequest,
+  ) => Stream.Stream<TemplateUpdate, HomeAssistantError>;
   // Searches the cached states and registries. Only a target asks Home
   // Assistant, to expand it.
   readonly search: (
@@ -123,6 +137,24 @@ const decodeStates = Schema.decodeUnknownEffect(Schema.Array(EntityState));
 
 const decodeStateChanged = Schema.decodeUnknownEffect(StateChangedEvent);
 
+const decodeTemplateUpdate = (event: Schema.Json) =>
+  Schema.decodeUnknownEffect(TemplateUpdate)(event).pipe(
+    Effect.mapError(
+      (error) =>
+        new HomeAssistantError({
+          message: `decode template render: ${error.message}`,
+        }),
+    ),
+  );
+
+const templateSubscription = (
+  request: TemplateRequest,
+): HomeAssistantSubscription => ({
+  type: "render_template",
+  ...request,
+  report_errors: true,
+});
+
 const decodeDisplay = Schema.decodeUnknownEffect(EntityRegistryDisplay);
 
 const decodeDevices = Schema.decodeUnknownEffect(DeviceRegistry);
@@ -155,7 +187,11 @@ export class HomeAssistant extends Context.Service<
       // Hot cache of every entity, written on each state_changed event.
       const states = new Map<string, EntityState>();
       const registries = yield* Ref.make<Registries>(emptyRegistries);
-      const session = yield* Ref.make(Option.none<HomeAssistantSession>());
+
+      const session = yield* SubscriptionRef.make(
+        Option.none<HomeAssistantSession>(),
+      );
+
       const changes = yield* PubSub.sliding<CacheEvent>(4096);
 
       const nameWith = (current: Registries, state: EntityState) =>
@@ -338,7 +374,7 @@ export class HomeAssistant extends Context.Service<
           }
         });
         // Set before the reset so watchers can expand their targets.
-        yield* Ref.set(session, Option.some(current));
+        yield* SubscriptionRef.set(session, Option.some(current));
         yield* PubSub.publish(changes, cacheReset());
         yield* Stream.mergeAll(registryChanges, {
           concurrency: "unbounded",
@@ -350,7 +386,10 @@ export class HomeAssistant extends Context.Service<
         yield* Effect.logInfo("Bridge subscribed to Home Assistant");
 
         return yield* current.closed;
-      }).pipe(Effect.ensuring(Ref.set(session, Option.none())), Effect.scoped);
+      }).pipe(
+        Effect.ensuring(SubscriptionRef.set(session, Option.none())),
+        Effect.scoped,
+      );
 
       yield* runSession.pipe(
         Effect.catch((error) =>
@@ -361,7 +400,7 @@ export class HomeAssistant extends Context.Service<
         Effect.forkScoped,
       );
 
-      const connected = Ref.get(session).pipe(
+      const connected = SubscriptionRef.get(session).pipe(
         Effect.flatMap(Effect.fromOption),
         Effect.mapError(
           () =>
@@ -433,7 +472,7 @@ export class HomeAssistant extends Context.Service<
             // Expands the target again and returns the entities it newly
             // matches. Keeps the last set while Home Assistant is unreachable.
             const expand = Effect.gen(function* () {
-              const current = yield* Ref.get(session);
+              const current = yield* SubscriptionRef.get(session);
 
               if (Option.isNone(current)) {
                 return [];
@@ -490,6 +529,69 @@ export class HomeAssistant extends Context.Service<
               ),
             ).pipe(Stream.mapEffect(withName));
           }),
+        );
+
+      // A subscription's events on each session in turn, subscribing again
+      // after every reconnect. Fails only when Home Assistant refuses it.
+      const followSessions = (subscription: HomeAssistantSubscription) =>
+        SubscriptionRef.changes(session).pipe(
+          Stream.switchMap(
+            Option.match({
+              onNone: () => Stream.empty,
+              onSome: (current) =>
+                Stream.unwrap(
+                  Effect.map(current.subscribe(subscription), (events) =>
+                    events.pipe(Stream.catch(() => Stream.empty)),
+                  ),
+                ),
+            }),
+          ),
+        );
+
+      const renderTemplate = Effect.fn("HomeAssistant.renderTemplate")(
+        function* (request: TemplateRequest) {
+          const current = yield* connected;
+          // Home Assistant can report the same warning more than once.
+          const warnings = new Set<string>();
+
+          const events = yield* current.subscribe(
+            templateSubscription(request),
+          );
+
+          const rendered = yield* events.pipe(
+            Stream.mapEffect(decodeTemplateUpdate),
+            Stream.filter((update) => {
+              if ("error" in update && update.level !== "ERROR") {
+                warnings.add(update.error);
+
+                return false;
+              }
+
+              return true;
+            }),
+            Stream.runHead,
+          );
+
+          if (Option.isNone(rendered)) {
+            return yield* new HomeAssistantError({
+              message: "the template was not rendered",
+            });
+          }
+
+          if ("error" in rendered.value) {
+            return yield* new HomeAssistantError({
+              message: rendered.value.error,
+            });
+          }
+
+          return { result: rendered.value.result, warnings: [...warnings] };
+        },
+        Effect.scoped,
+      );
+
+      const watchTemplate = (request: TemplateRequest) =>
+        followSessions(templateSubscription(request)).pipe(
+          Stream.mapEffect(decodeTemplateUpdate),
         );
 
       const callAction = Effect.fn("HomeAssistant.callAction")(function* (
@@ -624,6 +726,8 @@ export class HomeAssistant extends Context.Service<
         callAction,
         getConfig,
         cameraSnapshot: snapshot,
+        renderTemplate,
+        watchTemplate,
         search: runSearch,
       });
     }),

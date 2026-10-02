@@ -88,6 +88,7 @@ import {
   Ffmpeg,
   GoogleAssistant,
   Hassio,
+  type TemplateRequest,
   Lovelace,
   HomeAssistantError,
   PythonScript,
@@ -150,6 +151,8 @@ import {
   entityFieldValues,
   searchLine,
   stateTextBar,
+  templateBar,
+  templateText,
 } from "./cli/output.js";
 import { targetConfig, targetFlags, toTarget } from "./cli/target.js";
 import { BridgeConfig } from "./config/Config.js";
@@ -3944,10 +3947,125 @@ const yamlReloadDescriptions: Record<YamlReloadDomain, string> = {
   zone: "Zone actions",
 };
 
-const yamlReloadCommands = YamlReloadDomain.literals.map((domain) =>
-  domainCommand(domain, undefined, yamlReloadDescriptions[domain], [
-    reloadCommand(domain, () => reloadYaml(domain)),
-  ]),
+const yamlReloadCommands = YamlReloadDomain.literals
+  .filter((domain) => domain !== "template")
+  .map((domain) =>
+    domainCommand(domain, undefined, yamlReloadDescriptions[domain], [
+      reloadCommand(domain, () => reloadYaml(domain)),
+    ]),
+  );
+
+const templateConfig = {
+  template: Argument.String("template").pipe(
+    Argument.withDescription("Template, such as \"{{ states('sun.sun') }}\""),
+  ),
+  variables: optionalFlag(
+    Flag.String("variables"),
+    'Variables as a JSON object, such as \'{"room":"office"}\'',
+  ),
+  strict: Flag.Boolean("strict").pipe(
+    Flag.withDescription("Fail on undefined variables"),
+    Flag.withDefault(false),
+  ),
+  timeout: optionalFlag(
+    Flag.Finite("timeout"),
+    "Seconds the first render may take",
+  ),
+  json: Flag.Boolean("json").pipe(
+    Flag.withDescription("Print each result as JSON"),
+    Flag.withDefault(false),
+  ),
+  barJson: Flag.Boolean("bar-json").pipe(
+    Flag.withDescription(
+      "Print one bar JSON object per result, taking text, tooltip and class from an object result",
+    ),
+    Flag.withDefault(false),
+  ),
+};
+
+type TemplateInput = Command.Command.Config.Infer<typeof templateConfig>;
+
+const templateRequest = (input: TemplateInput) =>
+  Effect.gen(function* () {
+    if (input.json && input.barJson) {
+      return yield* failWith("use --json or --bar-json, not both");
+    }
+
+    const variables = yield* parseOptional(
+      input.variables,
+      parseJsonObject("variables"),
+    );
+
+    return {
+      template: input.template,
+      variables,
+      strict: input.strict,
+      timeout: Option.getOrUndefined(input.timeout),
+    } satisfies TemplateRequest;
+  });
+
+const templateLine = (input: TemplateInput) => (result: Schema.Json) =>
+  input.barJson
+    ? templateBar(result)
+    : input.json
+      ? JSON.stringify(result)
+      : templateText(result);
+
+const template = domainCommand(
+  "template",
+  undefined,
+  "Render templates and reload template entities",
+  [
+    Command.make("render", templateConfig, (input) =>
+      Effect.gen(function* () {
+        const request = yield* templateRequest(input);
+        const client = yield* BridgeClient;
+
+        const rendered = yield* client
+          .RenderTemplate(request)
+          .pipe(
+            Effect.catchTag("HomeAssistantError", (error) =>
+              failWith(`could not render the template: ${error.message}`),
+            ),
+          );
+
+        yield* Effect.forEach(rendered.warnings, (warning) =>
+          Effect.logWarning(warning),
+        );
+
+        yield* Console.log(templateLine(input)(rendered.result));
+      }).pipe(withBridge),
+    ).pipe(
+      Command.withAlias("r"),
+      Command.withDescription("Render a template once and print the result"),
+    ),
+    Command.make("watch", templateConfig, (input) =>
+      Effect.gen(function* () {
+        const request = yield* templateRequest(input);
+        const client = yield* BridgeClient;
+        const line = templateLine(input);
+
+        yield* client.WatchTemplate(request).pipe(
+          Stream.catchTag("HomeAssistantError", (error) =>
+            Stream.fromEffect(
+              failWith(`could not render the template: ${error.message}`),
+            ),
+          ),
+          Stream.runForEach((update) =>
+            "result" in update
+              ? Console.log(line(update.result))
+              : Effect.logWarning(`${update.level}: ${update.error}`),
+          ),
+        );
+      }).pipe(withBridge),
+    ).pipe(
+      Command.withAlias("w"),
+      Command.withDescription(
+        "Print a template's result now and whenever it changes",
+      ),
+    ),
+    reloadCommand("template", () => reloadYaml("template")),
+  ],
 );
 
 const serve = Command.make("serve", {}, () =>
@@ -4294,6 +4412,7 @@ const commands = [
   ffmpeg,
   googleAssistant,
   lovelace,
+  template,
   ...yamlReloadCommands,
 ] as const;
 
