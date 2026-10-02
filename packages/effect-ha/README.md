@@ -50,7 +50,7 @@ The session has:
 - `request(command)`: sends a raw WebSocket command, such as `get_states` or `subscribe_events`.
 - `closed`: fails once the connection is lost.
 
-`onState` receives each new entity state from `state_changed` events after you subscribe to them with `request`.
+`onState` receives each new entity state from `state_changed` events after you subscribe to them with `request`. The optional `onEvent` receives the type of every other subscribed event, such as `entity_registry_updated`.
 
 ## Actions
 

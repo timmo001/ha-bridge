@@ -96,6 +96,8 @@ export const connect = Effect.fn("HomeAssistant.connect")(function* (options: {
   readonly url: string;
   readonly token: Redacted.Redacted;
   readonly onState: (state: EntityState) => Effect.Effect<void>;
+  // Receives the type of every other subscribed event.
+  readonly onEvent?: (eventType: string) => Effect.Effect<void>;
 }) {
   const url = websocketUrl(options.url);
   yield* Effect.logInfo("Connecting to Home Assistant", url);
@@ -195,12 +197,18 @@ export const connect = Effect.fn("HomeAssistant.connect")(function* (options: {
       return;
     }
 
-    if (
-      message.type === "event" &&
-      message.event.event_type === "state_changed" &&
-      message.event.data.new_state
-    ) {
-      yield* options.onState(message.event.data.new_state);
+    if (message.type !== "event") {
+      return;
+    }
+
+    const { event_type, data } = message.event;
+
+    if (event_type === "state_changed") {
+      if (data.new_state) {
+        yield* options.onState(data.new_state);
+      }
+    } else if (options.onEvent !== undefined) {
+      yield* options.onEvent(event_type);
     }
   });
 
