@@ -14,6 +14,13 @@ ha-bridge search light on --kind command
 # command  ha-bridge light turn-on  Turn on  ha-bridge l on
 ```
 
+Leave out the words to list everything a target or filter matches instead:
+
+```bash
+ha-bridge search --area Office --kind device
+ha-bridge search --label "Evening lights" --domain light
+```
+
 Each line is the kind, the ID, the name and its context, separated by tabs. Entities and devices show their area and floor, and commands show their description and short alias. When there are more matches than shown, a summary on stderr says how many.
 
 ## Matching
@@ -37,10 +44,14 @@ Results far below the best match are dropped. The rest are ranked by score, with
 | --- | --- |
 | `--kind` | Only `entity`, `device`, `area` or `command`; repeat for more |
 | `--domain` | Only entities in this domain, and the devices, areas and commands for it |
-| `--area` | Only entities, devices and areas in this area, by area ID or name |
+| `--entity`, `--device`, `--area`, `--floor`, `--label` | Only what the [target](/using/reading#targets) refers to, by ID or name; repeat for more |
 | `--device-class` | Only entities with this device class, and their devices and areas |
 
-Commands have no area or device class, so `--area` and `--device-class` leave them out.
+A target refers to entities, devices and areas the same way Home Assistant expands an action's target: an area includes its devices and their entities, and a floor its areas. Commands have no target or device class, so target flags and `--device-class` leave them out.
+
+## Listing
+
+Without words, `search` lists every entity, device and area the target and filters allow, entities first, then devices, then areas, each sorted by name. It needs a target, `--domain` or `--device-class`, so it never lists everything. Commands are only found by words.
 
 ## More results
 

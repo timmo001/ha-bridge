@@ -16,18 +16,22 @@ DESCRIPTION
   Search Home Assistant entities, devices and areas, and ha-bridge commands
 
 USAGE
-  ha-bridge search [flags] <query...>
+  ha-bridge search [flags] [<query...>]
 
 ARGUMENTS
-  query... string    Words to search for, such as kitchen lamp
+  query... string    Words to search for, such as kitchen lamp; leave out to list everything the target and filters match (optional)
 
 FLAGS
   --socket string          Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --kind choice            Only return this kind; repeat for more (default: all) (choices: entity, device, area, command)
   --domain string          Only entities in this domain, such as light, and the devices, areas and commands for it
-  --area string            Only entities, devices and areas in this area, by ID or name
   --device-class string    Only entities with this device class, such as temperature, and their devices and areas
   --limit integer          Most results to show
   --page integer           Show this page of --limit results, starting at 1
   --json                   Print the results as JSON
+  --entity string          Entity ID or name; repeat for more
+  --device string          Device ID or name; repeat for more
+  --area string            Area ID or name; repeat for more
+  --floor string           Floor ID or name; repeat for more
+  --label string           Label ID or name; repeat for more
 ```
