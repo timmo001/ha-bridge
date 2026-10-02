@@ -1,6 +1,6 @@
 {
   "name": "@timmo001/effect-ha",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Effect services, schemas and typed actions for Home Assistant",
   "keywords": [
     "effect",

@@ -1,6 +1,6 @@
 {
   "name": "@timmo001/effect-ha-bridge",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Effect client and protocol for the ha-bridge Home Assistant socket",
   "keywords": [
     "effect",
@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "@effect/platform-node-shared": "4.0.0",
-    "@timmo001/effect-ha": "1.0.0"
+    "@timmo001/effect-ha": "1.0.1"
   },
   "peerDependencies": {
     "effect": "4.0.0"

@@ -24,10 +24,10 @@
     },
     "packages/client": {
       "name": "@timmo001/effect-ha-bridge",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "dependencies": {
         "@effect/platform-node-shared": "4.0.0",
-        "@timmo001/effect-ha": "1.0.0",
+        "@timmo001/effect-ha": "1.0.1",
       },
       "devDependencies": {
         "effect": "4.0.0",
@@ -38,7 +38,7 @@
     },
     "packages/effect-ha": {
       "name": "@timmo001/effect-ha",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "devDependencies": {
         "effect": "4.0.0",
       },
