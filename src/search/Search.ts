@@ -1,6 +1,5 @@
 import { Context, Effect, Layer } from "effect";
 import Fuse from "fuse.js";
-import { SearchQueryEmpty } from "@timmo001/effect-ha-bridge";
 
 // Ported from the dot CLI's Search service in timmo001/dotfiles, with a
 // larger default limit, a looser gap and an offset for pagination, since a
@@ -111,13 +110,14 @@ export const selectResults = <T, Name extends string>(
 export interface SearchService {
   /**
    * Typo-tolerant search, loose enough for ambiguous queries from agents and
-   * people. Every query word must match some field. See
+   * people. Every query word must match some field. An empty query
+   * matches nothing. See
    * {@link selectResults} for pruning and ordering. `total` counts every
    * close match so callers can say when more are available.
    */
   readonly fuzzy: <T, Name extends string>(
     input: SearchInput<T, Name>,
-  ) => Effect.Effect<SearchResults<T, Name>, SearchQueryEmpty>;
+  ) => Effect.Effect<SearchResults<T, Name>>;
 }
 
 /** Effect service for {@link SearchService}. */
@@ -135,7 +135,7 @@ export class Search extends Context.Service<Search, SearchService>()(
     }: SearchInput<T, Name>) {
       const trimmed = query.trim();
 
-      if (trimmed === "") return yield* new SearchQueryEmpty();
+      if (trimmed === "") return { results: [], total: 0 };
 
       const fuse = new Fuse(items, {
         keys: keys.map(({ name, weight, getFn }) => ({

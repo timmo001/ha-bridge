@@ -26,7 +26,6 @@ export interface SearchItem {
   readonly deviceClass?: string;
   readonly device?: string;
   readonly parentDevice?: string;
-  readonly areaId?: string;
   readonly area?: string;
   readonly floor?: string;
   // Domains and device classes of the item's entities, for filters.
@@ -129,7 +128,6 @@ export const searchItems = (
     const area = areaId === undefined ? undefined : areas.get(areaId);
 
     return {
-      areaId: area?.area_id,
       area: area?.name,
       floor: area?.floor_id ? floors.get(area.floor_id) : undefined,
     };
@@ -148,12 +146,12 @@ export const searchItems = (
     const deviceClass = stringAttribute(state, "device_class");
     const friendly = friendlyName(state);
     const parts = entityNameParts(registries.namer, state.entity_id);
-    const context = areaContext(entry?.ai || deviceAreaId(deviceId));
+    const areaId = entry?.ai || deviceAreaId(deviceId);
 
     addTo(deviceDomains, deviceId, domain);
     addTo(deviceClasses, deviceId, deviceClass);
-    addTo(areaDomains, context.areaId, domain);
-    addTo(areaClasses, context.areaId, deviceClass);
+    addTo(areaDomains, areaId, domain);
+    addTo(areaClasses, areaId, deviceClass);
 
     if (deviceId !== undefined && friendly !== "") {
       deviceFallbackNames.set(
@@ -176,7 +174,7 @@ export const searchItems = (
       deviceClass,
       device: parts?.device,
       parentDevice: parts?.parentDevice,
-      ...context,
+      ...areaContext(areaId),
       domains: new Set([domain]),
       deviceClasses: new Set(deviceClass === undefined ? [] : [deviceClass]),
     };
@@ -221,16 +219,16 @@ export const searchItems = (
   return [...entities, ...deviceItems, ...areaItems];
 };
 
-const normalise = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase()
-    .trim();
+// The IDs of each kind a search target refers to.
+export type TargetMembers = Readonly<Record<SearchKind, ReadonlySet<string>>>;
 
 export const matchesFilters =
-  (request: SearchRequest) =>
+  (request: SearchRequest, members: TargetMembers | undefined) =>
   (item: SearchItem): boolean => {
+    if (members !== undefined && !members[item.kind].has(item.id)) {
+      return false;
+    }
+
     if (request.kinds !== undefined && !request.kinds.includes(item.kind)) {
       return false;
     }
@@ -239,24 +237,10 @@ export const matchesFilters =
       return false;
     }
 
-    if (
-      request.deviceClass !== undefined &&
-      !item.deviceClasses.has(request.deviceClass)
-    ) {
-      return false;
-    }
-
-    if (request.area !== undefined) {
-      const area = normalise(request.area);
-
-      return (
-        item.areaId === request.area ||
-        (item.area !== undefined && normalise(item.area) === area) ||
-        (item.kind === "area" && normalise(item.name) === area)
-      );
-    }
-
-    return true;
+    return (
+      request.deviceClass === undefined ||
+      item.deviceClasses.has(request.deviceClass)
+    );
   };
 
 export const toSearchMatch = (

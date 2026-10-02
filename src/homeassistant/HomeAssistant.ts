@@ -36,7 +36,7 @@ import {
 import {
   TargetError,
   type EntityUpdate,
-  type SearchQueryEmpty,
+  SearchEmpty,
   type SearchRequest,
   type SearchResults,
   type TargetRequest,
@@ -46,6 +46,7 @@ import {
   matchesFilters,
   searchItems,
   searchKeys,
+  type TargetMembers,
   toSearchMatch,
 } from "../search/items.js";
 import {
@@ -77,10 +78,14 @@ export interface HomeAssistantService {
   readonly cameraSnapshot: (
     target: Target,
   ) => Effect.Effect<CameraSnapshot, HomeAssistantError | TargetError>;
-  // Searches the cached states and registries; never asks Home Assistant.
+  // Searches the cached states and registries. Only a target asks Home
+  // Assistant, to expand it.
   readonly search: (
     request: SearchRequest,
-  ) => Effect.Effect<SearchResults, SearchQueryEmpty>;
+  ) => Effect.Effect<
+    SearchResults,
+    SearchEmpty | HomeAssistantError | TargetError
+  >;
 }
 
 const reconnectDelay = "5 seconds";
@@ -364,29 +369,38 @@ export class HomeAssistant extends Context.Service<
           resolveTarget(target, { registries: current, states, domain }),
         );
 
-      // The IDs of every entity the target refers to, as Home Assistant
-      // expands it.
-      const expandEntities = Effect.fn("HomeAssistant.expandEntities")(
-        function* (current: HomeAssistantSession, request: TargetRequest) {
-          const target = yield* resolve(request.target, request.domain);
-          const extracted = yield* current.extractTarget(target);
+      // What the target refers to, as Home Assistant expands it.
+      const extract = Effect.fn("HomeAssistant.extract")(function* (
+        current: HomeAssistantSession,
+        request: TargetRequest,
+      ) {
+        const target = yield* resolve(request.target, request.domain);
+        const extracted = yield* current.extractTarget(target);
 
-          const missing = [
-            ...extracted.missing_devices.map((id) => `device ${id}`),
-            ...extracted.missing_areas.map((id) => `area ${id}`),
-            ...extracted.missing_floors.map((id) => `floor ${id}`),
-            ...extracted.missing_labels.map((id) => `label ${id}`),
-          ];
+        const missing = [
+          ...extracted.missing_devices.map((id) => `device ${id}`),
+          ...extracted.missing_areas.map((id) => `area ${id}`),
+          ...extracted.missing_floors.map((id) => `floor ${id}`),
+          ...extracted.missing_labels.map((id) => `label ${id}`),
+        ];
 
-          if (missing.length > 0) {
-            return yield* new TargetError({
-              message: `Home Assistant has no ${missing.join(", ")}`,
-            });
-          }
+        if (missing.length > 0) {
+          return yield* new TargetError({
+            message: `Home Assistant has no ${missing.join(", ")}`,
+          });
+        }
 
-          return extracted.referenced_entities.filter(inDomain(request.domain));
-        },
-      );
+        return extracted;
+      });
+
+      // The IDs of every entity the target refers to.
+      const expandEntities = (
+        current: HomeAssistantSession,
+        request: TargetRequest,
+      ) =>
+        Effect.map(extract(current, request), (extracted) =>
+          extracted.referenced_entities.filter(inDomain(request.domain)),
+        );
 
       const knownStates = (entityIds: Iterable<string>) =>
         Array.from(entityIds).flatMap((entityId) => {
@@ -514,19 +528,68 @@ export class HomeAssistant extends Context.Service<
         );
       });
 
+      const targetMembers = Effect.fn("HomeAssistant.targetMembers")(function* (
+        target: Target,
+        domain: string | undefined,
+      ) {
+        const extracted = yield* extract(yield* connected, { target, domain });
+
+        return {
+          entity: new Set(extracted.referenced_entities),
+          device: new Set(extracted.referenced_devices),
+          area: new Set(extracted.referenced_areas),
+        } satisfies TargetMembers;
+      });
+
       const runSearch = Effect.fn("HomeAssistant.search")(function* (
         request: SearchRequest,
       ) {
+        const query = request.query?.trim() ?? "";
+
+        if (
+          query === "" &&
+          request.target === undefined &&
+          request.domain === undefined &&
+          request.deviceClass === undefined
+        ) {
+          return yield* new SearchEmpty();
+        }
+
+        const members =
+          request.target === undefined
+            ? undefined
+            : yield* targetMembers(request.target, request.domain);
+
         const current = yield* Ref.get(registries);
 
         const items = searchItems(states.values(), current).filter(
-          matchesFilters(request),
+          matchesFilters(request, members),
         );
+
+        const unavailable = unavailableRegistries(current);
+        const offset = request.offset ?? 0;
+
+        // Without a query, list everything by kind, then name.
+        if (query === "") {
+          const listed = searchKinds.flatMap((kind) =>
+            items
+              .filter((item) => item.kind === kind)
+              .toSorted((a, b) => a.name.localeCompare(b.name)),
+          );
+
+          return {
+            results: listed
+              .slice(offset, offset + (request.limit ?? 20))
+              .map((item) => toSearchMatch(item, 100, [])),
+            total: listed.length,
+            unavailable,
+          } satisfies SearchResults;
+        }
 
         const perKind = yield* Effect.forEach(searchKinds, (kind) =>
           search.fuzzy({
             items: items.filter((item) => item.kind === kind),
-            query: request.query,
+            query,
             keys: searchKeys[kind],
             primary: (item) => item.name,
             overrides: { limit: Number.POSITIVE_INFINITY },
@@ -536,7 +599,7 @@ export class HomeAssistant extends Context.Service<
         const { results, total } = selectResults(
           perKind.flatMap(({ results }) => results),
           (item) => item.name,
-          { limit: request.limit, offset: request.offset },
+          { limit: request.limit, offset },
         );
 
         return {
@@ -544,7 +607,7 @@ export class HomeAssistant extends Context.Service<
             toSearchMatch(item, score, matched),
           ),
           total,
-          unavailable: unavailableRegistries(current),
+          unavailable,
         } satisfies SearchResults;
       });
 

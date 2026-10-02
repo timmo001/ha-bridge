@@ -8,7 +8,7 @@ import {
   Target,
 } from "@timmo001/effect-ha";
 import { EntityUpdate } from "./Entity.js";
-import { SearchQueryEmpty, SearchRequest, SearchResults } from "./Search.js";
+import { SearchEmpty, SearchRequest, SearchResults } from "./Search.js";
 import { TargetError, TargetRequest } from "./Target.js";
 
 const TargetFailure = Schema.Union([HomeAssistantError, TargetError]);
@@ -45,10 +45,11 @@ export class BridgeRpcs extends RpcGroup.make(
     success: CameraSnapshot,
     error: TargetFailure,
   }),
-  // Fuzzy search over cached entities, devices and areas.
+  // Fuzzy search over cached entities, devices and areas, or a list of
+  // them without a query. Only a target needs Home Assistant.
   Rpc.make("Search", {
     payload: SearchRequest,
     success: SearchResults,
-    error: SearchQueryEmpty,
+    error: Schema.Union([SearchEmpty, HomeAssistantError, TargetError]),
   }),
 ) {}

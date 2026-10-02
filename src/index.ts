@@ -121,7 +121,7 @@ import {
   searchLine,
   stateTextBar,
 } from "./cli/output.js";
-import { targetConfig, toTarget } from "./cli/target.js";
+import { targetConfig, targetFlags, toTarget } from "./cli/target.js";
 import { BridgeConfig } from "./config/Config.js";
 import {
   invalidInputNumberMessage,
@@ -3479,12 +3479,17 @@ const commands = [
 
 const searchKinds = ["entity", "device", "area", "command"] as const;
 
+const emptySearch =
+  "enter something to search for, or a target, --domain or --device-class to list";
+
 const search = Command.make(
   "search",
   {
     query: Argument.String("query").pipe(
-      Argument.withDescription("Words to search for, such as kitchen lamp"),
-      Argument.atLeast(1),
+      Argument.withDescription(
+        "Words to search for, such as kitchen lamp; leave out to list everything the target and filters match",
+      ),
+      Argument.atLeast(0),
     ),
     kinds: Flag.Literals("kind", searchKinds).pipe(
       Flag.withDescription(
@@ -3495,10 +3500,6 @@ const search = Command.make(
     domain: optionalFlag(
       Flag.String("domain"),
       "Only entities in this domain, such as light, and the devices, areas and commands for it",
-    ),
-    area: optionalFlag(
-      Flag.String("area"),
-      "Only entities, devices and areas in this area, by ID or name",
     ),
     deviceClass: optionalFlag(
       Flag.String("device-class"),
@@ -3516,13 +3517,23 @@ const search = Command.make(
       Flag.withDescription("Print the results as JSON"),
       Flag.withDefault(false),
     ),
+    target: targetFlags,
   },
   (input) =>
     Effect.gen(function* () {
       const query = input.query.join(" ").trim();
+      const target = toTarget(undefined, input.target);
+      const hasTarget = !isEmptyTarget(target);
+      const domain = Option.getOrUndefined(input.domain);
+      const deviceClass = Option.getOrUndefined(input.deviceClass);
 
-      if (query === "") {
-        return yield* failWith("enter something to search for");
+      if (
+        query === "" &&
+        !hasTarget &&
+        domain === undefined &&
+        deviceClass === undefined
+      ) {
+        return yield* failWith(emptySearch);
       }
 
       if (input.limit < 1) {
@@ -3538,13 +3549,14 @@ const search = Command.make(
       const offset = page === undefined ? 0 : (page - 1) * input.limit;
       const kinds = input.kinds.length === 0 ? searchKinds : input.kinds;
       const haKinds = kinds.filter((kind) => kind !== "command");
-      const domain = Option.getOrUndefined(input.domain);
 
-      // Commands have no area or device class.
+      // Commands are only searched by text, and have no target or device
+      // class.
       const includeCommands =
         kinds.includes("command") &&
-        Option.isNone(input.area) &&
-        Option.isNone(input.deviceClass);
+        query !== "" &&
+        !hasTarget &&
+        deviceClass === undefined;
 
       const searchBridge = (limit: number, offset: number) =>
         Effect.gen(function* () {
@@ -3552,19 +3564,15 @@ const search = Command.make(
 
           return yield* client
             .Search({
-              query,
+              query: query === "" ? undefined : query,
+              target: hasTarget ? target : undefined,
               kinds: haKinds,
               domain,
-              area: Option.getOrUndefined(input.area),
-              deviceClass: Option.getOrUndefined(input.deviceClass),
+              deviceClass,
               limit,
               offset,
             })
-            .pipe(
-              Effect.catchTag("SearchQueryEmpty", () =>
-                failWith("enter something to search for"),
-              ),
-            );
+            .pipe(Effect.catchTag("SearchEmpty", () => failWith(emptySearch)));
         }).pipe(withBridge);
 
       const noResults: SearchResults = {
@@ -3583,22 +3591,16 @@ const search = Command.make(
             ? noResults
             : yield* searchBridge(Number.MAX_SAFE_INTEGER, 0);
 
-        const fromCommands = yield* (yield* Search)
-          .fuzzy({
-            items: commandItems(commands).filter(
-              (item) =>
-                domain === undefined || item.path.split(" ")[0] === domain,
-            ),
-            query,
-            keys: commandKeys,
-            primary: (item) => item.path,
-            overrides: { limit: Number.POSITIVE_INFINITY },
-          })
-          .pipe(
-            Effect.catchTag("SearchQueryEmpty", () =>
-              failWith("enter something to search for"),
-            ),
-          );
+        const fromCommands = yield* (yield* Search).fuzzy({
+          items: commandItems(commands).filter(
+            (item) =>
+              domain === undefined || item.path.split(" ")[0] === domain,
+          ),
+          query,
+          keys: commandKeys,
+          primary: (item) => item.path,
+          overrides: { limit: Number.POSITIVE_INFINITY },
+        });
 
         const merged = selectResults<SearchMatch | CommandMatch, string>(
           [

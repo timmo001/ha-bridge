@@ -2,7 +2,12 @@ import { describe, expect, test } from "bun:test";
 import { Effect } from "effect";
 import { entityNamerFrom, type EntityState } from "@timmo001/effect-ha";
 import type { SearchRequest } from "@timmo001/effect-ha-bridge";
-import { matchesFilters, searchItems, searchKeys } from "./items.js";
+import {
+  matchesFilters,
+  searchItems,
+  searchKeys,
+  type TargetMembers,
+} from "./items.js";
 import {
   unavailableRegistries,
   type Registries,
@@ -53,10 +58,8 @@ const items = searchItems(states, registries);
 
 const byId = (id: string) => items.find((item) => item.id === id);
 
-const filtered = (request: Omit<SearchRequest, "query">) =>
-  items
-    .filter(matchesFilters({ query: "x", ...request }))
-    .map((item) => item.id);
+const filtered = (request: SearchRequest, members?: TargetMembers) =>
+  items.filter(matchesFilters(request, members)).map((item) => item.id);
 
 describe("searchItems", () => {
   test("names entities like dashboards and keeps every part", () => {
@@ -101,14 +104,24 @@ describe("matchesFilters", () => {
     ]);
   });
 
-  test("matches an area by name or ID", () => {
-    expect(filtered({ area: "kitchen", kinds: ["area", "device"] })).toEqual([
-      "strip",
-      "outlet",
+  test("keeps only what the target refers to", () => {
+    const members: TargetMembers = {
+      entity: new Set(["light.lamp", "switch.outlet"]),
+      device: new Set(["plug"]),
+      area: new Set(["office"]),
+    };
+
+    expect(filtered({}, members)).toEqual([
+      "switch.outlet",
+      "light.lamp",
       "plug",
-      "kitchen",
+      "office",
     ]);
-    expect(filtered({ area: "Office" })).toEqual(["light.lamp", "office"]);
+    expect(filtered({ domain: "light" }, members)).toEqual([
+      "light.lamp",
+      "plug",
+      "office",
+    ]);
   });
 });
 
