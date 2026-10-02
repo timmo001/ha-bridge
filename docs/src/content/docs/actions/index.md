@@ -14,7 +14,7 @@ Action commands take the entity name **without** its domain, because the command
 ha-bridge light turn-on bedroom_lamp
 ```
 
-[Watch commands](/using/watching) are different: `watch entity` takes the full entity ID.
+[Watch commands](/using/reading) are different: `watch entity` takes the full entity ID.
 
 ## Domains
 

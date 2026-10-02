@@ -75,7 +75,7 @@ export default defineConfig({
       {
         label: "Using",
         items: [
-          "/using/watching",
+          "/using/reading",
           "/using/search",
           "/using/bar-json",
           "/using/completions",
@@ -99,6 +99,7 @@ export default defineConfig({
   redirects: [
     { from: "/migrating", to: "/from-go-automate" },
     { from: "/using/actions", to: "/actions" },
+    { from: "/using/watching", to: "/using/reading" },
     { from: "/reference/bar-json", to: "/using/bar-json" },
     { from: "/reference/protocol", to: "/using/protocol" },
     { from: "/reference/commands/:slug*", to: "/commands/:slug*" },

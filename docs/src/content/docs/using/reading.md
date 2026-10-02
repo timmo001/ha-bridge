@@ -1,9 +1,9 @@
 ---
-title: Watching entities
-description: Stream Home Assistant entity state into scripts and status bars through the bridge.
+title: Reading entities
+description: Read or stream Home Assistant entity state into scripts and status bars through the bridge.
 ---
 
-Watch commands print an entity's state straight away, then again on every change. Each watcher is a small client of the bridge, so any number of them share the bridge's one Home Assistant connection.
+`get entity` prints an entity's state once. Watch commands print it straight away, then again on every change. Each is a small client of the bridge, so any number of them share the bridge's one Home Assistant connection.
 
 ## Any entity
 
@@ -47,6 +47,17 @@ ha-bridge watch entity input_boolean.guest_mode \
 ```
 
 See [Bar JSON](/using/bar-json) for the output and every flag.
+
+## Reading once
+
+`get entity` (`g e`) takes the same entity ID and output flags as `watch entity`, but prints the current state once and exits. It exits with status 1 when the bridge has no state for the entity.
+
+```bash
+ha-bridge get entity light.office --field state
+# on
+
+ha-bridge get entity input_boolean.guest_mode --bar-json --text-on "Guest"
+```
 
 ## Covers and climate
 
