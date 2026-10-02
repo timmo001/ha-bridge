@@ -28,16 +28,21 @@ Alias: `ha-bridge homeassistant on`
 
 ```text
 DESCRIPTION
-  Turn on entities of any domain
+  Turn on entities in any domain
 
 USAGE
-  ha-bridge homeassistant turn-on [flags] <entity_id...>
+  ha-bridge homeassistant turn-on [flags] [<entity_id...>]
 
 ARGUMENTS
-  entity_id... string    Full entity ID, such as light.desk; repeat for more
+  entity_id... string    Entity ID, such as light.desk; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge homeassistant turn-off`
@@ -46,16 +51,21 @@ Alias: `ha-bridge homeassistant off`
 
 ```text
 DESCRIPTION
-  Turn off entities of any domain
+  Turn off entities in any domain
 
 USAGE
-  ha-bridge homeassistant turn-off [flags] <entity_id...>
+  ha-bridge homeassistant turn-off [flags] [<entity_id...>]
 
 ARGUMENTS
-  entity_id... string    Full entity ID, such as light.desk; repeat for more
+  entity_id... string    Entity ID, such as light.desk; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge homeassistant toggle`
@@ -64,16 +74,21 @@ Alias: `ha-bridge homeassistant t`
 
 ```text
 DESCRIPTION
-  Toggle entities of any domain
+  Toggle entities in any domain
 
 USAGE
-  ha-bridge homeassistant toggle [flags] <entity_id...>
+  ha-bridge homeassistant toggle [flags] [<entity_id...>]
 
 ARGUMENTS
-  entity_id... string    Full entity ID, such as light.desk; repeat for more
+  entity_id... string    Entity ID, such as light.desk; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge homeassistant update-entity`

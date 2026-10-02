@@ -9,8 +9,8 @@ description: Control humidifiers and water heaters.
 
 ```bash
 ha-bridge humidifier turn-on bedroom
-ha-bridge humidifier mode bedroom sleep
-ha-bridge humidifier humidity bedroom 45
+ha-bridge humidifier mode sleep bedroom
+ha-bridge humidifier humidity 45 bedroom
 ```
 
 The mode is one of the humidifier's `available_modes`.
@@ -20,10 +20,10 @@ The mode is one of the humidifier's `available_modes`.
 `water_heater` has `turn-on` (`on`) and `turn-off` (`off`), and sets the temperature, operation mode or away mode:
 
 ```bash
-ha-bridge water_heater temperature tank 55
-ha-bridge water_heater temperature tank 60 --operation-mode performance
-ha-bridge water_heater operation-mode tank eco
-ha-bridge water_heater away-mode tank on
+ha-bridge water_heater temperature 55 tank
+ha-bridge water_heater temperature 60 tank --operation-mode performance
+ha-bridge water_heater operation-mode eco tank
+ha-bridge water_heater away-mode on tank
 ```
 
 The temperature is in the entity's unit, and the operation mode is one of its `operation_list`.

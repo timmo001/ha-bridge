@@ -29,13 +29,18 @@ DESCRIPTION
   Start cleaning
 
 USAGE
-  ha-bridge vacuum start [flags] <name>
+  ha-bridge vacuum start [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the vacuum. prefix
+  entity_id... string    Entity ID, with or without the vacuum. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge vacuum pause`
@@ -45,13 +50,18 @@ DESCRIPTION
   Pause cleaning
 
 USAGE
-  ha-bridge vacuum pause [flags] <name>
+  ha-bridge vacuum pause [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the vacuum. prefix
+  entity_id... string    Entity ID, with or without the vacuum. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge vacuum start-pause`
@@ -61,13 +71,18 @@ DESCRIPTION
   Start or pause cleaning
 
 USAGE
-  ha-bridge vacuum start-pause [flags] <name>
+  ha-bridge vacuum start-pause [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the vacuum. prefix
+  entity_id... string    Entity ID, with or without the vacuum. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge vacuum stop`
@@ -77,13 +92,18 @@ DESCRIPTION
   Stop cleaning
 
 USAGE
-  ha-bridge vacuum stop [flags] <name>
+  ha-bridge vacuum stop [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the vacuum. prefix
+  entity_id... string    Entity ID, with or without the vacuum. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge vacuum return-to-base`
@@ -93,13 +113,18 @@ DESCRIPTION
   Go back to the dock
 
 USAGE
-  ha-bridge vacuum return-to-base [flags] <name>
+  ha-bridge vacuum return-to-base [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the vacuum. prefix
+  entity_id... string    Entity ID, with or without the vacuum. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge vacuum locate`
@@ -109,13 +134,18 @@ DESCRIPTION
   Make the vacuum sound so you can find it
 
 USAGE
-  ha-bridge vacuum locate [flags] <name>
+  ha-bridge vacuum locate [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the vacuum. prefix
+  entity_id... string    Entity ID, with or without the vacuum. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge vacuum clean-spot`
@@ -125,13 +155,18 @@ DESCRIPTION
   Clean the spot it's on
 
 USAGE
-  ha-bridge vacuum clean-spot [flags] <name>
+  ha-bridge vacuum clean-spot [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the vacuum. prefix
+  entity_id... string    Entity ID, with or without the vacuum. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge vacuum clean-area`
@@ -141,14 +176,19 @@ DESCRIPTION
   Clean areas
 
 USAGE
-  ha-bridge vacuum clean-area [flags] <name> <area_id...>
+  ha-bridge vacuum clean-area [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string          Entity name without the vacuum. prefix
-  area_id... string    Area ID to clean; repeat for more
+  entity_id... string    Entity ID, with or without the vacuum. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --clean-area string    Area ID to clean; repeat for more
+  --entity string        Entity ID or name; repeat for more
+  --device string        Device ID or name; repeat for more
+  --area string          Area ID or name; repeat for more
+  --floor string         Floor ID or name; repeat for more
+  --label string         Label ID or name; repeat for more
 ```
 
 ## `ha-bridge vacuum fan-speed`
@@ -158,14 +198,19 @@ DESCRIPTION
   Set the fan speed
 
 USAGE
-  ha-bridge vacuum fan-speed [flags] <name> <speed>
+  ha-bridge vacuum fan-speed [flags] <speed> [<entity_id...>]
 
 ARGUMENTS
-  name string     Entity name without the vacuum. prefix
-  speed string    One of the vacuum's fan_speed_list
+  speed string           One of the vacuum's fan_speed_list
+  entity_id... string    Entity ID, with or without the vacuum. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge vacuum send-command`
@@ -175,13 +220,18 @@ DESCRIPTION
   Send a raw command
 
 USAGE
-  ha-bridge vacuum send-command [flags] <name> <command>
+  ha-bridge vacuum send-command [flags] <command> [<entity_id...>]
 
 ARGUMENTS
-  name string       Entity name without the vacuum. prefix
-  command string    Command the integration understands
+  command string         Command the integration understands
+  entity_id... string    Entity ID, with or without the vacuum. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --params string    Parameters as JSON, such as {"speed":2}
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```

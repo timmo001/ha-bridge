@@ -20,12 +20,12 @@ Drop `go-automate ha` from the front, and `bridge` from the bridge commands:
 | Go Automate | Home Assistant Bridge |
 | --- | --- |
 | `go-automate ha bridge serve` | `ha-bridge serve` |
-| `go-automate ha bridge watch entity <entity_id>` | `ha-bridge watch entity <entity_id>` |
+| `go-automate ha bridge watch entity <entity_id>` | `ha-bridge watch <entity_id>` |
 | `go-automate ha light toggle <name>` | `ha-bridge light toggle <name>` |
 | `go-automate ha cover watch <name>` | `ha-bridge cover watch <name>` |
 | `go-automate completion zsh` | `ha-bridge --completions zsh` |
 
-The domain commands, their aliases, arguments and flags are unchanged. `camera snapshot` and `setup` are new. See [Commands](/commands) for the full list.
+The domain commands and their aliases are the same, but they now take [targets](/actions#targets): entity IDs go last, after any values (`cover position 50 curtain`), and `--area`, `--floor`, `--label`, `--device` and `--entity` pick entities by ID or name. `get`, `camera snapshot` and `setup` are new. See [Commands](/commands) for the full list.
 
 ## Service and socket
 

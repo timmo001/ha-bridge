@@ -33,13 +33,18 @@ DESCRIPTION
   Turn on
 
 USAGE
-  ha-bridge media_player turn-on [flags] <name>
+  ha-bridge media_player turn-on [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the media_player. prefix
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player turn-off`
@@ -51,13 +56,18 @@ DESCRIPTION
   Turn off
 
 USAGE
-  ha-bridge media_player turn-off [flags] <name>
+  ha-bridge media_player turn-off [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the media_player. prefix
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player toggle`
@@ -69,13 +79,18 @@ DESCRIPTION
   Toggle
 
 USAGE
-  ha-bridge media_player toggle [flags] <name>
+  ha-bridge media_player toggle [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the media_player. prefix
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player play`
@@ -85,13 +100,18 @@ DESCRIPTION
   Play
 
 USAGE
-  ha-bridge media_player play [flags] <name>
+  ha-bridge media_player play [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the media_player. prefix
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player pause`
@@ -101,13 +121,18 @@ DESCRIPTION
   Pause
 
 USAGE
-  ha-bridge media_player pause [flags] <name>
+  ha-bridge media_player pause [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the media_player. prefix
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player play-pause`
@@ -117,13 +142,18 @@ DESCRIPTION
   Play or pause
 
 USAGE
-  ha-bridge media_player play-pause [flags] <name>
+  ha-bridge media_player play-pause [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the media_player. prefix
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player stop`
@@ -133,13 +163,18 @@ DESCRIPTION
   Stop
 
 USAGE
-  ha-bridge media_player stop [flags] <name>
+  ha-bridge media_player stop [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the media_player. prefix
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player next`
@@ -149,13 +184,18 @@ DESCRIPTION
   Next track
 
 USAGE
-  ha-bridge media_player next [flags] <name>
+  ha-bridge media_player next [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the media_player. prefix
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player previous`
@@ -165,13 +205,18 @@ DESCRIPTION
   Previous track
 
 USAGE
-  ha-bridge media_player previous [flags] <name>
+  ha-bridge media_player previous [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the media_player. prefix
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player volume-up`
@@ -181,13 +226,18 @@ DESCRIPTION
   Turn the volume up
 
 USAGE
-  ha-bridge media_player volume-up [flags] <name>
+  ha-bridge media_player volume-up [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the media_player. prefix
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player volume-down`
@@ -197,13 +247,18 @@ DESCRIPTION
   Turn the volume down
 
 USAGE
-  ha-bridge media_player volume-down [flags] <name>
+  ha-bridge media_player volume-down [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the media_player. prefix
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player clear-playlist`
@@ -213,13 +268,18 @@ DESCRIPTION
   Clear the playlist
 
 USAGE
-  ha-bridge media_player clear-playlist [flags] <name>
+  ha-bridge media_player clear-playlist [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the media_player. prefix
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player unjoin`
@@ -229,13 +289,18 @@ DESCRIPTION
   Leave the player's group
 
 USAGE
-  ha-bridge media_player unjoin [flags] <name>
+  ha-bridge media_player unjoin [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the media_player. prefix
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player volume`
@@ -245,14 +310,19 @@ DESCRIPTION
   Set the volume
 
 USAGE
-  ha-bridge media_player volume [flags] <name> <volume>
+  ha-bridge media_player volume [flags] <volume> [<entity_id...>]
 
 ARGUMENTS
-  name string      Entity name without the media_player. prefix
-  volume string    Volume from 0 to 1
+  volume string          Volume from 0 to 1
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player mute`
@@ -262,14 +332,19 @@ DESCRIPTION
   Mute or unmute
 
 USAGE
-  ha-bridge media_player mute [flags] <name> <state>
+  ha-bridge media_player mute [flags] <state> [<entity_id...>]
 
 ARGUMENTS
-  name string     Entity name without the media_player. prefix
-  state string    on or off
+  state string           on or off
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player seek`
@@ -279,14 +354,19 @@ DESCRIPTION
   Seek to a position
 
 USAGE
-  ha-bridge media_player seek [flags] <name> <position>
+  ha-bridge media_player seek [flags] <position> [<entity_id...>]
 
 ARGUMENTS
-  name string        Entity name without the media_player. prefix
-  position string    Position in seconds
+  position string        Position in seconds
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player source`
@@ -296,14 +376,19 @@ DESCRIPTION
   Select the input source
 
 USAGE
-  ha-bridge media_player source [flags] <name> <source>
+  ha-bridge media_player source [flags] <source> [<entity_id...>]
 
 ARGUMENTS
-  name string      Entity name without the media_player. prefix
-  source string    One of the player's source_list
+  source string          One of the player's source_list
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player sound-mode`
@@ -313,14 +398,19 @@ DESCRIPTION
   Select the sound mode
 
 USAGE
-  ha-bridge media_player sound-mode [flags] <name> <mode>
+  ha-bridge media_player sound-mode [flags] <mode> [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the media_player. prefix
-  mode string    One of the player's sound_mode_list
+  mode string            One of the player's sound_mode_list
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player shuffle`
@@ -330,14 +420,19 @@ DESCRIPTION
   Turn shuffle on or off
 
 USAGE
-  ha-bridge media_player shuffle [flags] <name> <state>
+  ha-bridge media_player shuffle [flags] <state> [<entity_id...>]
 
 ARGUMENTS
-  name string     Entity name without the media_player. prefix
-  state string    on or off
+  state string           on or off
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player repeat`
@@ -347,14 +442,19 @@ DESCRIPTION
   Set the repeat mode
 
 USAGE
-  ha-bridge media_player repeat [flags] <name> <mode>
+  ha-bridge media_player repeat [flags] <mode> [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the media_player. prefix
-  mode string    off, all or one
+  mode string            off, all or one
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player play-media`
@@ -364,34 +464,44 @@ DESCRIPTION
   Play media
 
 USAGE
-  ha-bridge media_player play-media [flags] <name> <content_id>
+  ha-bridge media_player play-media [flags] <content_id> [<entity_id...>]
 
 ARGUMENTS
-  name string          Entity name without the media_player. prefix
-  content_id string    Media to play, such as a URL
+  content_id string      Media to play, such as a URL
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string          Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --content-type string    Media type, such as music or url
   --enqueue choice         Queue behaviour (default: play) (choices: play, next, add, replace)
   --announce               Pause what's playing to announce the media
+  --entity string          Entity ID or name; repeat for more
+  --device string          Device ID or name; repeat for more
+  --area string            Area ID or name; repeat for more
+  --floor string           Floor ID or name; repeat for more
+  --label string           Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player join`
 
 ```text
 DESCRIPTION
-  Group players with this one
+  Group other players with these
 
 USAGE
-  ha-bridge media_player join [flags] <name> <member...>
+  ha-bridge media_player join [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string         Entity name without the media_player. prefix
-  member... string    Player to group with this one, without media_player.; repeat for more
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --member string    Player to group with these, as an entity ID, object ID or name; repeat for more
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player browse`
@@ -401,15 +511,20 @@ DESCRIPTION
   Print the player's media library as JSON
 
 USAGE
-  ha-bridge media_player browse [flags] <name>
+  ha-bridge media_player browse [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the media_player. prefix
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string          Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --content-type string    Media content type, from a browse response
   --content-id string      Media content ID, from a browse response
+  --entity string          Entity ID or name; repeat for more
+  --device string          Device ID or name; repeat for more
+  --area string            Area ID or name; repeat for more
+  --floor string           Floor ID or name; repeat for more
+  --label string           Label ID or name; repeat for more
 ```
 
 ## `ha-bridge media_player search`
@@ -419,14 +534,19 @@ DESCRIPTION
   Search the player's media, printing JSON
 
 USAGE
-  ha-bridge media_player search [flags] <name> <query>
+  ha-bridge media_player search [flags] <query> [<entity_id...>]
 
 ARGUMENTS
-  name string     Entity name without the media_player. prefix
-  query string    Text to search for
+  query string           Text to search for
+  entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
   --socket string          Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --content-type string    Media content type, from a browse response
   --content-id string      Media content ID, from a browse response
+  --entity string          Entity ID or name; repeat for more
+  --device string          Device ID or name; repeat for more
+  --area string            Area ID or name; repeat for more
+  --floor string           Floor ID or name; repeat for more
+  --label string           Label ID or name; repeat for more
 ```

@@ -31,15 +31,20 @@ DESCRIPTION
   Turn on
 
 USAGE
-  ha-bridge fan turn-on [flags] <name>
+  ha-bridge fan turn-on [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the fan. prefix
+  entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
   --socket string         Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --percentage integer    Speed from 0 to 100
   --preset-mode string    Preset mode, one of the fan's preset_modes
+  --entity string         Entity ID or name; repeat for more
+  --device string         Device ID or name; repeat for more
+  --area string           Area ID or name; repeat for more
+  --floor string          Floor ID or name; repeat for more
+  --label string          Label ID or name; repeat for more
 ```
 
 ## `ha-bridge fan turn-off`
@@ -51,13 +56,18 @@ DESCRIPTION
   Turn off
 
 USAGE
-  ha-bridge fan turn-off [flags] <name>
+  ha-bridge fan turn-off [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the fan. prefix
+  entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge fan toggle`
@@ -69,13 +79,18 @@ DESCRIPTION
   Toggle
 
 USAGE
-  ha-bridge fan toggle [flags] <name>
+  ha-bridge fan toggle [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the fan. prefix
+  entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge fan percentage`
@@ -85,14 +100,19 @@ DESCRIPTION
   Set the speed
 
 USAGE
-  ha-bridge fan percentage [flags] <name> <percentage>
+  ha-bridge fan percentage [flags] <percentage> [<entity_id...>]
 
 ARGUMENTS
-  name string          Entity name without the fan. prefix
-  percentage string    Speed from 0 to 100
+  percentage string      Speed from 0 to 100
+  entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge fan increase-speed`
@@ -102,14 +122,19 @@ DESCRIPTION
   Speed up by a step
 
 USAGE
-  ha-bridge fan increase-speed [flags] <name>
+  ha-bridge fan increase-speed [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the fan. prefix
+  entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --step integer     Percent to change by (default: the fan's own step)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge fan decrease-speed`
@@ -119,14 +144,19 @@ DESCRIPTION
   Slow down by a step
 
 USAGE
-  ha-bridge fan decrease-speed [flags] <name>
+  ha-bridge fan decrease-speed [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the fan. prefix
+  entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --step integer     Percent to change by (default: the fan's own step)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge fan preset-mode`
@@ -136,14 +166,19 @@ DESCRIPTION
   Set the preset mode
 
 USAGE
-  ha-bridge fan preset-mode [flags] <name> <mode>
+  ha-bridge fan preset-mode [flags] <mode> [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the fan. prefix
-  mode string    One of the fan's preset_modes
+  mode string            One of the fan's preset_modes
+  entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge fan oscillate`
@@ -153,14 +188,19 @@ DESCRIPTION
   Turn oscillation on or off
 
 USAGE
-  ha-bridge fan oscillate [flags] <name> <state>
+  ha-bridge fan oscillate [flags] <state> [<entity_id...>]
 
 ARGUMENTS
-  name string     Entity name without the fan. prefix
-  state string    on or off
+  state string           on or off
+  entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge fan direction`
@@ -170,12 +210,17 @@ DESCRIPTION
   Set the direction
 
 USAGE
-  ha-bridge fan direction [flags] <name> <direction>
+  ha-bridge fan direction [flags] <direction> [<entity_id...>]
 
 ARGUMENTS
-  name string         Entity name without the fan. prefix
-  direction string    forward or reverse
+  direction string       forward or reverse
+  entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```

@@ -10,7 +10,7 @@ ha-bridge cover open curtain
 ha-bridge cover close curtain
 ha-bridge cover toggle curtain
 ha-bridge cover stop curtain
-ha-bridge cover position curtain 30
+ha-bridge cover position 30 curtain
 ```
 
 `open`, `close` and `position` take `--speed` for covers that list `supported_speeds`:
@@ -28,7 +28,7 @@ ha-bridge cover open-tilt office_blind
 ha-bridge cover close-tilt office_blind
 ha-bridge cover toggle-tilt office_blind
 ha-bridge cover stop-tilt office_blind
-ha-bridge cover tilt-position office_blind 40
+ha-bridge cover tilt-position 40 office_blind
 ```
 
 ## Watching

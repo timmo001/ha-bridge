@@ -29,13 +29,18 @@ DESCRIPTION
   Start mowing
 
 USAGE
-  ha-bridge lawn_mower start [flags] <name>
+  ha-bridge lawn_mower start [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the lawn_mower. prefix
+  entity_id... string    Entity ID, with or without the lawn_mower. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge lawn_mower pause`
@@ -45,13 +50,18 @@ DESCRIPTION
   Pause mowing
 
 USAGE
-  ha-bridge lawn_mower pause [flags] <name>
+  ha-bridge lawn_mower pause [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the lawn_mower. prefix
+  entity_id... string    Entity ID, with or without the lawn_mower. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge lawn_mower stop`
@@ -61,13 +71,18 @@ DESCRIPTION
   Stop mowing
 
 USAGE
-  ha-bridge lawn_mower stop [flags] <name>
+  ha-bridge lawn_mower stop [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the lawn_mower. prefix
+  entity_id... string    Entity ID, with or without the lawn_mower. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge lawn_mower dock`
@@ -77,11 +92,16 @@ DESCRIPTION
   Go back to the dock
 
 USAGE
-  ha-bridge lawn_mower dock [flags] <name>
+  ha-bridge lawn_mower dock [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the lawn_mower. prefix
+  entity_id... string    Entity ID, with or without the lawn_mower. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```

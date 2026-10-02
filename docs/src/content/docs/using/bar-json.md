@@ -3,7 +3,7 @@ title: Bar JSON
 description: The JSON lines that watchers print for status bars, shells and scripts.
 ---
 
-`watch entity --bar-json`, `cover watch` and `climate watch` print one JSON object per line: once straight away, then on every change. Any status bar or script that reads JSON lines can use them, including [Quickshell](https://quickshell.org) and [Waybar](https://github.com/Alexays/Waybar).
+`watch --bar-json`, `get --bar-json`, `cover watch` and `climate watch` print one JSON object per line for one entity: the watchers print once straight away, then on every change. Any status bar or script that reads JSON lines can use them, including [Quickshell](https://quickshell.org) and [Waybar](https://github.com/Alexays/Waybar).
 
 ## Output
 
@@ -22,9 +22,9 @@ description: The JSON lines that watchers print for status bars, shells and scri
 
 `name` is built the way Home Assistant dashboards name entities: the parent device name (for a child device), the device name and the entity's own name together, such as `Living Room Thermostat Temperature`. The bridge reads the registries when it connects and again shortly after any of them changes, so a rename shows in running watchers without a restart and costs no extra request per watcher. When the registries don't give a name, the entity's `friendly_name` is used.
 
-`watch entity` skips a line identical to the one before it, so an attribute change that doesn't change the output prints nothing.
+`watch` skips a line identical to the one before it, so an attribute change that doesn't change the output prints nothing.
 
-## How `watch entity` fills the fields
+## How `--bar-json` fills the fields
 
 A state is "on" when it is `on`, or one of the `--on-state` values when you give any. Everything else, including `off`, `unavailable` and sensor readings, is "off".
 
@@ -70,12 +70,12 @@ Strings are inserted as they are, other values as JSON. A missing value is empty
 | `--class-off` | Class when the entity is off. |
 | `--on-state` | A state that counts as on. Repeat for more. Defaults to `on`. |
 
-`--bar-json` can't be combined with `--json` or `--field`.
+`--bar-json` can't be combined with `--json` or `--field`. Its target has to match one entity.
 
 ## Example
 
 ```bash
-ha-bridge watch entity input_boolean.guest_mode \
+ha-bridge watch input_boolean.guest_mode \
   --bar-json \
   --text-on "Guest" \
   --tooltip-on "Guest mode is on" \
@@ -99,10 +99,10 @@ With it off:
 A light's brightness, with a cover-style on state shown for comparison:
 
 ```bash
-ha-bridge watch entity light.office --bar-json \
+ha-bridge watch light.office --bar-json \
   --text "{attributes.brightness}" --tooltip "{name}" --class-on lit
 
-ha-bridge watch entity cover.office_blind --bar-json \
+ha-bridge watch cover.office_blind --bar-json \
   --on-state open --on-state opening --class-on open --class-off closed
 ```
 
@@ -116,7 +116,7 @@ With the light on at brightness 128:
 
 ```jsonc
 "custom/guest_mode": {
-  "exec": "ha-bridge watch entity input_boolean.guest_mode --bar-json --text-on Guest --class-on active --class-off inactive",
+  "exec": "ha-bridge watch input_boolean.guest_mode --bar-json --text-on Guest --class-on active --class-off inactive",
   "return-type": "json",
   "restart-interval": 5
 }
@@ -127,7 +127,7 @@ With the light on at brightness 128:
 ## Scripts
 
 ```bash
-ha-bridge watch entity input_boolean.guest_mode --bar-json |
+ha-bridge watch input_boolean.guest_mode --bar-json |
   while IFS= read -r line; do
     jq -r '.text' <<< "$line"
   done

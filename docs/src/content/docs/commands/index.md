@@ -89,8 +89,8 @@ GLOBAL FLAGS
 SUBCOMMANDS
   serve               Hold the shared Home Assistant connection and serve it on the bridge socket
   setup               Set the Home Assistant URL and access token
-  get, g              Read entities through the bridge
-  watch, w            Watch entities through the bridge
+  get, g              Print the state of every entity a target matches once
+  watch, w            Print the state of every entity a target matches now and on every change
   assist_satellite, as Assist satellite actions
   input_boolean, ib   Input boolean actions
   input_number, in    Input number actions

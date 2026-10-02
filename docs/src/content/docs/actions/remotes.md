@@ -12,12 +12,12 @@ ha-bridge remote turn-off living_room
 
 ## Sending commands
 
-`send-command` sends one or more commands in order. `--device` picks the device they're for:
+`send-command` sends one or more commands in order, each with `--command`. `--remote-device` picks the device they're for, as the remote's integration names it:
 
 ```bash
-ha-bridge remote send-command living_room power
-ha-bridge remote send-command living_room volume_up volume_up --device tv
-ha-bridge remote send-command living_room volume_up --num-repeats 5 --delay-secs 0.2
+ha-bridge remote send-command living_room --command power
+ha-bridge remote send-command living_room --command volume_up --command volume_up --remote-device tv
+ha-bridge remote send-command living_room --command volume_up --num-repeats 5 --delay-secs 0.2
 ```
 
 | Flag | Value |
@@ -31,8 +31,8 @@ ha-bridge remote send-command living_room volume_up --num-repeats 5 --delay-secs
 `learn-command` waits for you to press buttons on the physical remote and saves them under the names you give. `delete-command` removes them:
 
 ```bash
-ha-bridge remote learn-command living_room power --device tv --command-type ir
-ha-bridge remote delete-command living_room power --device tv
+ha-bridge remote learn-command living_room --command power --remote-device tv --command-type ir
+ha-bridge remote delete-command living_room --command power --remote-device tv
 ```
 
 `learn-command` also takes `--alternative`, to save a second code for a command, and `--timeout` in seconds.

@@ -31,14 +31,19 @@ DESCRIPTION
   Start the script without waiting for it
 
 USAGE
-  ha-bridge script turn-on [flags] <name>
+  ha-bridge script turn-on [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the script. prefix
+  entity_id... string    Entity ID, with or without the script. prefix; repeat for more (optional)
 
 FLAGS
   --socket string       Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --variables string    Script variables as a JSON object, such as '{"room":"office"}'
+  --entity string       Entity ID or name; repeat for more
+  --device string       Device ID or name; repeat for more
+  --area string         Area ID or name; repeat for more
+  --floor string        Floor ID or name; repeat for more
+  --label string        Label ID or name; repeat for more
 ```
 
 ## `ha-bridge script turn-off`
@@ -50,13 +55,18 @@ DESCRIPTION
   Stop the script
 
 USAGE
-  ha-bridge script turn-off [flags] <name>
+  ha-bridge script turn-off [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the script. prefix
+  entity_id... string    Entity ID, with or without the script. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge script toggle`
@@ -68,13 +78,18 @@ DESCRIPTION
   Start or stop the script
 
 USAGE
-  ha-bridge script toggle [flags] <name>
+  ha-bridge script toggle [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the script. prefix
+  entity_id... string    Entity ID, with or without the script. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge script run`
@@ -84,14 +99,19 @@ DESCRIPTION
   Run the script, wait for it to finish and print its response as JSON
 
 USAGE
-  ha-bridge script run [flags] <name>
+  ha-bridge script run [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the script. prefix
+  entity_id... string    Entity ID, with or without the script. prefix; repeat for more (optional)
 
 FLAGS
   --socket string       Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --variables string    Script variables as a JSON object, such as '{"room":"office"}'
+  --entity string       Entity ID or name; repeat for more
+  --device string       Device ID or name; repeat for more
+  --area string         Area ID or name; repeat for more
+  --floor string        Floor ID or name; repeat for more
+  --label string        Label ID or name; repeat for more
 ```
 
 ## `ha-bridge script reload`

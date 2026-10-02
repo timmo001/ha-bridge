@@ -31,14 +31,19 @@ DESCRIPTION
   Activate the scene
 
 USAGE
-  ha-bridge scene turn-on [flags] <name>
+  ha-bridge scene turn-on [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the scene. prefix
+  entity_id... string    Entity ID, with or without the scene. prefix; repeat for more (optional)
 
 FLAGS
   --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --transition number    Transition time in seconds
+  --entity string        Entity ID or name; repeat for more
+  --device string        Device ID or name; repeat for more
+  --area string          Area ID or name; repeat for more
+  --floor string         Floor ID or name; repeat for more
+  --label string         Label ID or name; repeat for more
 ```
 
 ## `ha-bridge scene apply`
@@ -83,13 +88,18 @@ DESCRIPTION
   Delete a scene made with create
 
 USAGE
-  ha-bridge scene delete [flags] <name>
+  ha-bridge scene delete [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the scene. prefix
+  entity_id... string    Entity ID, with or without the scene. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge scene reload`

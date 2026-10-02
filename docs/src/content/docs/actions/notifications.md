@@ -8,7 +8,7 @@ description: Send notifications, show persistent notifications in Home Assistant
 `notify send-message` sends to a notify entity. `notify legacy` sends through a legacy notify action, such as the mobile app's, and takes integration `--data` as JSON:
 
 ```bash
-ha-bridge notify send-message family_group "Back in 10" --title Home
+ha-bridge notify send-message "Back in 10" family_group --title Home
 ha-bridge notify legacy mobile_app_pixel "Door left open" --data '{"ttl":0,"priority":"high"}'
 ```
 
@@ -24,11 +24,11 @@ ha-bridge pn dismiss-all
 
 ## Text to speech
 
-`tts speak` speaks a message with a TTS entity on a media player, both named without their prefix:
+`tts speak` speaks a message with a TTS entity on one media player. `--media-player` takes an entity ID, an ID without `media_player.`, or a name:
 
 ```bash
-ha-bridge tts speak google_translate_en_com kitchen "Dinner's ready"
-ha-bridge tts speak piper kitchen "Good morning" --language en-GB --options '{"voice":"en_GB-alba-medium"}'
+ha-bridge tts speak "Dinner's ready" google_translate_en_com --media-player kitchen
+ha-bridge tts speak "Good morning" piper --media-player kitchen --language en-GB --options '{"voice":"en_GB-alba-medium"}'
 ha-bridge tts clear-cache
 ```
 

@@ -5,16 +5,30 @@ description: Control Home Assistant entities from the command line, one action p
 
 Action commands send one Home Assistant action through the bridge and exit. They exit with status 1 and print the error when the bridge isn't running, the options are invalid, or Home Assistant rejects the action.
 
-## Entity names
+## Targets
 
-Action commands take the entity name **without** its domain, because the command already says which domain it acts on:
+Action commands act on a target, like actions in Home Assistant. Entity IDs go last, with or without the domain, since the command already says which domain it acts on. Repeat them for more:
 
 ```bash
-# Acts on light.bedroom_lamp
-ha-bridge light turn-on bedroom_lamp
+# Acts on light.bedroom_lamp and light.hall
+ha-bridge light turn-on bedroom_lamp hall
 ```
 
-[Watch commands](/using/reading) are different: `watch entity` takes the full entity ID.
+Flags pick entities by what they belong to. Each takes an ID or a name, and can be repeated:
+
+```bash
+ha-bridge light turn-off --area Kitchen --area "Living room"
+ha-bridge cover close --floor Upstairs
+ha-bridge switch turn-on --label Christmas
+ha-bridge light toggle --device "Desk lamp"
+ha-bridge light turn-on --entity "Bedroom lamp"
+```
+
+`--entity` takes an entity ID, an ID without the domain, or the entity's display name in that domain. A name has to match exactly one item, ignoring case, or the command fails and lists the matches. Home Assistant then decides which entities the target contains, so an area includes entities on devices in it.
+
+Commands that need one entity, such as `script run`, `camera snapshot` and `assist_satellite ask-question`, take the same target and fail unless it matches exactly one. Fixed arguments, such as the position in `cover position 50 office_blind`, come before the entity IDs.
+
+[`get` and `watch`](/using/reading) take full entity IDs, since they read entities in any domain.
 
 ## Domains
 

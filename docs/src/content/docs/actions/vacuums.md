@@ -13,19 +13,19 @@ ha-bridge vacuum stop robo
 ha-bridge vacuum return-to-base robo
 ha-bridge vacuum locate robo
 ha-bridge vacuum clean-spot robo
-ha-bridge vacuum fan-speed robo max
+ha-bridge vacuum fan-speed max robo
 ```
 
 `clean-area` cleans Home Assistant areas, by area ID, that are mapped to the vacuum's segments:
 
 ```bash
-ha-bridge vacuum clean-area robo kitchen hallway
+ha-bridge vacuum clean-area robo --clean-area kitchen --clean-area hallway
 ```
 
 `send-command` sends a raw command the integration understands, with optional JSON `--params`:
 
 ```bash
-ha-bridge vacuum send-command robo app_goto_target --params '[25500,25500]'
+ha-bridge vacuum send-command app_goto_target robo --params '[25500,25500]'
 ```
 
 ## Lawn mowers

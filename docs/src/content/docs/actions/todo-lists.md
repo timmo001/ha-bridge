@@ -13,11 +13,11 @@ ha-bridge todo get shopping --status needs_action
 ## Changing items
 
 ```bash
-ha-bridge todo add shopping milk
-ha-bridge todo add chores "Book MOT" --due-date 2026-11-01 --description "Before the 14th"
-ha-bridge todo update shopping milk --status completed
-ha-bridge todo update chores "Book MOT" --rename "Book MOT and service"
-ha-bridge todo remove shopping milk bread
+ha-bridge todo add milk shopping
+ha-bridge todo add "Book MOT" chores --due-date 2026-11-01 --description "Before the 14th"
+ha-bridge todo update milk shopping --status completed
+ha-bridge todo update "Book MOT" chores --rename "Book MOT and service"
+ha-bridge todo remove shopping --item milk --item bread
 ha-bridge todo remove-completed shopping
 ```
 

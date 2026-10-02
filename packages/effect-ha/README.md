@@ -33,7 +33,9 @@ const program = Effect.gen(function* () {
   const config = yield* session.getConfig;
   yield* Console.log(`Connected to Home Assistant ${config.version}`);
 
-  yield* session.callAction(InputBoolean.toggle("input_boolean.in_a_call"));
+  yield* session.callAction(
+    InputBoolean.toggle({ entity_id: "input_boolean.in_a_call" }),
+  );
 });
 
 program.pipe(
@@ -48,28 +50,40 @@ The session has:
 - `callAction(action)`: runs an action. It succeeds with the action's response when `return_response` is set, otherwise `null`.
 - `getConfig`: the instance's configuration, such as its time zone and version.
 - `request(command)`: sends a raw WebSocket command, such as `get_states` or `subscribe_events`.
+- `extractTarget(target)`: asks Home Assistant which entities, devices and areas a target refers to, with `extract_from_target`. It takes IDs only.
 - `closed`: fails once the connection is lost.
 
 `onState` receives each new entity state from `state_changed` events after you subscribe to them with `request`. The optional `onRemove` receives the ID of an entity removed from Home Assistant, and `onEvent` receives the type of every other subscribed event, such as `entity_registry_updated`.
 
 ## Actions
 
-Builders return a plain `Action` (`{ action, data?, target?, return_response? }`), so you can also write one by hand:
+Builders take a `Target`, the same fields as an action's target in Home Assistant (`entity_id`, `device_id`, `area_id`, `floor_id` and `label_id`, each a string or a list of IDs). They return a plain `Action` (`{ action, data?, target?, return_response? }`), so you can also write one by hand:
 
 ```ts
-import { Camera, Climate, Cover, InputNumber, Light } from "@timmo001/effect-ha";
+import {
+  Camera,
+  Climate,
+  Cover,
+  InputNumber,
+  Light,
+} from "@timmo001/effect-ha";
 
-Light.turnOn("light.office");
-Light.turnOn("light.office", { brightness_pct: 60, color_temp_kelvin: 3000 });
-InputNumber.increment("input_number.desk_height");
-Cover.setPosition("cover.office_blind", 40);
-Climate.setFanMode("climate.office", "high");
-Camera.record("camera.front_door", "/media/front_door.mp4", { duration: 20 });
+Light.turnOn({ entity_id: "light.office" });
+Light.turnOn(
+  { area_id: "office" },
+  { brightness_pct: 60, color_temp_kelvin: 3000 },
+);
+InputNumber.increment({ entity_id: "input_number.desk_height" });
+Cover.setPosition({ floor_id: "upstairs" }, 40);
+Climate.setFanMode({ label_id: "bedrooms" }, "high");
+Camera.record({ entity_id: "camera.front_door" }, "/media/front_door.mp4", {
+  duration: 20,
+});
 
 const restart = { action: "homeassistant.restart" };
 ```
 
-Entity IDs are typed by domain, so `Light.turnOn("switch.fan")` is a type error.
+Home Assistant applies a domain's action only to that domain's entities, so `Light.turnOn({ area_id: "office" })` leaves the office's switches alone. Actions that need one particular entity, such as `Script.run`, `AssistSatellite.askQuestion` and `cameraSnapshot`, take an entity ID typed by domain instead, and `isEntityIdIn(domain)` narrows a string to one.
 
 Action data follows Home Assistant's own action schemas. Where Core checks more than types can say, such as ranges or fields that can't be set together, the package exports the schema too, so you can check data before sending it:
 
@@ -85,14 +99,15 @@ const data = yield* Schema.decodeUnknownEffect(LightTurnOnData)({
 
 ## Calendar events
 
-`Calendar.getEvents` builds a `calendar.get_events` action and `Calendar.eventsFrom` reads one calendar's events from its response:
+`Calendar.getEvents` builds a `calendar.get_events` action and `Calendar.eventsFrom` reads its response, keyed by calendar entity ID. `Schedule.getSchedule` and `Schedule.schedulesFrom` work the same way for schedules:
 
 ```ts
 const response = yield* session.callAction(
-  Calendar.getEvents("calendar.work", { start, end }),
+  Calendar.getEvents({ entity_id: "calendar.work" }, { start, end }),
 );
 
-const events = yield* Calendar.eventsFrom("calendar.work", response);
+const events = yield* Calendar.eventsFrom(response);
+// events["calendar.work"]
 ```
 
 ## Assist satellite questions
@@ -126,7 +141,7 @@ const snapshot = yield* cameraSnapshot(
 
 ## Entities
 
-`EntityState` is the schema for a state object. `friendlyName` and `stateWithUnit` format one for display. `entityNamerFrom` builds names the way Home Assistant dashboards do (parent device, device and entity name) from the entity and device registries, and `entityNameParts` returns those parts separately. `AreaRegistry` and `FloorRegistry` decode `config/area_registry/list` and `config/floor_registry/list`.
+`EntityState` is the schema for a state object. `friendlyName` and `stateWithUnit` format one for display. `entityNamerFrom` builds names the way Home Assistant dashboards do (parent device, device and entity name) from the entity and device registries, and `entityNameParts` returns those parts separately. `AreaRegistry`, `FloorRegistry` and `LabelRegistry` decode `config/area_registry/list`, `config/floor_registry/list` and `config/label_registry/list`.
 
 Failures use `HomeAssistantError`.
 

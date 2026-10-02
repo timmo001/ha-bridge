@@ -9,7 +9,7 @@ description: Start, pause, change and finish timers, and read schedules.
 
 ```bash
 ha-bridge timer start tea
-ha-bridge timer start tea 00:04:00
+ha-bridge timer start tea --duration 00:04:00
 ha-bridge timer pause tea
 ha-bridge timer cancel tea
 ha-bridge timer finish tea
@@ -18,8 +18,8 @@ ha-bridge timer finish tea
 `change` adds time to a running timer. To take time away, put the negative value after `--`:
 
 ```bash
-ha-bridge timer change tea 60
-ha-bridge timer change tea -- -00:01:00
+ha-bridge timer change 60 tea
+ha-bridge timer change -- -00:01:00 tea
 ```
 
 ## Schedules

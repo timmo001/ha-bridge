@@ -29,15 +29,20 @@ DESCRIPTION
   Send a message to a notify entity
 
 USAGE
-  ha-bridge notify send-message [flags] <name> <message>
+  ha-bridge notify send-message [flags] <message> [<entity_id...>]
 
 ARGUMENTS
-  name string       Entity name without the notify. prefix
-  message string    Message text
+  message string         Message text
+  entity_id... string    Entity ID, with or without the notify. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --title string     Title
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge notify legacy`

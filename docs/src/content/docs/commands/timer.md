@@ -29,14 +29,19 @@ DESCRIPTION
   Start or restart the timer
 
 USAGE
-  ha-bridge timer start [flags] <name> [<duration>]
+  ha-bridge timer start [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string        Entity name without the timer. prefix
-  duration string    Seconds or HH:MM:SS (default: the timer's own duration) (optional)
+  entity_id... string    Entity ID, with or without the timer. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --socket string      Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --duration string    Seconds or HH:MM:SS (default: the timer's own duration)
+  --entity string      Entity ID or name; repeat for more
+  --device string      Device ID or name; repeat for more
+  --area string        Area ID or name; repeat for more
+  --floor string       Floor ID or name; repeat for more
+  --label string       Label ID or name; repeat for more
 ```
 
 ## `ha-bridge timer pause`
@@ -46,13 +51,18 @@ DESCRIPTION
   Pause the timer
 
 USAGE
-  ha-bridge timer pause [flags] <name>
+  ha-bridge timer pause [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the timer. prefix
+  entity_id... string    Entity ID, with or without the timer. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge timer cancel`
@@ -62,13 +72,18 @@ DESCRIPTION
   Cancel the timer
 
 USAGE
-  ha-bridge timer cancel [flags] <name>
+  ha-bridge timer cancel [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the timer. prefix
+  entity_id... string    Entity ID, with or without the timer. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge timer finish`
@@ -78,13 +93,18 @@ DESCRIPTION
   Finish the timer now
 
 USAGE
-  ha-bridge timer finish [flags] <name>
+  ha-bridge timer finish [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the timer. prefix
+  entity_id... string    Entity ID, with or without the timer. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge timer change`
@@ -94,14 +114,19 @@ DESCRIPTION
   Add time to a running timer
 
 USAGE
-  ha-bridge timer change [flags] <name> <duration>
+  ha-bridge timer change [flags] <duration> [<entity_id...>]
 
 ARGUMENTS
-  name string        Entity name without the timer. prefix
-  duration string    Seconds or HH:MM:SS to add; negative to take away, after --
+  duration string        Seconds or HH:MM:SS to add; negative to take away, after --
+  entity_id... string    Entity ID, with or without the timer. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge timer reload`

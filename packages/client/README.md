@@ -33,15 +33,13 @@ import { Console, Effect, Option } from "effect";
 
 const program = Effect.gen(function* () {
   const client = yield* BridgeClient;
-  const update = yield* client.GetEntity({
-    entityId: "sensor.office_temperature",
+  const updates = yield* client.GetEntities({
+    target: { entity_id: "sensor.office_temperature" },
   });
 
-  if (update === null) {
-    return yield* Console.log("Entity not found");
+  for (const { name, state } of updates) {
+    yield* Console.log(`${name}: ${stateWithUnit(state)}`);
   }
-
-  yield* Console.log(`${update.name}: ${stateWithUnit(update.state)}`);
 });
 
 const main = Effect.gen(function* () {
@@ -53,28 +51,35 @@ const main = Effect.gen(function* () {
 main.pipe(Effect.provide(NodeServices.layer), NodeRuntime.runMain);
 ```
 
-### Read an entity
+### Targets
 
-`GetEntity` returns the entity's state and display name, or `null` when the bridge has no state for it.
+Reads, watches, actions and camera snapshots take a target with the same fields as an action's target in Home Assistant: `entity_id`, `device_id`, `area_id`, `floor_id` and `label_id`, each a string or a list. Every value can be an ID or a name; the bridge resolves names to IDs, then Home Assistant decides which entities the target contains. `domain` keeps only entities in that domain. A name that matches nothing or more than one item fails with `TargetError`.
+
+### Read entities
+
+`GetEntities` returns the state and display name of every entity the target matches.
 
 ```ts
-const desk = Effect.gen(function* () {
+const officeLights = Effect.gen(function* () {
   const client = yield* BridgeClient;
 
-  return yield* client.GetEntity({ entityId: "light.desk" });
+  return yield* client.GetEntities({
+    target: { area_id: "Office" },
+    domain: "light",
+  });
 });
 ```
 
-### Watch an entity
+### Watch entities
 
-`WatchEntity` returns a `Stream` that emits the current state (when the bridge has one), then every change.
+`WatchEntities` returns a `Stream` that emits the current state of every matching entity, then every change. After a reconnect or a registry change, the bridge expands the target again and emits entities it newly matches.
 
 ```ts
 const watchDesk = Effect.gen(function* () {
   const client = yield* BridgeClient;
 
   yield* client
-    .WatchEntity({ entityId: "light.desk" })
+    .WatchEntities({ target: { label_id: "Evening lights" }, domain: "light" })
     .pipe(
       Stream.runForEach(({ state, name }) =>
         Console.log(`${name}: ${state.state}`),
@@ -85,13 +90,13 @@ const watchDesk = Effect.gen(function* () {
 
 ### Run an action
 
-`CallAction` takes an action in the shape Home Assistant automations use: `action`, `data` and `target`. Typed builders from `@timmo001/effect-ha` cover common actions, such as `Light.toggle`, `InputNumber.setValue`, `Cover.setPosition` and `Climate.setFanMode`. It fails with `HomeAssistantError` when Home Assistant rejects the action.
+`CallAction` takes an action in the shape Home Assistant automations use: `action`, `data` and `target`. Typed builders from `@timmo001/effect-ha` cover common actions, such as `Light.toggle`, `InputNumber.setValue`, `Cover.setPosition` and `Climate.setFanMode`. Names in the target are resolved first. It fails with `HomeAssistantError` when Home Assistant rejects the action, and `TargetError` when a name doesn't resolve.
 
 ```ts
 const dimDesk = Effect.gen(function* () {
   const client = yield* BridgeClient;
 
-  yield* client.CallAction(Light.toggle("light.desk"));
+  yield* client.CallAction(Light.toggle({ area_id: "Office" }));
 
   yield* client
     .CallAction({
@@ -111,25 +116,28 @@ Set `return_response: true` for actions that return data. `CallAction` then succ
 
 ### Calendar events
 
-`getCalendarEvents` returns the events on a calendar that overlap a time range. All-day events have ISO dates for `start` and `end`; others have date-times.
+`getCalendarEvents` returns the events that overlap a time range on every calendar the target matches, keyed by calendar entity ID. All-day events have ISO dates for `start` and `end`; others have date-times.
 
 ```ts
-const upcoming = getCalendarEvents("calendar.personal", {
-  start: new Date(),
-  end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-});
+const upcoming = getCalendarEvents(
+  { entity_id: "calendar.personal" },
+  {
+    start: new Date(),
+    end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  },
+);
 ```
 
 ### Config and camera snapshots
 
-`GetConfig` returns Home Assistant's config, such as `time_zone`, `location_name` and `version`. `CameraSnapshot` returns a camera's current image as bytes, with its content type.
+`GetConfig` returns Home Assistant's config, such as `time_zone`, `location_name` and `version`. `CameraSnapshot` returns the current image, as bytes with its content type, from the one camera its target matches.
 
 ```ts
 const frontDoor = Effect.gen(function* () {
   const client = yield* BridgeClient;
   const { time_zone } = yield* client.GetConfig();
   const { contentType, data } = yield* client.CameraSnapshot({
-    entityId: "camera.front_door",
+    target: { entity_id: "camera.front_door" },
   });
 });
 ```

@@ -29,14 +29,19 @@ DESCRIPTION
   Save the camera's current image
 
 USAGE
-  ha-bridge camera snapshot [flags] <name> <output>
+  ha-bridge camera snapshot [flags] <output> [<entity_id...>]
 
 ARGUMENTS
-  name string      Entity name without the camera. prefix
-  output string    File to write the image to
+  output string          File to write the image to
+  entity_id... string    Entity ID, with or without the camera. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge camera turn-on`
@@ -48,13 +53,18 @@ DESCRIPTION
   Turn on
 
 USAGE
-  ha-bridge camera turn-on [flags] <name>
+  ha-bridge camera turn-on [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the camera. prefix
+  entity_id... string    Entity ID, with or without the camera. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge camera turn-off`
@@ -66,13 +76,18 @@ DESCRIPTION
   Turn off
 
 USAGE
-  ha-bridge camera turn-off [flags] <name>
+  ha-bridge camera turn-off [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the camera. prefix
+  entity_id... string    Entity ID, with or without the camera. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge camera enable-motion-detection`
@@ -82,13 +97,18 @@ DESCRIPTION
   Enable motion detection
 
 USAGE
-  ha-bridge camera enable-motion-detection [flags] <name>
+  ha-bridge camera enable-motion-detection [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the camera. prefix
+  entity_id... string    Entity ID, with or without the camera. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge camera disable-motion-detection`
@@ -98,13 +118,18 @@ DESCRIPTION
   Disable motion detection
 
 USAGE
-  ha-bridge camera disable-motion-detection [flags] <name>
+  ha-bridge camera disable-motion-detection [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the camera. prefix
+  entity_id... string    Entity ID, with or without the camera. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge camera server-snapshot`
@@ -114,14 +139,19 @@ DESCRIPTION
   Save the camera's current image on the Home Assistant host
 
 USAGE
-  ha-bridge camera server-snapshot [flags] <name> <filename>
+  ha-bridge camera server-snapshot [flags] <filename> [<entity_id...>]
 
 ARGUMENTS
-  name string        Entity name without the camera. prefix
-  filename string    Path on the Home Assistant host, in allowlist_external_dirs
+  filename string        Path on the Home Assistant host, in allowlist_external_dirs
+  entity_id... string    Entity ID, with or without the camera. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge camera record`
@@ -131,16 +161,21 @@ DESCRIPTION
   Record the camera's stream on the Home Assistant host
 
 USAGE
-  ha-bridge camera record [flags] <name> <filename>
+  ha-bridge camera record [flags] <filename> [<entity_id...>]
 
 ARGUMENTS
-  name string        Entity name without the camera. prefix
-  filename string    Path on the Home Assistant host, in allowlist_external_dirs
+  filename string        Path on the Home Assistant host, in allowlist_external_dirs
+  entity_id... string    Entity ID, with or without the camera. prefix; repeat for more (optional)
 
 FLAGS
   --socket string       Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --duration integer    Seconds to record (default: 30)
   --lookback integer    Seconds from before the call to include (default: 0)
+  --entity string       Entity ID or name; repeat for more
+  --device string       Device ID or name; repeat for more
+  --area string         Area ID or name; repeat for more
+  --floor string        Floor ID or name; repeat for more
+  --label string        Label ID or name; repeat for more
 ```
 
 ## `ha-bridge camera play-stream`
@@ -150,12 +185,17 @@ DESCRIPTION
   Play the camera's stream on a media player
 
 USAGE
-  ha-bridge camera play-stream [flags] <name> <media_player>
+  ha-bridge camera play-stream [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string            Entity name without the camera. prefix
-  media_player string    Media player name without the media_player. prefix
+  entity_id... string    Entity ID, with or without the camera. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --socket string          Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --media-player string    Media player to play the stream on: entity ID, object ID or name
+  --entity string          Entity ID or name; repeat for more
+  --device string          Device ID or name; repeat for more
+  --area string            Area ID or name; repeat for more
+  --floor string           Floor ID or name; repeat for more
+  --label string           Label ID or name; repeat for more
 ```

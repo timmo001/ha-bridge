@@ -29,12 +29,17 @@ DESCRIPTION
   Save the image on the Home Assistant host
 
 USAGE
-  ha-bridge image snapshot [flags] <name> <filename>
+  ha-bridge image snapshot [flags] <filename> [<entity_id...>]
 
 ARGUMENTS
-  name string        Entity name without the image. prefix
-  filename string    Path on the Home Assistant host to save to
+  filename string        Path on the Home Assistant host to save to
+  entity_id... string    Entity ID, with or without the image. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```

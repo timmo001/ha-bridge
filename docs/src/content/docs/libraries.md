@@ -41,15 +41,17 @@ Calls fail straight away when the bridge isn't running, rather than waiting for 
 
 | Method | Returns |
 | --- | --- |
-| `GetEntity({ entityId })` | The entity's state and display name from the bridge's cache, or `null` if it doesn't exist |
-| `WatchEntity({ entityId })` | A `Stream` of updates, starting with the current state if the bridge has it. It keeps going across Home Assistant reconnects |
-| `CallAction(action)` | The action's response when `return_response` is set, otherwise `null`. Fails with `HomeAssistantError` |
+| `GetEntities({ target, domain? })` | The state and display name of every entity the target matches. Fails with `TargetError` when a name doesn't resolve |
+| `WatchEntities({ target, domain? })` | A `Stream` of updates for every matching entity, starting with their current states. It keeps going across Home Assistant reconnects and picks up entities the target newly matches |
+| `CallAction(action)` | The action's response when `return_response` is set, otherwise `null`. Names in the target are resolved first. Fails with `HomeAssistantError` or `TargetError` |
 | `GetConfig()` | Home Assistant's config, such as its name, version and units |
-| `CameraSnapshot({ entityId })` | The camera's current image, as `contentType` and `data` bytes |
+| `CameraSnapshot({ target })` | The image from the one camera the target matches, as `contentType` and `data` bytes |
+
+A target has the same fields as an action's target in Home Assistant: `entity_id`, `device_id`, `area_id`, `floor_id` and `label_id`. Each takes an ID or a name, and the bridge resolves names to IDs. `domain` keeps only entities in that domain. [The protocol](/using/protocol#rpcs) has the full rules.
 
 Entity results are `EntityUpdate`s: the raw `EntityState` plus `name`, the display name the bridge resolved the same way the Home Assistant frontend does.
 
-`getCalendarEvents(entityId, { start, end })` is a helper on top of `CallAction`. It calls `calendar.get_events` and decodes the events.
+`getCalendarEvents(target, { start, end })` is a helper on top of `CallAction`. It calls `calendar.get_events` and returns the events keyed by calendar entity ID.
 
 ### Example
 
@@ -65,9 +67,10 @@ const main = Effect.gen(function* () {
   yield* Effect.gen(function* () {
     const client = yield* BridgeClient;
 
-    yield* client.CallAction(Light.toggle("light.desk"));
+    yield* client.CallAction(Light.toggle({ area_id: "office" }));
 
-    yield* client.WatchEntity({ entityId: "light.desk" }).pipe(
+    yield* client
+      .WatchEntities({ target: { area_id: "office" }, domain: "light" }).pipe(
       Stream.runForEach(({ name, state }) =>
         Effect.log(`${name}: ${state.state}`),
       ),
@@ -95,6 +98,7 @@ It returns a session with:
 - `callAction(action)`: runs an action and returns its response, or `null`.
 - `getConfig`: reads Home Assistant's config.
 - `request(command)`: sends a supported raw command, such as `get_states`, `subscribe_events` or the entity and device registry lists. The session adds the message id and matches up the reply.
+- `extractTarget(target)`: asks Home Assistant which entities, devices and areas a target refers to, through `extract_from_target`.
 - `closed`: fails once the connection drops. The library doesn't reconnect on its own; race your work against `closed` and retry with a `Schedule`, as the bridge does.
 
 `connect` doesn't subscribe to anything by itself. Send `subscribe_events` for `state_changed` and each new state is passed to `onState`.
@@ -103,7 +107,7 @@ It returns a session with:
 
 Actions are plain data in the shape automations use: `action`, plus optional `data`, `target` and `return_response`. The `Action` schema checks them, so you can build one by hand for any action.
 
-The domain builders do it for you with typed entity IDs and options, such as `Light.turnOn("light.desk", { brightness_pct: 50 })`, `Cover.setPosition(...)` or `MediaPlayer.playMedia(...)`. Where an action takes structured data, its schema is exported too (for example `LightTurnOnData` or `ClimateSetTemperatureData`). The [Actions](/actions) pages list every domain and builder.
+The domain builders do it for you with a target and typed options, such as `Light.turnOn({ entity_id: "light.desk" }, { brightness_pct: 50 })`, `Cover.setPosition(...)` or `MediaPlayer.playMedia(...)`. Where an action takes structured data, its schema is exported too (for example `LightTurnOnData` or `ClimateSetTemperatureData`). The [Actions](/actions) pages list every domain and builder.
 
 Because builders only return data, the same action works with `session.callAction` here and `client.CallAction` on the bridge.
 
@@ -111,7 +115,7 @@ Because builders only return data, the same action works with `session.callActio
 
 - `EntityState`, with `friendlyName`, `stateWithUnit`, `stringAttribute` and `numberAttribute` for reading it.
 - `entityNamerFrom` and `displayName`, which name entities from the entity and device registries like the frontend does.
-- `Calendar.getEvents` and `Calendar.eventsFrom` for calendar events.
+- `Calendar.getEvents` and `Calendar.eventsFrom`, and `Schedule.getSchedule` and `Schedule.schedulesFrom`, which return results keyed by entity ID.
 - `cameraSnapshot`, which fetches a camera image through Home Assistant's REST camera proxy.
 - `HomeAssistantError`, the one error type for failed requests.
 

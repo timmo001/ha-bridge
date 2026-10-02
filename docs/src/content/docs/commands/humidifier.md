@@ -31,13 +31,18 @@ DESCRIPTION
   Turn on
 
 USAGE
-  ha-bridge humidifier turn-on [flags] <name>
+  ha-bridge humidifier turn-on [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the humidifier. prefix
+  entity_id... string    Entity ID, with or without the humidifier. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge humidifier turn-off`
@@ -49,13 +54,18 @@ DESCRIPTION
   Turn off
 
 USAGE
-  ha-bridge humidifier turn-off [flags] <name>
+  ha-bridge humidifier turn-off [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the humidifier. prefix
+  entity_id... string    Entity ID, with or without the humidifier. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge humidifier toggle`
@@ -67,13 +77,18 @@ DESCRIPTION
   Toggle
 
 USAGE
-  ha-bridge humidifier toggle [flags] <name>
+  ha-bridge humidifier toggle [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the humidifier. prefix
+  entity_id... string    Entity ID, with or without the humidifier. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge humidifier mode`
@@ -83,14 +98,19 @@ DESCRIPTION
   Set the mode
 
 USAGE
-  ha-bridge humidifier mode [flags] <name> <mode>
+  ha-bridge humidifier mode [flags] <mode> [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the humidifier. prefix
-  mode string    One of the humidifier's available_modes
+  mode string            One of the humidifier's available_modes
+  entity_id... string    Entity ID, with or without the humidifier. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge humidifier humidity`
@@ -100,12 +120,17 @@ DESCRIPTION
   Set the target humidity
 
 USAGE
-  ha-bridge humidifier humidity [flags] <name> <humidity>
+  ha-bridge humidifier humidity [flags] <humidity> [<entity_id...>]
 
 ARGUMENTS
-  name string        Entity name without the humidifier. prefix
-  humidity string    Target humidity from 0 to 100
+  humidity string        Target humidity from 0 to 100
+  entity_id... string    Entity ID, with or without the humidifier. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```

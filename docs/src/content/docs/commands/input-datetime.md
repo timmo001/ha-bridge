@@ -29,10 +29,10 @@ DESCRIPTION
   Set the date, time or both, or a date and time or timestamp
 
 USAGE
-  ha-bridge input_datetime set-datetime [flags] <name>
+  ha-bridge input_datetime set-datetime [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the input_datetime. prefix
+  entity_id... string    Entity ID, with or without the input_datetime. prefix; repeat for more (optional)
 
 FLAGS
   --socket string       Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -40,6 +40,11 @@ FLAGS
   --time string         Time as HH:MM or HH:MM:SS
   --datetime string     Date and time, such as "2026-10-01 18:30"
   --timestamp number    Seconds since the Unix epoch
+  --entity string       Entity ID or name; repeat for more
+  --device string       Device ID or name; repeat for more
+  --area string         Area ID or name; repeat for more
+  --floor string        Floor ID or name; repeat for more
+  --label string        Label ID or name; repeat for more
 ```
 
 ## `ha-bridge input_datetime reload`

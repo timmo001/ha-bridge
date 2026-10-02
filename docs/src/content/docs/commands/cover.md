@@ -33,13 +33,18 @@ DESCRIPTION
   Print bar JSON now and on every change
 
 USAGE
-  ha-bridge cover watch [flags] <name>
+  ha-bridge cover watch [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the cover. prefix
+  entity_id... string    Entity ID, with or without the cover. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge cover open`
@@ -49,14 +54,19 @@ DESCRIPTION
   Open the cover
 
 USAGE
-  ha-bridge cover open [flags] <name>
+  ha-bridge cover open [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the cover. prefix
+  entity_id... string    Entity ID, with or without the cover. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --speed string     Speed, one of the cover's supported_speeds
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge cover close`
@@ -66,14 +76,19 @@ DESCRIPTION
   Close the cover
 
 USAGE
-  ha-bridge cover close [flags] <name>
+  ha-bridge cover close [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the cover. prefix
+  entity_id... string    Entity ID, with or without the cover. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --speed string     Speed, one of the cover's supported_speeds
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge cover toggle`
@@ -83,13 +98,18 @@ DESCRIPTION
   Open or close the cover
 
 USAGE
-  ha-bridge cover toggle [flags] <name>
+  ha-bridge cover toggle [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the cover. prefix
+  entity_id... string    Entity ID, with or without the cover. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge cover stop`
@@ -99,13 +119,18 @@ DESCRIPTION
   Stop the cover
 
 USAGE
-  ha-bridge cover stop [flags] <name>
+  ha-bridge cover stop [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the cover. prefix
+  entity_id... string    Entity ID, with or without the cover. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge cover position`
@@ -115,15 +140,20 @@ DESCRIPTION
   Set the position
 
 USAGE
-  ha-bridge cover position [flags] <name> <position>
+  ha-bridge cover position [flags] <position> [<entity_id...>]
 
 ARGUMENTS
-  name string        Entity name without the cover. prefix
-  position string    Position from 0 to 100
+  position string        Position from 0 to 100
+  entity_id... string    Entity ID, with or without the cover. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --speed string     Speed, one of the cover's supported_speeds
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge cover open-tilt`
@@ -133,13 +163,18 @@ DESCRIPTION
   Open the tilt
 
 USAGE
-  ha-bridge cover open-tilt [flags] <name>
+  ha-bridge cover open-tilt [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the cover. prefix
+  entity_id... string    Entity ID, with or without the cover. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge cover close-tilt`
@@ -149,13 +184,18 @@ DESCRIPTION
   Close the tilt
 
 USAGE
-  ha-bridge cover close-tilt [flags] <name>
+  ha-bridge cover close-tilt [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the cover. prefix
+  entity_id... string    Entity ID, with or without the cover. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge cover toggle-tilt`
@@ -165,13 +205,18 @@ DESCRIPTION
   Open or close the tilt
 
 USAGE
-  ha-bridge cover toggle-tilt [flags] <name>
+  ha-bridge cover toggle-tilt [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the cover. prefix
+  entity_id... string    Entity ID, with or without the cover. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge cover stop-tilt`
@@ -181,13 +226,18 @@ DESCRIPTION
   Stop the tilt
 
 USAGE
-  ha-bridge cover stop-tilt [flags] <name>
+  ha-bridge cover stop-tilt [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the cover. prefix
+  entity_id... string    Entity ID, with or without the cover. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge cover tilt-position`
@@ -197,12 +247,17 @@ DESCRIPTION
   Set the tilt position
 
 USAGE
-  ha-bridge cover tilt-position [flags] <name> <position>
+  ha-bridge cover tilt-position [flags] <position> [<entity_id...>]
 
 ARGUMENTS
-  name string        Entity name without the cover. prefix
-  position string    Position from 0 to 100
+  position string        Position from 0 to 100
+  entity_id... string    Entity ID, with or without the cover. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```

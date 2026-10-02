@@ -6,12 +6,12 @@ description: Set the value of number, text, date, time and datetime entities and
 Each of these domains has `set-value`. Home Assistant checks the value against the entity's own limits, such as its minimum, maximum and step:
 
 ```bash
-ha-bridge number set-value oven_target 180
-ha-bridge text set-value display_message "Back at 5"
-ha-bridge input_text set-value note "Bins out tonight"
-ha-bridge date set-value next_service 2026-12-01
-ha-bridge time set-value alarm_time 06:45
-ha-bridge datetime set-value away_until "2026-10-03 18:00"
+ha-bridge number set-value 180 oven_target
+ha-bridge text set-value "Back at 5" display_message
+ha-bridge input_text set-value "Bins out tonight" note
+ha-bridge date set-value 2026-12-01 next_service
+ha-bridge time set-value 06:45 alarm_time
+ha-bridge datetime set-value "2026-10-03 18:00" away_until
 ```
 
 | Domain | Value |

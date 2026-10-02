@@ -16,23 +16,23 @@ ha-bridge climate toggle air_conditioner
 `hvac-mode` takes `off`, `heat`, `cool`, `heat_cool`, `auto`, `dry` or `fan_only`:
 
 ```bash
-ha-bridge climate hvac-mode air_conditioner cool
+ha-bridge climate hvac-mode cool air_conditioner
 ```
 
 ## Temperature and humidity
 
-`temperature` sets the target temperature, in your Home Assistant unit. `--hvac-mode` switches mode at the same time. For a range, set `--target-temp-low` and `--target-temp-high` together:
+`temperature` sets the target temperature with `--temperature`, in your Home Assistant unit. `--hvac-mode` switches mode at the same time. For a range, set `--target-temp-low` and `--target-temp-high` together:
 
 ```bash
-ha-bridge climate temperature air_conditioner 21.5
-ha-bridge climate temperature air_conditioner 21.5 --hvac-mode heat
+ha-bridge climate temperature air_conditioner --temperature 21.5
+ha-bridge climate temperature air_conditioner --temperature 21.5 --hvac-mode heat
 ha-bridge climate temperature thermostat --target-temp-low 18 --target-temp-high 23
 ```
 
 `humidity` sets the target humidity in percent:
 
 ```bash
-ha-bridge climate humidity dehumidifier 45
+ha-bridge climate humidity 45 dehumidifier
 ```
 
 ## Other modes
@@ -40,10 +40,10 @@ ha-bridge climate humidity dehumidifier 45
 These take a mode from the entity's attributes: `preset_modes`, `fan_modes`, `swing_modes` and `swing_horizontal_modes`:
 
 ```bash
-ha-bridge climate preset-mode air_conditioner away
-ha-bridge climate fan-mode air_conditioner auto
-ha-bridge climate swing-mode air_conditioner on
-ha-bridge climate swing-horizontal-mode air_conditioner on
+ha-bridge climate preset-mode away air_conditioner
+ha-bridge climate fan-mode auto air_conditioner
+ha-bridge climate swing-mode on air_conditioner
+ha-bridge climate swing-horizontal-mode on air_conditioner
 ```
 
 ## Watching

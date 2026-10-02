@@ -5,10 +5,11 @@ description: Control entities of any domain, restart Home Assistant and reload i
 
 ## Any entity
 
-`homeassistant turn-on` (`on`), `turn-off` (`off`) and `toggle` (`t`) work on entities of any domain that can be turned on and off. Unlike the other action commands, they take **full entity IDs**, one or more:
+`homeassistant turn-on` (`on`), `turn-off` (`off`) and `toggle` (`t`) work on entities of any domain that can be turned on and off. Unlike the other action commands, they take **full entity IDs**, and the target flags work across every domain:
 
 ```bash
 ha-bridge homeassistant turn-off light.desk switch.monitor fan.office
+ha-bridge homeassistant turn-off --area Office
 ```
 
 `update-entity` asks integrations to refresh entities now, rather than at their next update:

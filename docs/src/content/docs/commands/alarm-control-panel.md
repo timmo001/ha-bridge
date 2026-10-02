@@ -31,14 +31,19 @@ DESCRIPTION
   Disarm
 
 USAGE
-  ha-bridge alarm_control_panel disarm [flags] <name>
+  ha-bridge alarm_control_panel disarm [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the alarm_control_panel. prefix
+  entity_id... string    Entity ID, with or without the alarm_control_panel. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --code string      The lock's code
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge alarm_control_panel arm-home`
@@ -48,14 +53,19 @@ DESCRIPTION
   Arm for when you're home
 
 USAGE
-  ha-bridge alarm_control_panel arm-home [flags] <name>
+  ha-bridge alarm_control_panel arm-home [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the alarm_control_panel. prefix
+  entity_id... string    Entity ID, with or without the alarm_control_panel. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --code string      The lock's code
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge alarm_control_panel arm-away`
@@ -65,14 +75,19 @@ DESCRIPTION
   Arm for when you're away
 
 USAGE
-  ha-bridge alarm_control_panel arm-away [flags] <name>
+  ha-bridge alarm_control_panel arm-away [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the alarm_control_panel. prefix
+  entity_id... string    Entity ID, with or without the alarm_control_panel. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --code string      The lock's code
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge alarm_control_panel arm-night`
@@ -82,14 +97,19 @@ DESCRIPTION
   Arm for the night
 
 USAGE
-  ha-bridge alarm_control_panel arm-night [flags] <name>
+  ha-bridge alarm_control_panel arm-night [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the alarm_control_panel. prefix
+  entity_id... string    Entity ID, with or without the alarm_control_panel. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --code string      The lock's code
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge alarm_control_panel arm-vacation`
@@ -99,14 +119,19 @@ DESCRIPTION
   Arm for a holiday
 
 USAGE
-  ha-bridge alarm_control_panel arm-vacation [flags] <name>
+  ha-bridge alarm_control_panel arm-vacation [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the alarm_control_panel. prefix
+  entity_id... string    Entity ID, with or without the alarm_control_panel. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --code string      The lock's code
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge alarm_control_panel arm-custom-bypass`
@@ -116,14 +141,19 @@ DESCRIPTION
   Arm with the panel's bypassed zones
 
 USAGE
-  ha-bridge alarm_control_panel arm-custom-bypass [flags] <name>
+  ha-bridge alarm_control_panel arm-custom-bypass [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the alarm_control_panel. prefix
+  entity_id... string    Entity ID, with or without the alarm_control_panel. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --code string      The lock's code
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge alarm_control_panel trigger`
@@ -133,12 +163,17 @@ DESCRIPTION
   Set off the alarm
 
 USAGE
-  ha-bridge alarm_control_panel trigger [flags] <name>
+  ha-bridge alarm_control_panel trigger [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the alarm_control_panel. prefix
+  entity_id... string    Entity ID, with or without the alarm_control_panel. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --code string      The lock's code
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```

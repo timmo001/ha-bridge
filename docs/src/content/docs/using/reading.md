@@ -3,41 +3,53 @@ title: Reading entities
 description: Read or stream Home Assistant entity state into scripts and status bars through the bridge.
 ---
 
-`get entity` prints an entity's state once. Watch commands print it straight away, then again on every change. Each is a small client of the bridge, so any number of them share the bridge's one Home Assistant connection.
+`get` prints the state of the entities a target matches once. `watch` prints it straight away, then again on every change. Each is a small client of the bridge, so any number of them share the bridge's one Home Assistant connection.
 
-## Any entity
+## Targets
 
-`watch entity` (`w e`) takes the **full** entity ID:
+Both take a target, like an action's target in Home Assistant. Give entity IDs as arguments, or pick entities by what they belong to with flags. Every flag takes an ID or a name, and can be repeated:
+
+| Flag | Matches |
+| --- | --- |
+| `--entity` | An entity, by entity ID or display name |
+| `--device` | Every entity on a device |
+| `--area` | Every entity in an area, including those on devices in it |
+| `--floor` | Every entity in the floor's areas |
+| `--label` | Every entity, device and area with the label |
 
 ```bash
-ha-bridge watch entity input_boolean.guest_mode
+ha-bridge get light.office sensor.office_temperature --json
+ha-bridge watch --area Office --domain light --json
+ha-bridge get --label "Evening lights" --field state --field name
 ```
 
-Without an output flag it prints the raw state on each line and warns on stderr that scripts should use JSON.
+Home Assistant decides what a target contains, the same way it does for actions. `--domain` keeps only entities in that domain. A name has to match exactly one item, ignoring case, or the command fails and lists the matches.
 
-`--json` prints the full entity update, the same shape the [bridge protocol](/using/protocol#rpcs) sends, including Home Assistant's timestamps and context:
+## Output
+
+Without an output flag, `get` and `watch` print the raw state, and `watch` warns on stderr that scripts should use JSON.
+
+`--json` prints an object keyed by entity ID. Each value is the full entity update, the same shape the [bridge protocol](/using/protocol#rpcs) sends, including Home Assistant's timestamps and context:
 
 ```bash
-ha-bridge watch entity sun.sun --json
-# {"state":{"entity_id":"sun.sun","state":"above_horizon","attributes":{...},"last_changed":"...","last_reported":"...","last_updated":"...","context":{...}},"name":"Sun"}
+ha-bridge get sun.sun --json
+# {"sun.sun":{"state":{"entity_id":"sun.sun","state":"above_horizon","attributes":{...},"last_changed":"...","last_reported":"...","last_updated":"...","context":{...}},"name":"Sun"}}
 ```
 
-`--field` picks values by path, the same paths as [bar templates](/using/bar-json#templates). One field prints its raw value; several, or one with `--json`, print an object keyed by path, with `null` for anything missing:
+`--field` picks values by path, the same paths as [bar templates](/using/bar-json#templates). One field prints its raw value. Several, or one with `--json`, print an object keyed by entity ID, then by path, with `null` for anything missing:
 
 ```bash
-ha-bridge watch entity light.office --field state
+ha-bridge get light.office --field state
 # on
 
-ha-bridge watch entity light.office --field state --field attributes.brightness
-# {"state":"on","attributes.brightness":128}
+ha-bridge get --area Office --domain light --field state --field attributes.brightness
+# {"light.office":{"state":"on","attributes.brightness":128},"light.ceiling":{"state":"off","attributes.brightness":null}}
 ```
 
-A line identical to the one before it is skipped, so `--field state` only prints when the state changes.
-
-With `--bar-json` it prints one JSON object per line for status bars and scripts:
+`--bar-json` prints one JSON object per line for status bars and scripts:
 
 ```bash
-ha-bridge watch entity input_boolean.guest_mode \
+ha-bridge watch input_boolean.guest_mode \
   --bar-json \
   --text-on "Guest" \
   --tooltip-on "Guest mode is on" \
@@ -48,26 +60,19 @@ ha-bridge watch entity input_boolean.guest_mode \
 
 See [Bar JSON](/using/bar-json) for the output and every flag.
 
-## Reading once
+Plain output, one `--field` and `--bar-json` describe a single entity. With those, `get` fails when the target matches more than one entity, and `watch` fails as soon as a second entity appears. Use `--json` or several `--field` flags for more.
 
-`get entity` (`g e`) takes the same entity ID and output flags as `watch entity`, but prints the current state once and exits. It exits with status 1 when the bridge has no state for the entity.
-
-```bash
-ha-bridge get entity light.office --field state
-# on
-
-ha-bridge get entity input_boolean.guest_mode --bar-json --text-on "Guest"
-```
+`watch` skips a line identical to the entity's previous line, so `--field state` only prints when the state changes.
 
 ## Covers and climate
 
-`cover watch` and `climate watch` take the entity name without its domain, like the [action commands](/actions), and always print bar JSON with a summary of the entity:
+`cover watch` and `climate watch` take the same target as the [action commands](/actions), with entity IDs with or without the domain, and always print bar JSON with a summary of the entity. The target has to match one entity:
 
 ```bash
 ha-bridge cover watch office_blind
 # {"class":"open","name":"Office Blind","text":"open • 40%","tooltip":"open • 40%"}
 
-ha-bridge climate watch air_conditioner
+ha-bridge climate watch --entity "Air Conditioner"
 # {"class":"cool","name":"Air Conditioner","text":"Cool • Low • 21 °C","tooltip":"Cool • Low • 21 °C"}
 ```
 
@@ -77,4 +82,6 @@ ha-bridge climate watch air_conditioner
 
 ## When the bridge goes away
 
-A watcher prints nothing until the bridge has a state for the entity, then keeps running across Home Assistant reconnects. When an entity or its device is renamed in Home Assistant, watchers print again with the new name. It exits with status 1 when it can't reach the bridge, or when the bridge stops. Run watchers under something that restarts them, such as Waybar's `restart-interval` or a systemd unit with `Restart=on-failure`.
+A watcher prints nothing until the bridge is connected to Home Assistant, then keeps running across reconnects. After a reconnect, or when a registry changes, the bridge expands the target again: a watcher prints entities that now match, and stops printing ones that no longer do. When an entity or its device is renamed, watchers print again with the new name.
+
+A watcher exits with status 1 when it can't reach the bridge, when the bridge stops, or when its target stops resolving, such as an area name that no longer exists. Run watchers under something that restarts them, such as Waybar's `restart-interval` or a systemd unit with `Restart=on-failure`.

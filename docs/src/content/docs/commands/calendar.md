@@ -26,17 +26,22 @@ FLAGS
 
 ```text
 DESCRIPTION
-  Print upcoming events as JSON
+  Print upcoming events as JSON, keyed by calendar entity ID
 
 USAGE
-  ha-bridge calendar events [flags] <name>
+  ha-bridge calendar events [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the calendar. prefix
+  entity_id... string    Entity ID, with or without the calendar. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --days integer     Days ahead to read, from now
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge calendar create-event`
@@ -46,11 +51,11 @@ DESCRIPTION
   Add an event
 
 USAGE
-  ha-bridge calendar create-event [flags] <name> <summary>
+  ha-bridge calendar create-event [flags] <summary> [<entity_id...>]
 
 ARGUMENTS
-  name string       Entity name without the calendar. prefix
-  summary string    Event title
+  summary string         Event title
+  entity_id... string    Entity ID, with or without the calendar. prefix; repeat for more (optional)
 
 FLAGS
   --socket string         Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -60,4 +65,9 @@ FLAGS
   --in-weeks integer      All day, this many weeks from today
   --description string    Description
   --location string       Location
+  --entity string         Entity ID or name; repeat for more
+  --device string         Device ID or name; repeat for more
+  --area string           Area ID or name; repeat for more
+  --floor string          Floor ID or name; repeat for more
+  --label string          Label ID or name; repeat for more
 ```

@@ -29,15 +29,20 @@ DESCRIPTION
   Install the update
 
 USAGE
-  ha-bridge update install [flags] <name>
+  ha-bridge update install [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the update. prefix
+  entity_id... string    Entity ID, with or without the update. prefix; repeat for more (optional)
 
 FLAGS
   --socket string     Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --version string    Version to install (default: the latest)
   --backup            Back up first, where the integration supports it
+  --entity string     Entity ID or name; repeat for more
+  --device string     Device ID or name; repeat for more
+  --area string       Area ID or name; repeat for more
+  --floor string      Floor ID or name; repeat for more
+  --label string      Label ID or name; repeat for more
 ```
 
 ## `ha-bridge update skip`
@@ -47,13 +52,18 @@ DESCRIPTION
   Skip this version
 
 USAGE
-  ha-bridge update skip [flags] <name>
+  ha-bridge update skip [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the update. prefix
+  entity_id... string    Entity ID, with or without the update. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge update clear-skipped`
@@ -63,11 +73,16 @@ DESCRIPTION
   Stop skipping the version
 
 USAGE
-  ha-bridge update clear-skipped [flags] <name>
+  ha-bridge update clear-skipped [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the update. prefix
+  entity_id... string    Entity ID, with or without the update. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```

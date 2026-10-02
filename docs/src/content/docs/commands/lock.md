@@ -29,14 +29,19 @@ DESCRIPTION
   Lock
 
 USAGE
-  ha-bridge lock lock [flags] <name>
+  ha-bridge lock lock [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the lock. prefix
+  entity_id... string    Entity ID, with or without the lock. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --code string      The lock's code
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge lock unlock`
@@ -46,14 +51,19 @@ DESCRIPTION
   Unlock
 
 USAGE
-  ha-bridge lock unlock [flags] <name>
+  ha-bridge lock unlock [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the lock. prefix
+  entity_id... string    Entity ID, with or without the lock. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --code string      The lock's code
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge lock open`
@@ -63,12 +73,17 @@ DESCRIPTION
   Open the latch
 
 USAGE
-  ha-bridge lock open [flags] <name>
+  ha-bridge lock open [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the lock. prefix
+  entity_id... string    Entity ID, with or without the lock. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --code string      The lock's code
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```

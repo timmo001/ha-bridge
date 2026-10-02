@@ -29,14 +29,19 @@ DESCRIPTION
   Print the list's items as JSON
 
 USAGE
-  ha-bridge todo get [flags] <name>
+  ha-bridge todo get [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the todo. prefix
+  entity_id... string    Entity ID, with or without the todo. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --status choice    Only items with this status; repeat for both (choices: needs_action, completed)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge todo add`
@@ -46,17 +51,22 @@ DESCRIPTION
   Add an item
 
 USAGE
-  ha-bridge todo add [flags] <name> <item>
+  ha-bridge todo add [flags] <item> [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the todo. prefix
-  item string    Item name
+  item string            Item name
+  entity_id... string    Entity ID, with or without the todo. prefix; repeat for more (optional)
 
 FLAGS
   --socket string          Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --due-date string        Due date as YYYY-MM-DD
   --due-datetime string    Due date and time, such as "2026-10-01 18:30"
   --description string     Description
+  --entity string          Entity ID or name; repeat for more
+  --device string          Device ID or name; repeat for more
+  --area string            Area ID or name; repeat for more
+  --floor string           Floor ID or name; repeat for more
+  --label string           Label ID or name; repeat for more
 ```
 
 ## `ha-bridge todo update`
@@ -66,11 +76,11 @@ DESCRIPTION
   Change an item
 
 USAGE
-  ha-bridge todo update [flags] <name> <item>
+  ha-bridge todo update [flags] <item> [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the todo. prefix
-  item string    Item name or UID
+  item string            Item name or UID
+  entity_id... string    Entity ID, with or without the todo. prefix; repeat for more (optional)
 
 FLAGS
   --socket string          Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -79,6 +89,11 @@ FLAGS
   --due-date string        Due date as YYYY-MM-DD
   --due-datetime string    Due date and time, such as "2026-10-01 18:30"
   --description string     Description
+  --entity string          Entity ID or name; repeat for more
+  --device string          Device ID or name; repeat for more
+  --area string            Area ID or name; repeat for more
+  --floor string           Floor ID or name; repeat for more
+  --label string           Label ID or name; repeat for more
 ```
 
 ## `ha-bridge todo remove`
@@ -88,14 +103,19 @@ DESCRIPTION
   Remove items
 
 USAGE
-  ha-bridge todo remove [flags] <name> <item...>
+  ha-bridge todo remove [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string       Entity name without the todo. prefix
-  item... string    Item name or UID
+  entity_id... string    Entity ID, with or without the todo. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --item string      Item name or UID; repeat for more
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge todo remove-completed`
@@ -105,11 +125,16 @@ DESCRIPTION
   Remove completed items
 
 USAGE
-  ha-bridge todo remove-completed [flags] <name>
+  ha-bridge todo remove-completed [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the todo. prefix
+  entity_id... string    Entity ID, with or without the todo. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```

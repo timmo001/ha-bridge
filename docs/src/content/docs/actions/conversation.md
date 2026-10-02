@@ -21,7 +21,7 @@ ha-bridge conversation process "what's on today?" --agent-id conversation.openai
 ```bash
 ha-bridge ai_task generate-data dinner "Suggest a dinner using chicken"
 ha-bridge ai_task generate-data names "Suggest a name for a cat" --structure '{"name":{"selector":{"text":null}}}'
-ha-bridge ai_task generate-image openai_image poster "A cosy living room at dusk"
+ha-bridge ai_task generate-image poster "A cosy living room at dusk" openai_image
 ```
 
 `generate-data` uses the preferred AI task entity unless you pass `--entity`.

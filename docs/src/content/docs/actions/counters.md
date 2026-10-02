@@ -9,7 +9,7 @@ description: Step counters up and down, reset them or set a count.
 ha-bridge counter increment coffees
 ha-bridge counter decrement coffees
 ha-bridge counter reset coffees
-ha-bridge counter set-value coffees 3
+ha-bridge counter set-value 3 coffees
 ```
 
 | Command | Home Assistant action |

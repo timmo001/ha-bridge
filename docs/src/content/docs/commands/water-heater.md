@@ -31,13 +31,18 @@ DESCRIPTION
   Turn on
 
 USAGE
-  ha-bridge water_heater turn-on [flags] <name>
+  ha-bridge water_heater turn-on [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the water_heater. prefix
+  entity_id... string    Entity ID, with or without the water_heater. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge water_heater turn-off`
@@ -49,13 +54,18 @@ DESCRIPTION
   Turn off
 
 USAGE
-  ha-bridge water_heater turn-off [flags] <name>
+  ha-bridge water_heater turn-off [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the water_heater. prefix
+  entity_id... string    Entity ID, with or without the water_heater. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge water_heater temperature`
@@ -65,15 +75,20 @@ DESCRIPTION
   Set the target temperature
 
 USAGE
-  ha-bridge water_heater temperature [flags] <name> <temperature>
+  ha-bridge water_heater temperature [flags] <temperature> [<entity_id...>]
 
 ARGUMENTS
-  name string           Entity name without the water_heater. prefix
-  temperature string    Target temperature in the entity's unit
+  temperature string     Target temperature in the entity's unit
+  entity_id... string    Entity ID, with or without the water_heater. prefix; repeat for more (optional)
 
 FLAGS
   --socket string            Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --operation-mode string    Also switch to this operation mode
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
 ```
 
 ## `ha-bridge water_heater operation-mode`
@@ -83,14 +98,19 @@ DESCRIPTION
   Set the operation mode
 
 USAGE
-  ha-bridge water_heater operation-mode [flags] <name> <mode>
+  ha-bridge water_heater operation-mode [flags] <mode> [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the water_heater. prefix
-  mode string    One of the entity's operation_list
+  mode string            One of the entity's operation_list
+  entity_id... string    Entity ID, with or without the water_heater. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge water_heater away-mode`
@@ -100,12 +120,17 @@ DESCRIPTION
   Turn away mode on or off
 
 USAGE
-  ha-bridge water_heater away-mode [flags] <name> <state>
+  ha-bridge water_heater away-mode [flags] <state> [<entity_id...>]
 
 ARGUMENTS
-  name string     Entity name without the water_heater. prefix
-  state string    on or off
+  state string           on or off
+  entity_id... string    Entity ID, with or without the water_heater. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```

@@ -29,16 +29,21 @@ DESCRIPTION
   Generate data and print it as JSON
 
 USAGE
-  ha-bridge ai_task generate-data [flags] <task_name> <instructions>
+  ha-bridge ai_task generate-data [flags] <task_name> <instructions> [<entity_id...>]
 
 ARGUMENTS
   task_name string       Short name for the task
   instructions string    What to generate
+  entity_id... string    Entity ID, with or without the ai_task. prefix; repeat for more (optional)
 
 FLAGS
   --socket string       Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
-  --entity string       AI task entity name without ai_task. (default: the preferred one)
   --structure string    Output structure as a JSON object of selectors
+  --entity string       Entity ID or name; repeat for more
+  --device string       Device ID or name; repeat for more
+  --area string         Area ID or name; repeat for more
+  --floor string        Floor ID or name; repeat for more
+  --label string        Label ID or name; repeat for more
 ```
 
 ## `ha-bridge ai_task generate-image`
@@ -48,13 +53,18 @@ DESCRIPTION
   Generate an image and print its details
 
 USAGE
-  ha-bridge ai_task generate-image [flags] <name> <task_name> <instructions>
+  ha-bridge ai_task generate-image [flags] <task_name> <instructions> [<entity_id...>]
 
 ARGUMENTS
-  name string            Entity name without the ai_task. prefix
   task_name string       Short name for the task
   instructions string    What to generate
+  entity_id... string    Entity ID, with or without the ai_task. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```

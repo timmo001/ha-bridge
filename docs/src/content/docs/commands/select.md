@@ -29,14 +29,19 @@ DESCRIPTION
   Select an option
 
 USAGE
-  ha-bridge select select-option [flags] <name> <option>
+  ha-bridge select select-option [flags] <option> [<entity_id...>]
 
 ARGUMENTS
-  name string      Entity name without the select. prefix
-  option string    Option to select
+  option string          Option to select
+  entity_id... string    Entity ID, with or without the select. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge select select-first`
@@ -46,13 +51,18 @@ DESCRIPTION
   Select the first option
 
 USAGE
-  ha-bridge select select-first [flags] <name>
+  ha-bridge select select-first [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the select. prefix
+  entity_id... string    Entity ID, with or without the select. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge select select-last`
@@ -62,13 +72,18 @@ DESCRIPTION
   Select the last option
 
 USAGE
-  ha-bridge select select-last [flags] <name>
+  ha-bridge select select-last [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the select. prefix
+  entity_id... string    Entity ID, with or without the select. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge select select-next`
@@ -78,14 +93,19 @@ DESCRIPTION
   Select the next option
 
 USAGE
-  ha-bridge select select-next [flags] <name>
+  ha-bridge select select-next [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the select. prefix
+  entity_id... string    Entity ID, with or without the select. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --cycle            Wrap round at the end (the default); --no-cycle stops there
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge select select-previous`
@@ -95,12 +115,17 @@ DESCRIPTION
   Select the previous option
 
 USAGE
-  ha-bridge select select-previous [flags] <name>
+  ha-bridge select select-previous [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the select. prefix
+  entity_id... string    Entity ID, with or without the select. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --cycle            Wrap round at the end (the default); --no-cycle stops there
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```

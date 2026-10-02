@@ -33,10 +33,10 @@ DESCRIPTION
   Turn on
 
 USAGE
-  ha-bridge light turn-on [flags] <name>
+  ha-bridge light turn-on [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the light. prefix
+  entity_id... string    Entity ID, with or without the light. prefix; repeat for more (optional)
 
 FLAGS
   --socket string                 Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -56,6 +56,11 @@ FLAGS
   --xy-color string               XY colour, for example 0.52,0.43
   --white string                  true for white mode, or a white brightness from 0 to 255
   --effect string                 Effect from the light's effect_list
+  --entity string                 Entity ID or name; repeat for more
+  --device string                 Device ID or name; repeat for more
+  --area string                   Area ID or name; repeat for more
+  --floor string                  Floor ID or name; repeat for more
+  --label string                  Label ID or name; repeat for more
 ```
 
 ## `ha-bridge light turn-off`
@@ -67,15 +72,20 @@ DESCRIPTION
   Turn off
 
 USAGE
-  ha-bridge light turn-off [flags] <name>
+  ha-bridge light turn-off [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the light. prefix
+  entity_id... string    Entity ID, with or without the light. prefix; repeat for more (optional)
 
 FLAGS
   --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --transition string    Transition time in seconds
   --flash choice         Flash the light (choices: short, long)
+  --entity string        Entity ID or name; repeat for more
+  --device string        Device ID or name; repeat for more
+  --area string          Area ID or name; repeat for more
+  --floor string         Floor ID or name; repeat for more
+  --label string         Label ID or name; repeat for more
 ```
 
 ## `ha-bridge light toggle`
@@ -87,10 +97,10 @@ DESCRIPTION
   Toggle
 
 USAGE
-  ha-bridge light toggle [flags] <name>
+  ha-bridge light toggle [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the light. prefix
+  entity_id... string    Entity ID, with or without the light. prefix; repeat for more (optional)
 
 FLAGS
   --socket string                 Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -110,4 +120,9 @@ FLAGS
   --xy-color string               XY colour, for example 0.52,0.43
   --white string                  true for white mode, or a white brightness from 0 to 255
   --effect string                 Effect from the light's effect_list
+  --entity string                 Entity ID or name; repeat for more
+  --device string                 Device ID or name; repeat for more
+  --area string                   Area ID or name; repeat for more
+  --floor string                  Floor ID or name; repeat for more
+  --label string                  Label ID or name; repeat for more
 ```

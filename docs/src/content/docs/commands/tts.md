@@ -29,18 +29,23 @@ DESCRIPTION
   Speak a message on a media player
 
 USAGE
-  ha-bridge tts speak [flags] <name> <media_player> <message>
+  ha-bridge tts speak [flags] <message> [<entity_id...>]
 
 ARGUMENTS
-  name string            Entity name without the tts. prefix
-  media_player string    Media player name without media_player.
   message string         Message text
+  entity_id... string    Entity ID, with or without the tts. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string      Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
-  --language string    Language, such as en-GB
-  --cache              Cache the audio (the default); --no-cache skips it
-  --options string     Engine options, such as a voice, as a JSON object
+  --socket string          Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --media-player string    Media player to speak on: entity ID, object ID or name
+  --language string        Language, such as en-GB
+  --cache                  Cache the audio (the default); --no-cache skips it
+  --options string         Engine options, such as a voice, as a JSON object
+  --entity string          Entity ID or name; repeat for more
+  --device string          Device ID or name; repeat for more
+  --area string            Area ID or name; repeat for more
+  --floor string           Floor ID or name; repeat for more
+  --label string           Label ID or name; repeat for more
 ```
 
 ## `ha-bridge tts clear-cache`

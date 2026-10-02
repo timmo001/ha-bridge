@@ -12,18 +12,18 @@ ha-bridge mp play-pause lounge
 ha-bridge mp stop lounge
 ha-bridge mp next lounge
 ha-bridge mp previous lounge
-ha-bridge mp seek lounge 90
+ha-bridge mp seek 90 lounge
 ```
 
 ## Volume and sound
 
 ```bash
-ha-bridge mp volume lounge 0.3
+ha-bridge mp volume 0.3 lounge
 ha-bridge mp volume-up lounge
 ha-bridge mp volume-down lounge
-ha-bridge mp mute lounge on
-ha-bridge mp source lounge HDMI1
-ha-bridge mp sound-mode lounge Movie
+ha-bridge mp mute on lounge
+ha-bridge mp source HDMI1 lounge
+ha-bridge mp sound-mode Movie lounge
 ```
 
 `volume` is from 0 to 1. The source and sound mode are from the player's `source_list` and `sound_mode_list`.
@@ -33,9 +33,9 @@ ha-bridge mp sound-mode lounge Movie
 `play-media` plays a content ID, such as a URL. `--content-type` defaults to `music`:
 
 ```bash
-ha-bridge mp play-media kitchen https://example.com/radio.mp3
-ha-bridge mp play-media kitchen https://example.com/news.mp3 --announce
-ha-bridge mp play-media kitchen spotify:track:abc --content-type music --enqueue next
+ha-bridge mp play-media https://example.com/radio.mp3 kitchen
+ha-bridge mp play-media https://example.com/news.mp3 kitchen --announce
+ha-bridge mp play-media spotify:track:abc kitchen --content-type music --enqueue next
 ```
 
 `--enqueue` is `play` (the default), `next`, `add` or `replace`. `--announce` pauses what's playing, plays the media and resumes.
@@ -44,10 +44,10 @@ ha-bridge mp play-media kitchen spotify:track:abc --content-type music --enqueue
 
 ## Grouping
 
-`join` groups other players with this one for synchronised playback, and `unjoin` takes a player out of its group:
+`join` groups each `--member` with the target players for synchronised playback, and `unjoin` takes a player out of its group:
 
 ```bash
-ha-bridge mp join kitchen lounge office
+ha-bridge mp join kitchen --member lounge --member office
 ha-bridge mp unjoin office
 ```
 
@@ -58,7 +58,7 @@ ha-bridge mp unjoin office
 ```bash
 ha-bridge mp browse kitchen
 ha-bridge mp browse kitchen --content-type library --content-id albums
-ha-bridge mp search kitchen "Abbey Road"
+ha-bridge mp search "Abbey Road" kitchen
 ```
 
 | Command | Home Assistant action |

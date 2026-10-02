@@ -6,7 +6,7 @@ description: Save image entities, run image processing and report legacy device 
 `image snapshot` saves an image entity to a path on the Home Assistant host, which must be in `allowlist_external_dirs`. `image_processing scan` processes an image now:
 
 ```bash
-ha-bridge image snapshot doorbell_last_ring /config/www/doorbell.jpg
+ha-bridge image snapshot /config/www/doorbell.jpg doorbell_last_ring
 ha-bridge image_processing scan front_door_faces
 ```
 

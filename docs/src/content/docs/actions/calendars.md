@@ -14,9 +14,9 @@ ha-bridge calendar events family --days 14
 `create-event` adds an event. Give `--start` and `--end` as dates for an all-day event (the end is exclusive) or as dates and times, or use `--in-days` or `--in-weeks` for an all-day event that far from today:
 
 ```bash
-ha-bridge calendar create-event family "Dentist" --start "2026-10-02 09:00" --end "2026-10-02 10:00" --location "High Street"
-ha-bridge calendar create-event family "Holiday" --start 2026-12-20 --end 2026-12-27
-ha-bridge calendar create-event family "Renew insurance" --in-weeks 2
+ha-bridge calendar create-event "Dentist" family --start "2026-10-02 09:00" --end "2026-10-02 10:00" --location "High Street"
+ha-bridge calendar create-event "Holiday" family --start 2026-12-20 --end 2026-12-27
+ha-bridge calendar create-event "Renew insurance" family --in-weeks 2
 ```
 
 ## Weather

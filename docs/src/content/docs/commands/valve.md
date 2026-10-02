@@ -29,13 +29,18 @@ DESCRIPTION
   Open the valve
 
 USAGE
-  ha-bridge valve open [flags] <name>
+  ha-bridge valve open [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the valve. prefix
+  entity_id... string    Entity ID, with or without the valve. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge valve close`
@@ -45,13 +50,18 @@ DESCRIPTION
   Close the valve
 
 USAGE
-  ha-bridge valve close [flags] <name>
+  ha-bridge valve close [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the valve. prefix
+  entity_id... string    Entity ID, with or without the valve. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge valve toggle`
@@ -61,13 +71,18 @@ DESCRIPTION
   Open or close the valve
 
 USAGE
-  ha-bridge valve toggle [flags] <name>
+  ha-bridge valve toggle [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the valve. prefix
+  entity_id... string    Entity ID, with or without the valve. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge valve stop`
@@ -77,13 +92,18 @@ DESCRIPTION
   Stop the valve
 
 USAGE
-  ha-bridge valve stop [flags] <name>
+  ha-bridge valve stop [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the valve. prefix
+  entity_id... string    Entity ID, with or without the valve. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge valve position`
@@ -93,12 +113,17 @@ DESCRIPTION
   Set the position
 
 USAGE
-  ha-bridge valve position [flags] <name> <position>
+  ha-bridge valve position [flags] <position> [<entity_id...>]
 
 ARGUMENTS
-  name string        Entity name without the valve. prefix
-  position string    Position from 0 to 100
+  position string        Position from 0 to 100
+  entity_id... string    Entity ID, with or without the valve. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```

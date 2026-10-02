@@ -33,13 +33,18 @@ DESCRIPTION
   Turn on
 
 USAGE
-  ha-bridge switch turn-on [flags] <name>
+  ha-bridge switch turn-on [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the switch. prefix
+  entity_id... string    Entity ID, with or without the switch. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge switch turn-off`
@@ -51,13 +56,18 @@ DESCRIPTION
   Turn off
 
 USAGE
-  ha-bridge switch turn-off [flags] <name>
+  ha-bridge switch turn-off [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the switch. prefix
+  entity_id... string    Entity ID, with or without the switch. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```
 
 ## `ha-bridge switch toggle`
@@ -69,11 +79,16 @@ DESCRIPTION
   Toggle
 
 USAGE
-  ha-bridge switch toggle [flags] <name>
+  ha-bridge switch toggle [flags] [<entity_id...>]
 
 ARGUMENTS
-  name string    Entity name without the switch. prefix
+  entity_id... string    Entity ID, with or without the switch. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```

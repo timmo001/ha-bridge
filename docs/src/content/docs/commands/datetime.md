@@ -29,12 +29,17 @@ DESCRIPTION
   Set the value
 
 USAGE
-  ha-bridge datetime set-value [flags] <name> <value>
+  ha-bridge datetime set-value [flags] <value> [<entity_id...>]
 
 ARGUMENTS
-  name string     Entity name without the datetime. prefix
-  value string    Date and time, such as "2026-10-01 18:30"
+  value string           Date and time, such as "2026-10-01 18:30"
+  entity_id... string    Entity ID, with or without the datetime. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --entity string    Entity ID or name; repeat for more
+  --device string    Device ID or name; repeat for more
+  --area string      Area ID or name; repeat for more
+  --floor string     Floor ID or name; repeat for more
+  --label string     Label ID or name; repeat for more
 ```

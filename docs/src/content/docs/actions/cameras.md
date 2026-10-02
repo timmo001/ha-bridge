@@ -8,7 +8,7 @@ description: Save camera snapshots, record clips, play streams and switch motion
 `camera snapshot` saves a camera's current image on your machine:
 
 ```bash
-ha-bridge camera snapshot front_door /tmp/front-door.jpg
+ha-bridge camera snapshot /tmp/front-door.jpg front_door
 ```
 
 The image is written to a temporary file first and then renamed, so anything reading the file never sees a partial image. It's readable only by you (`0600`).
@@ -18,21 +18,21 @@ The image is written to a temporary file first and then renamed, so anything rea
 `server-snapshot` and `record` save on the Home Assistant host instead. The path must be in Home Assistant's `allowlist_external_dirs`, and can be a template such as `/media/{{ entity_id.name }}.mp4`. `record` takes `--duration` (30 seconds by default) and `--lookback`:
 
 ```bash
-ha-bridge camera server-snapshot front_door /media/front-door.jpg
-ha-bridge camera record front_door /media/front-door.mp4 --duration 20
+ha-bridge camera server-snapshot /media/front-door.jpg front_door
+ha-bridge camera record /media/front-door.mp4 front_door --duration 20
 ```
 
 ## Streams, power and motion detection
 
 ```bash
-ha-bridge camera play-stream front_door living_room_tv
+ha-bridge camera play-stream front_door --media-player living_room_tv
 ha-bridge camera turn-on front_door
 ha-bridge camera turn-off front_door
 ha-bridge camera enable-motion-detection front_door
 ha-bridge camera disable-motion-detection front_door
 ```
 
-`play-stream` takes the media player's name without `media_player.`.
+`--media-player` takes one media player, by entity ID, ID without `media_player.`, or name.
 
 ## Actions
 

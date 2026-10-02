@@ -10,7 +10,7 @@ ha-bridge valve open garden
 ha-bridge valve close garden
 ha-bridge valve toggle garden
 ha-bridge valve stop garden
-ha-bridge valve position garden 50
+ha-bridge valve position 50 garden
 ```
 
 | Command | Home Assistant action |

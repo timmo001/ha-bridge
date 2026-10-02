@@ -8,7 +8,7 @@ description: Set input number helpers, step them up or down, and reload them fro
 ```bash
 ha-bridge input_number increment target_temperature
 ha-bridge input_number decrement target_temperature
-ha-bridge input_number set-value target_temperature 23.5
+ha-bridge input_number set-value 23.5 target_temperature
 ```
 
 `reload` reloads input numbers from YAML. It acts on the whole domain, so it takes no name:
