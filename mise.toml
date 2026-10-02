@@ -61,6 +61,11 @@ run = "bun run format:check"
 description = "Lint, type-check, and verify formatting"
 depends = ["lint", "typecheck", "format:check"]
 
+[tasks."drift:core"]
+description = "Compare Home Assistant Core's built-in actions with effect-ha (--update saves the snapshot)"
+depends = ["install"]
+run = "bun scripts/check-core-drift.ts"
+
 [tasks."docs:gen"]
 description = "Regenerate the docs command reference from the CLI's help"
 depends = ["install"]

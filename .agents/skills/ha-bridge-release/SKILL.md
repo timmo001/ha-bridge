@@ -19,6 +19,8 @@ The publish workflows fail unless the release tag exactly matches every manifest
 
 Then run `mise run version:sync` to pin the client's `@timmo001/effect-ha` dependency to it, and `bun install` to refresh `bun.lock`; CI installs with `--frozen-lockfile`. Run `mise run check`, `mise run test`, `mise run build` and `mise run build:packages` before committing.
 
+Before a release, run `mise run drift:core` against an up-to-date Core checkout (`--core` sets its path; the default is `../core`). It lists actions Core added, removed or changed since `scripts/core-actions.json`, and built-in actions with no effect-ha builder. Cover or ignore each one, then run `mise run drift:core -- --update` to save the snapshot.
+
 Releasing is a public, irreversible publish. Commit, push and create the release only when the user asks for each step, and use their chosen version.
 
 ## Packaging

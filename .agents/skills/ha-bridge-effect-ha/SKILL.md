@@ -48,4 +48,5 @@ The bridge's `src/homeassistant/HomeAssistant.ts` drives the session: it subscri
 - Add the command to `HomeAssistantCommand` and decode its result with a `Schema`. Decode only the fields ha-bridge uses, with `Schema.optionalKey` where Home Assistant may omit them.
 - Fail with `HomeAssistantError` and a short context prefix, as `cameraSnapshot` and `Calendar.eventsFrom` do.
 - Export new modules from `src/index.ts` and update `packages/effect-ha/README.md` when the public API changes.
+- A new action builder belongs on a plain-object namespace, such as `Light`, so `mise run drift:core` finds it. Run it after adding or removing builders.
 - Run `mise run build:packages` as well as the root checks; the published `dist` builds with `tsconfig.build.json`, not the root config.

@@ -1,0 +1,731 @@
+{
+  "ai_task.generate_data": [
+    "attachments",
+    "entity_id",
+    "instructions",
+    "structure",
+    "task_name"
+  ],
+  "ai_task.generate_image": [
+    "attachments",
+    "entity_id",
+    "instructions",
+    "task_name"
+  ],
+  "alarm_control_panel.alarm_disarm": [
+    "code"
+  ],
+  "alarm_control_panel.alarm_arm_custom_bypass": [
+    "code"
+  ],
+  "alarm_control_panel.alarm_arm_home": [
+    "code"
+  ],
+  "alarm_control_panel.alarm_arm_away": [
+    "code"
+  ],
+  "alarm_control_panel.alarm_arm_night": [
+    "code"
+  ],
+  "alarm_control_panel.alarm_arm_vacation": [
+    "code"
+  ],
+  "alarm_control_panel.alarm_trigger": [
+    "code"
+  ],
+  "alert.toggle": [],
+  "alert.turn_off": [],
+  "alert.turn_on": [],
+  "assist_satellite.announce": [
+    "media_id",
+    "message",
+    "preannounce",
+    "preannounce_media_id"
+  ],
+  "assist_satellite.start_conversation": [
+    "extra_system_prompt",
+    "preannounce",
+    "preannounce_media_id",
+    "start_media_id",
+    "start_message"
+  ],
+  "assist_satellite.ask_question": [
+    "answers",
+    "entity_id",
+    "preannounce",
+    "preannounce_media_id",
+    "question",
+    "question_media_id"
+  ],
+  "automation.turn_on": [],
+  "automation.turn_off": [
+    "stop_actions"
+  ],
+  "automation.toggle": [],
+  "automation.trigger": [
+    "skip_condition"
+  ],
+  "automation.reload": [],
+  "backup.create": [],
+  "backup.create_automatic": [],
+  "bayesian.reload": [],
+  "button.press": [],
+  "calendar.create_event": [
+    "description",
+    "end_date",
+    "end_date_time",
+    "in",
+    "location",
+    "start_date",
+    "start_date_time",
+    "summary"
+  ],
+  "calendar.get_events": [
+    "duration",
+    "end_date_time",
+    "start_date_time"
+  ],
+  "camera.turn_off": [],
+  "camera.turn_on": [],
+  "camera.enable_motion_detection": [],
+  "camera.disable_motion_detection": [],
+  "camera.snapshot": [
+    "filename"
+  ],
+  "camera.play_stream": [
+    "format",
+    "media_player"
+  ],
+  "camera.record": [
+    "duration",
+    "filename",
+    "lookback"
+  ],
+  "climate.set_preset_mode": [
+    "preset_mode"
+  ],
+  "climate.set_temperature": [
+    "hvac_mode",
+    "target_temp_high",
+    "target_temp_low",
+    "temperature"
+  ],
+  "climate.set_humidity": [
+    "humidity"
+  ],
+  "climate.set_fan_mode": [
+    "fan_mode"
+  ],
+  "climate.set_hvac_mode": [
+    "hvac_mode"
+  ],
+  "climate.set_swing_mode": [
+    "swing_mode"
+  ],
+  "climate.set_swing_horizontal_mode": [
+    "swing_horizontal_mode"
+  ],
+  "climate.turn_on": [],
+  "climate.turn_off": [],
+  "climate.toggle": [],
+  "cloud.remote_connect": [],
+  "cloud.remote_disconnect": [],
+  "command_line.reload": [],
+  "conversation.process": [
+    "agent_id",
+    "conversation_id",
+    "language",
+    "text"
+  ],
+  "conversation.reload": [
+    "agent_id",
+    "language"
+  ],
+  "counter.decrement": [],
+  "counter.increment": [],
+  "counter.reset": [],
+  "counter.set_value": [
+    "value"
+  ],
+  "cover.open_cover": [
+    "speed"
+  ],
+  "cover.close_cover": [
+    "speed"
+  ],
+  "cover.toggle": [],
+  "cover.set_cover_position": [
+    "position",
+    "speed"
+  ],
+  "cover.stop_cover": [],
+  "cover.open_cover_tilt": [],
+  "cover.close_cover_tilt": [],
+  "cover.toggle_cover_tilt": [],
+  "cover.set_cover_tilt_position": [
+    "tilt_position"
+  ],
+  "cover.stop_cover_tilt": [],
+  "date.set_value": [
+    "date"
+  ],
+  "datetime.set_value": [
+    "datetime"
+  ],
+  "derivative.reload": [],
+  "device_tracker.see": [
+    "battery",
+    "dev_id",
+    "gps",
+    "gps_accuracy",
+    "host_name",
+    "location_name",
+    "mac"
+  ],
+  "fan.set_preset_mode": [
+    "preset_mode"
+  ],
+  "fan.set_percentage": [
+    "percentage"
+  ],
+  "fan.turn_on": [
+    "percentage",
+    "preset_mode"
+  ],
+  "fan.turn_off": [],
+  "fan.oscillate": [
+    "oscillating"
+  ],
+  "fan.toggle": [],
+  "fan.set_direction": [
+    "direction"
+  ],
+  "fan.increase_speed": [
+    "percentage_step"
+  ],
+  "fan.decrease_speed": [
+    "percentage_step"
+  ],
+  "ffmpeg.restart": [
+    "entity_id"
+  ],
+  "ffmpeg.start": [
+    "entity_id"
+  ],
+  "ffmpeg.stop": [
+    "entity_id"
+  ],
+  "filter.reload": [],
+  "frontend.set_theme": [
+    "name",
+    "name_dark"
+  ],
+  "frontend.reload_themes": [],
+  "generic_thermostat.reload": [],
+  "google_assistant.request_sync": [
+    "agent_user_id"
+  ],
+  "group.reload": [],
+  "group.set": [
+    "add_entities",
+    "all",
+    "entities",
+    "icon",
+    "name",
+    "object_id",
+    "remove_entities"
+  ],
+  "group.remove": [
+    "object_id"
+  ],
+  "hassio.addon_start": [
+    "addon"
+  ],
+  "hassio.addon_restart": [
+    "addon"
+  ],
+  "hassio.addon_stdin": [
+    "addon"
+  ],
+  "hassio.addon_stop": [
+    "addon"
+  ],
+  "hassio.app_start": [
+    "app"
+  ],
+  "hassio.app_restart": [
+    "app"
+  ],
+  "hassio.app_stdin": [
+    "app",
+    "input"
+  ],
+  "hassio.app_stop": [
+    "app"
+  ],
+  "hassio.host_reboot": [],
+  "hassio.host_shutdown": [],
+  "hassio.backup_full": [
+    "compressed",
+    "homeassistant_exclude_database",
+    "location",
+    "name",
+    "password"
+  ],
+  "hassio.backup_partial": [
+    "addons",
+    "apps",
+    "compressed",
+    "folders",
+    "homeassistant",
+    "homeassistant_exclude_database",
+    "location",
+    "name",
+    "password"
+  ],
+  "hassio.restore_full": [
+    "password",
+    "slug"
+  ],
+  "hassio.restore_partial": [
+    "addons",
+    "apps",
+    "folders",
+    "homeassistant",
+    "password",
+    "slug"
+  ],
+  "hassio.mount_reload": [
+    "device_id"
+  ],
+  "history_stats.reload": [],
+  "homeassistant.check_config": [],
+  "homeassistant.reload_core_config": [],
+  "homeassistant.restart": [],
+  "homeassistant.set_location": [
+    "elevation",
+    "latitude",
+    "longitude"
+  ],
+  "homeassistant.stop": [],
+  "homeassistant.toggle": [],
+  "homeassistant.turn_on": [],
+  "homeassistant.turn_off": [],
+  "homeassistant.update_entity": [
+    "entity_id"
+  ],
+  "homeassistant.reload_custom_templates": [],
+  "homeassistant.reload_config_entry": [
+    "entry_id"
+  ],
+  "homeassistant.save_persistent_states": [],
+  "homeassistant.reload_all": [],
+  "humidifier.set_mode": [
+    "mode"
+  ],
+  "humidifier.set_humidity": [
+    "humidity"
+  ],
+  "humidifier.turn_on": [],
+  "humidifier.turn_off": [],
+  "humidifier.toggle": [],
+  "image.snapshot": [
+    "filename"
+  ],
+  "image_processing.scan": [],
+  "input_boolean.toggle": [],
+  "input_boolean.turn_off": [],
+  "input_boolean.turn_on": [],
+  "input_boolean.reload": [],
+  "input_button.press": [],
+  "input_button.reload": [],
+  "input_datetime.set_datetime": [
+    "date",
+    "datetime",
+    "time",
+    "timestamp"
+  ],
+  "input_datetime.reload": [],
+  "input_number.decrement": [],
+  "input_number.increment": [],
+  "input_number.set_value": [
+    "value"
+  ],
+  "input_number.reload": [],
+  "input_select.select_next": [
+    "cycle"
+  ],
+  "input_select.select_option": [
+    "option"
+  ],
+  "input_select.select_previous": [
+    "cycle"
+  ],
+  "input_select.select_first": [],
+  "input_select.select_last": [],
+  "input_select.set_options": [
+    "options"
+  ],
+  "input_select.reload": [],
+  "input_text.set_value": [
+    "value"
+  ],
+  "input_text.reload": [],
+  "intent_script.reload": [],
+  "lawn_mower.start_mowing": [],
+  "lawn_mower.dock": [],
+  "lawn_mower.pause": [],
+  "lawn_mower.stop": [],
+  "light.turn_on": [
+    "brightness",
+    "brightness_pct",
+    "brightness_step",
+    "brightness_step_pct",
+    "color_name",
+    "color_temp_kelvin",
+    "effect",
+    "flash",
+    "hs_color",
+    "profile",
+    "rgb_color",
+    "rgbw_color",
+    "rgbww_color",
+    "transition",
+    "white",
+    "xy_color"
+  ],
+  "light.turn_off": [
+    "flash",
+    "transition"
+  ],
+  "light.toggle": [
+    "brightness",
+    "brightness_pct",
+    "color_name",
+    "color_temp_kelvin",
+    "effect",
+    "flash",
+    "hs_color",
+    "profile",
+    "rgb_color",
+    "rgbw_color",
+    "rgbww_color",
+    "transition",
+    "white",
+    "xy_color"
+  ],
+  "lock.lock": [
+    "code"
+  ],
+  "lock.open": [
+    "code"
+  ],
+  "lock.unlock": [
+    "code"
+  ],
+  "logbook.log": [
+    "domain",
+    "entity_id",
+    "message",
+    "name"
+  ],
+  "logger.set_default_level": [
+    "level"
+  ],
+  "logger.set_level": [],
+  "lovelace.reload_resources": [],
+  "media_player.turn_on": [],
+  "media_player.turn_off": [],
+  "media_player.toggle": [],
+  "media_player.volume_up": [],
+  "media_player.volume_down": [],
+  "media_player.volume_mute": [
+    "is_volume_muted"
+  ],
+  "media_player.volume_set": [
+    "volume_level"
+  ],
+  "media_player.media_play_pause": [],
+  "media_player.media_play": [],
+  "media_player.media_pause": [],
+  "media_player.media_stop": [],
+  "media_player.media_next_track": [],
+  "media_player.media_previous_track": [],
+  "media_player.media_seek": [
+    "seek_position"
+  ],
+  "media_player.play_media": [
+    "announce",
+    "enqueue",
+    "media"
+  ],
+  "media_player.browse_media": [
+    "media_content_id",
+    "media_content_type"
+  ],
+  "media_player.search_media": [
+    "media_content_id",
+    "media_content_type",
+    "media_filter_classes",
+    "search_query"
+  ],
+  "media_player.select_source": [
+    "source"
+  ],
+  "media_player.select_sound_mode": [
+    "sound_mode"
+  ],
+  "media_player.clear_playlist": [],
+  "media_player.shuffle_set": [
+    "shuffle"
+  ],
+  "media_player.repeat_set": [
+    "repeat"
+  ],
+  "media_player.join": [
+    "group_members"
+  ],
+  "media_player.unjoin": [],
+  "min_max.reload": [],
+  "notify.notify": [
+    "data",
+    "message",
+    "target",
+    "title"
+  ],
+  "notify.send_message": [
+    "message",
+    "title"
+  ],
+  "notify.persistent_notification": [
+    "data",
+    "message",
+    "title"
+  ],
+  "number.set_value": [
+    "value"
+  ],
+  "persistent_notification.create": [
+    "message",
+    "notification_id",
+    "title"
+  ],
+  "persistent_notification.dismiss": [
+    "notification_id"
+  ],
+  "persistent_notification.dismiss_all": [],
+  "person.reload": [],
+  "python_script.reload": [],
+  "recorder.purge": [
+    "apply_filter",
+    "keep_days",
+    "repack"
+  ],
+  "recorder.purge_entities": [
+    "domains",
+    "entity_globs",
+    "entity_id",
+    "keep_days"
+  ],
+  "recorder.disable": [],
+  "recorder.enable": [],
+  "recorder.get_statistics": [
+    "end_time",
+    "period",
+    "start_time",
+    "statistic_ids",
+    "types",
+    "units"
+  ],
+  "remote.turn_on": [
+    "activity"
+  ],
+  "remote.toggle": [],
+  "remote.turn_off": [],
+  "remote.send_command": [
+    "command",
+    "delay_secs",
+    "device",
+    "hold_secs",
+    "num_repeats"
+  ],
+  "remote.learn_command": [
+    "alternative",
+    "command",
+    "command_type",
+    "device",
+    "timeout"
+  ],
+  "remote.delete_command": [
+    "command",
+    "device"
+  ],
+  "rest.reload": [],
+  "rest_command.reload": [],
+  "scene.turn_on": [
+    "transition"
+  ],
+  "scene.reload": [],
+  "scene.apply": [
+    "entities",
+    "transition"
+  ],
+  "scene.create": [
+    "entities",
+    "scene_id",
+    "snapshot_entities"
+  ],
+  "scene.delete": [],
+  "schedule.reload": [],
+  "schedule.get_schedule": [],
+  "script.reload": [],
+  "script.turn_on": [],
+  "script.turn_off": [],
+  "script.toggle": [],
+  "select.select_first": [],
+  "select.select_last": [],
+  "select.select_next": [
+    "cycle"
+  ],
+  "select.select_option": [
+    "option"
+  ],
+  "select.select_previous": [
+    "cycle"
+  ],
+  "shell_command.reload": [],
+  "siren.turn_on": [
+    "duration",
+    "tone",
+    "volume_level"
+  ],
+  "siren.turn_off": [],
+  "siren.toggle": [],
+  "statistics.reload": [],
+  "switch.turn_on": [],
+  "switch.turn_off": [],
+  "switch.toggle": [],
+  "system_log.clear": [],
+  "system_log.write": [
+    "level",
+    "logger",
+    "message"
+  ],
+  "template.reload": [],
+  "text.set_value": [
+    "value"
+  ],
+  "time.set_value": [
+    "time"
+  ],
+  "timer.start": [
+    "duration"
+  ],
+  "timer.pause": [],
+  "timer.cancel": [],
+  "timer.finish": [],
+  "timer.change": [
+    "duration"
+  ],
+  "timer.reload": [],
+  "todo.get_items": [
+    "status"
+  ],
+  "todo.add_item": [
+    "description",
+    "due_date",
+    "due_datetime",
+    "item"
+  ],
+  "todo.update_item": [
+    "description",
+    "due_date",
+    "due_datetime",
+    "item",
+    "rename",
+    "status"
+  ],
+  "todo.remove_item": [
+    "item"
+  ],
+  "todo.remove_completed_items": [],
+  "trend.reload": [],
+  "tts.say": [
+    "cache",
+    "entity_id",
+    "language",
+    "message",
+    "options"
+  ],
+  "tts.speak": [
+    "cache",
+    "language",
+    "media_player_entity_id",
+    "message",
+    "options"
+  ],
+  "tts.clear_cache": [],
+  "universal.reload": [],
+  "update.install": [
+    "backup",
+    "version"
+  ],
+  "update.skip": [],
+  "update.clear_skipped": [],
+  "utility_meter.reset": [],
+  "utility_meter.calibrate": [
+    "value"
+  ],
+  "vacuum.turn_on": [],
+  "vacuum.turn_off": [],
+  "vacuum.toggle": [],
+  "vacuum.stop": [],
+  "vacuum.locate": [],
+  "vacuum.start_pause": [],
+  "vacuum.start": [],
+  "vacuum.pause": [],
+  "vacuum.return_to_base": [],
+  "vacuum.clean_spot": [],
+  "vacuum.clean_area": [
+    "cleaning_area_id"
+  ],
+  "vacuum.send_command": [
+    "command",
+    "params"
+  ],
+  "vacuum.set_fan_speed": [
+    "fan_speed"
+  ],
+  "valve.open_valve": [],
+  "valve.close_valve": [],
+  "valve.toggle": [],
+  "valve.set_valve_position": [
+    "position"
+  ],
+  "valve.stop_valve": [],
+  "wake_on_lan.send_magic_packet": [
+    "broadcast_address",
+    "broadcast_port",
+    "mac",
+    "secureon_password"
+  ],
+  "water_heater.set_away_mode": [
+    "away_mode"
+  ],
+  "water_heater.set_temperature": [
+    "operation_mode",
+    "temperature"
+  ],
+  "water_heater.set_operation_mode": [
+    "operation_mode"
+  ],
+  "water_heater.turn_on": [],
+  "water_heater.turn_off": [],
+  "weather.get_forecast": [
+    "type"
+  ],
+  "weather.get_forecasts": [
+    "type"
+  ],
+  "zone.reload": []
+}
