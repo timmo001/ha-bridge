@@ -4,7 +4,8 @@ import {
   climateStateText,
   coverStateText,
   entityBar,
-  entityFields,
+  entityField,
+  entityFieldValues,
   stateTextBar,
 } from "./output.js";
 
@@ -110,34 +111,33 @@ describe("bar JSON", () => {
   });
 });
 
-describe("entityFields", () => {
+describe("entity fields", () => {
   const light: EntityState = {
     entity_id: "light.office",
     state: "on",
     attributes: { brightness: 128, hs_color: [30, 50] },
   };
 
-  test("prints one string field raw", () => {
-    expect(entityFields(light, "Office", ["state"], false)).toBe("on");
+  test("prints a string field raw", () => {
+    expect(entityField(light, "Office", "state")).toBe("on");
   });
 
-  test("prints one object field as JSON", () => {
-    expect(entityFields(light, "Office", ["attributes.hs_color"], false)).toBe(
-      "[30,50]",
-    );
+  test("prints an object field as JSON", () => {
+    expect(entityField(light, "Office", "attributes.hs_color")).toBe("[30,50]");
   });
 
-  test("prints several fields as an object with null for missing", () => {
+  test("collects several fields with null for missing", () => {
     expect(
-      entityFields(
-        light,
-        "Office",
-        ["state", "attributes.hs_color.0", "attributes.missing"],
-        false,
-      ),
-    ).toBe(
-      `{"state":"on","attributes.hs_color.0":30,"attributes.missing":null}`,
-    );
+      entityFieldValues(light, "Office", [
+        "state",
+        "attributes.hs_color.0",
+        "attributes.missing",
+      ]),
+    ).toEqual({
+      state: "on",
+      "attributes.hs_color.0": 30,
+      "attributes.missing": null,
+    });
   });
 });
 

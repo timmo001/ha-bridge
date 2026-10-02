@@ -149,6 +149,16 @@ class FakeWebSocket implements Socket.WebSocketLike {
       Match.when("config/device_registry/list", () => []),
       Match.when("config/area_registry/list", () => []),
       Match.when("config/floor_registry/list", () => []),
+      Match.when("config/label_registry/list", () => []),
+      Match.when("extract_from_target", () => ({
+        referenced_entities: ["light.kitchen"],
+        referenced_devices: [],
+        referenced_areas: [],
+        missing_devices: [],
+        missing_areas: [],
+        missing_floors: [],
+        missing_labels: [],
+      })),
       Match.when("get_config", () => configResult),
       Match.orElse(() => null),
     );
@@ -211,10 +221,14 @@ describe("HomeAssistant state cache", () => {
         const homeAssistant = yield* HomeAssistant;
         const seen = yield* Queue.unbounded<string>();
 
-        yield* homeAssistant.watchEntity("light.kitchen").pipe(
-          Stream.runForEach((update) => Queue.offer(seen, update.state.state)),
-          Effect.forkScoped,
-        );
+        yield* homeAssistant
+          .watchEntities({ target: { entity_id: "light.kitchen" } })
+          .pipe(
+            Stream.runForEach((update) =>
+              Queue.offer(seen, update.state.state),
+            ),
+            Effect.forkScoped,
+          );
 
         const first = yield* Queue.take(seen).pipe(Effect.timeout("2 seconds"));
         current?.close();

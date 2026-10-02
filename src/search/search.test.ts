@@ -2,13 +2,11 @@ import { describe, expect, test } from "bun:test";
 import { Effect } from "effect";
 import { entityNamerFrom, type EntityState } from "@timmo001/effect-ha";
 import type { SearchRequest } from "@timmo001/effect-ha-bridge";
+import { matchesFilters, searchItems, searchKeys } from "./items.js";
 import {
-  matchesFilters,
-  searchItems,
-  searchKeys,
   unavailableRegistries,
   type Registries,
-} from "./items.js";
+} from "../homeassistant/registries.js";
 import { Search, selectResults } from "./Search.js";
 
 const entities = {
@@ -33,6 +31,7 @@ const registries: Registries = {
     { area_id: "office", name: "Office" },
   ],
   floors: [{ floor_id: "ground", name: "Ground floor" }],
+  labels: [],
   namer: entityNamerFrom(entities, devices),
 };
 

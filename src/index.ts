@@ -9,6 +9,7 @@ import {
   Logger,
   Option,
   Predicate,
+  Ref,
   Schema,
   Stream,
 } from "effect";
@@ -91,10 +92,10 @@ import {
   LightTurnOffData,
   LightTurnOnData,
   Switch,
+  isEntityIdIn,
   type Action,
   type CoverMoveOptions,
   type CalendarEventWhen,
-  type EntityId,
   type LockOptions,
   type SelectStepOptions,
   type Target,
@@ -115,16 +116,19 @@ import {
   climateStateText,
   coverStateText,
   entityBar,
-  entityFields,
+  entityField,
+  entityFieldValues,
   searchLine,
   stateTextBar,
 } from "./cli/output.js";
+import { targetConfig, toTarget } from "./cli/target.js";
 import { BridgeConfig } from "./config/Config.js";
 import {
   invalidInputNumberMessage,
   parseInputNumberValue,
 } from "./homeassistant/inputNumber.js";
 import { lightData } from "./homeassistant/light.js";
+import { exactlyOne, isEmptyTarget } from "./homeassistant/target.js";
 import {
   commandItems,
   commandKeys,
@@ -176,7 +180,17 @@ const withBridge = <A, E, R>(
     );
   });
 
+const failWith = (message: string) =>
+  Effect.fail(new CommandError({ message }));
+
+const noTarget = () =>
+  failWith("give at least one entity, device, area, floor or label");
+
 const callAction = Effect.fn("callAction")(function* (action: Action) {
+  if (action.target !== undefined && isEmptyTarget(action.target)) {
+    return yield* noTarget();
+  }
+
   const client = yield* BridgeClient;
 
   return yield* client.CallAction(action).pipe(
@@ -190,11 +204,37 @@ const callAction = Effect.fn("callAction")(function* (action: Action) {
   );
 });
 
-const failWith = (message: string) =>
-  Effect.fail(new CommandError({ message }));
+const getEntities = Effect.fn("getEntities")(function* (
+  target: Target,
+  domain?: string,
+) {
+  if (isEmptyTarget(target)) {
+    return yield* noTarget();
+  }
 
-const nameArgument = (description: string) =>
-  Argument.String("name").pipe(Argument.withDescription(description));
+  const client = yield* BridgeClient;
+
+  return yield* client
+    .GetEntities({ target, domain })
+    .pipe(
+      Effect.catchTag("HomeAssistantError", (error) =>
+        failWith(`could not read entities: ${error.message}`),
+      ),
+    );
+});
+
+// The ID of the one entity in the domain that the target matches.
+const resolveOne = Effect.fn("resolveOne")(function* <
+  const Domain extends string,
+>(domain: Domain, target: Target) {
+  const updates = yield* getEntities(target, domain);
+
+  return yield* exactlyOne(
+    updates.map(({ state }) => state.entity_id).filter(isEntityIdIn(domain)),
+    (entityId) => entityId,
+    `${domain} entity`,
+  );
+});
 
 const domainCommand = <
   const Subcommands extends ReadonlyArray<Command.Command.SubcommandEntry>,
@@ -211,24 +251,19 @@ const domainCommand = <
     Command.withSubcommands(subcommands),
   );
 
-const entityActionCommand = <const Domain extends string>(
-  domain: Domain,
+const entityActionCommand = (
+  domain: string,
   name: string,
-  toAction: (entityId: EntityId<Domain>) => Action,
+  toAction: (target: Target) => Action,
   description: string,
 ) =>
-  Command.make(
-    name,
-    { name: nameArgument(`Entity name without the ${domain}. prefix`) },
-    (input) => callAction(toAction(`${domain}.${input.name}`)).pipe(withBridge),
+  Command.make(name, { target: targetConfig(domain) }, (input) =>
+    callAction(toAction(toTarget(domain, input.target))).pipe(withBridge),
   ).pipe(Command.withDescription(description));
 
-const toggleCommands = <const Domain extends string>(
-  domain: Domain,
-  actions: Record<
-    "turnOn" | "turnOff" | "toggle",
-    (entityId: EntityId<Domain>) => Action
-  >,
+const toggleCommands = (
+  domain: string,
+  actions: Record<"turnOn" | "turnOff" | "toggle", (target: Target) => Action>,
 ) => [
   entityActionCommand(domain, "turn-on", actions.turnOn, "Turn on").pipe(
     Command.withAlias("on"),
@@ -283,36 +318,55 @@ const percentArgument = Argument.String("position").pipe(
   Argument.withDescription("Position from 0 to 100"),
 );
 
+// For output that only fits one entity: fails once a second entity appears.
+const singleEntity = <E, R>(updates: Stream.Stream<EntityUpdate, E, R>) =>
+  Stream.unwrap(
+    Effect.map(Ref.make<string | undefined>(undefined), (first) =>
+      updates.pipe(
+        Stream.mapEffect((update) =>
+          Effect.flatMap(
+            Ref.getAndUpdate(first, (seen) => seen ?? update.state.entity_id),
+            (seen) =>
+              seen === undefined || seen === update.state.entity_id
+                ? Effect.succeed(update)
+                : failWith(
+                    `the target matches more than one entity (${seen}, ${update.state.entity_id}); this output shows one`,
+                  ),
+          ),
+        ),
+      ),
+    ),
+  );
+
+const watchUpdates = (target: Target, domain?: string) =>
+  Stream.unwrap(
+    Effect.gen(function* () {
+      if (isEmptyTarget(target)) {
+        return yield* noTarget();
+      }
+
+      const client = yield* BridgeClient;
+
+      return client.WatchEntities({ target, domain });
+    }),
+  );
+
 const stateWatchCommand = (
   domain: string,
   toText: (state: EntityUpdate["state"]) => string,
 ) =>
-  Command.make(
-    "watch",
-    { name: nameArgument(`Entity name without the ${domain}. prefix`) },
-    (input) =>
-      Effect.gen(function* () {
-        const client = yield* BridgeClient;
-
-        yield* client
-          .WatchEntity({ entityId: `${domain}.${input.name}` })
-          .pipe(
-            Stream.runForEach(({ state, name }) =>
-              Console.log(stateTextBar(state, name, toText)),
-            ),
-          );
-      }).pipe(withBridge),
+  Command.make("watch", { target: targetConfig(domain) }, (input) =>
+    watchUpdates(toTarget(domain, input.target), domain).pipe(
+      singleEntity,
+      Stream.runForEach(({ state, name }) =>
+        Console.log(stateTextBar(state, name, toText)),
+      ),
+      withBridge,
+    ),
   ).pipe(
     Command.withAlias("w"),
     Command.withDescription("Print bar JSON now and on every change"),
   );
-
-const inputNumberName = nameArgument(
-  "Entity name without the input_number. prefix",
-);
-
-const areaArgument = (description: string) =>
-  Argument.String("area_id").pipe(Argument.withDescription(description));
 
 const preannounceFlags = {
   preannounce: optionalFlag(
@@ -345,7 +399,6 @@ const assistSatellite = domainCommand(
     Command.make(
       "announce",
       {
-        area: areaArgument("Area to announce in"),
         message: Argument.String("message").pipe(
           Argument.withDescription("Message to announce"),
         ),
@@ -354,8 +407,9 @@ const assistSatellite = domainCommand(
           "Media ID to play instead of speaking the message",
         ),
         ...preannounceFlags,
+        target: targetConfig("assist_satellite"),
       },
-      ({ area, message, ...flags }) =>
+      ({ target, message, ...flags }) =>
         Effect.gen(function* () {
           const options = yield* decodeData(
             "announce options",
@@ -363,17 +417,20 @@ const assistSatellite = domainCommand(
           );
 
           yield* callAction(
-            AssistSatellite.announce({ area_id: area }, message, options),
+            AssistSatellite.announce(
+              toTarget("assist_satellite", target),
+              message,
+              options,
+            ),
           );
         }).pipe(withBridge),
     ).pipe(
       Command.withAlias("a"),
-      Command.withDescription("Announce a message on an area's satellites"),
+      Command.withDescription("Announce a message on satellites"),
     ),
     Command.make(
       "start-conversation",
       {
-        area: areaArgument("Area to start the conversation in"),
         message: Argument.String("message").pipe(
           Argument.withDescription("Message to start with"),
         ),
@@ -386,8 +443,9 @@ const assistSatellite = domainCommand(
           "Context for the conversation agent, such as why it was started",
         ),
         ...preannounceFlags,
+        target: targetConfig("assist_satellite"),
       },
-      ({ area, message, ...flags }) =>
+      ({ target, message, ...flags }) =>
         Effect.gen(function* () {
           const data = yield* decodeData(
             "conversation options",
@@ -398,19 +456,21 @@ const assistSatellite = domainCommand(
           );
 
           yield* callAction(
-            AssistSatellite.startConversation({ area_id: area }, data),
+            AssistSatellite.startConversation(
+              toTarget("assist_satellite", target),
+              data,
+            ),
           );
         }).pipe(withBridge),
     ).pipe(
       Command.withAlias("c"),
       Command.withDescription(
-        "Speak a message on an area's satellites, then listen for a reply",
+        "Speak a message on satellites, then listen for a reply",
       ),
     ),
     Command.make(
       "ask-question",
       {
-        name: nameArgument("Entity name without the assist_satellite. prefix"),
         question: Argument.String("question").pipe(
           Argument.withDescription("Question to ask"),
         ),
@@ -425,8 +485,9 @@ const assistSatellite = domainCommand(
           "Media ID to play instead of speaking the question",
         ),
         ...preannounceFlags,
+        target: targetConfig("assist_satellite"),
       },
-      ({ name, question, answers, ...flags }) =>
+      ({ target, question, answers, ...flags }) =>
         Effect.gen(function* () {
           const answerOptions = parseAnswerOptions(answers);
 
@@ -448,7 +509,13 @@ const assistSatellite = domainCommand(
           );
 
           const response = yield* callAction(
-            AssistSatellite.askQuestion(`assist_satellite.${name}`, data),
+            AssistSatellite.askQuestion(
+              yield* resolveOne(
+                "assist_satellite",
+                toTarget("assist_satellite", target),
+              ),
+              data,
+            ),
           );
 
           const reply = yield* AssistSatellite.answerFrom(response).pipe(
@@ -488,10 +555,10 @@ const inputNumber = domainCommand(
     Command.make(
       "set-value",
       {
-        name: inputNumberName,
         value: Argument.String("value").pipe(
           Argument.withDescription("New value"),
         ),
+        target: targetConfig("input_number"),
       },
       (input) =>
         Effect.gen(function* () {
@@ -502,15 +569,13 @@ const inputNumber = domainCommand(
           }
 
           yield* callAction(
-            InputNumber.setValue(`input_number.${input.name}`, value),
+            InputNumber.setValue(toTarget("input_number", input.target), value),
           );
         }).pipe(withBridge),
     ).pipe(Command.withDescription("Set the value")),
     reloadCommand("input_number", InputNumber.reload),
   ],
 );
-
-const lightName = nameArgument("Entity name without the light. prefix");
 
 const lightOffFlags = {
   transition: optionalFlag(
@@ -589,20 +654,20 @@ const decodeLightTurnOff = Schema.decodeUnknownEffect(LightTurnOffData);
 
 const lightOnCommand = (
   name: string,
-  toAction: (entityId: EntityId<"light">, data: LightTurnOnData) => Action,
+  toAction: (target: Target, data: LightTurnOnData) => Action,
   description: string,
 ) =>
   Command.make(
     name,
-    { name: lightName, ...lightOnFlags },
-    ({ name, ...flags }) =>
+    { ...lightOnFlags, target: targetConfig("light") },
+    ({ target, ...flags }) =>
       Effect.gen(function* () {
         const data = yield* decodeData(
           "light options",
           decodeLightTurnOn(lightData(flags)),
         );
 
-        yield* callAction(toAction(`light.${name}`, data));
+        yield* callAction(toAction(toTarget("light", target), data));
       }).pipe(withBridge),
   ).pipe(Command.withDescription(description));
 
@@ -612,21 +677,19 @@ const light = domainCommand("light", "l", "Light actions", [
   ),
   Command.make(
     "turn-off",
-    { name: lightName, ...lightOffFlags },
-    ({ name, ...flags }) =>
+    { ...lightOffFlags, target: targetConfig("light") },
+    ({ target, ...flags }) =>
       Effect.gen(function* () {
         const data = yield* decodeData(
           "light options",
           decodeLightTurnOff(lightData(flags)),
         );
 
-        yield* callAction(Light.turnOff(`light.${name}`, data));
+        yield* callAction(Light.turnOff(toTarget("light", target), data));
       }).pipe(withBridge),
   ).pipe(Command.withAlias("off"), Command.withDescription("Turn off")),
   lightOnCommand("toggle", Light.toggle, "Toggle").pipe(Command.withAlias("t")),
 ]);
-
-const coverName = nameArgument("Entity name without the cover. prefix");
 
 const speedFlag = Flag.String("speed").pipe(
   Flag.withDescription("Speed, one of the cover's supported_speeds"),
@@ -635,15 +698,18 @@ const speedFlag = Flag.String("speed").pipe(
 
 const coverMoveCommand = (
   name: string,
-  toAction: (entityId: EntityId<"cover">, options: CoverMoveOptions) => Action,
+  toAction: (target: Target, options: CoverMoveOptions) => Action,
   description: string,
 ) =>
-  Command.make(name, { name: coverName, speed: speedFlag }, (input) =>
-    callAction(
-      toAction(`cover.${input.name}`, {
-        speed: Option.getOrUndefined(input.speed),
-      }),
-    ).pipe(withBridge),
+  Command.make(
+    name,
+    { speed: speedFlag, target: targetConfig("cover") },
+    (input) =>
+      callAction(
+        toAction(toTarget("cover", input.target), {
+          speed: Option.getOrUndefined(input.speed),
+        }),
+      ).pipe(withBridge),
   ).pipe(Command.withDescription(description));
 
 const cover = domainCommand("cover", "c", "Cover actions", [
@@ -659,12 +725,16 @@ const cover = domainCommand("cover", "c", "Cover actions", [
   entityActionCommand("cover", "stop", Cover.stop, "Stop the cover"),
   Command.make(
     "position",
-    { name: coverName, position: percentArgument, speed: speedFlag },
+    {
+      position: percentArgument,
+      speed: speedFlag,
+      target: targetConfig("cover"),
+    },
     (input) =>
       Effect.gen(function* () {
         const position = yield* parsePercent(input.position);
         yield* callAction(
-          Cover.setPosition(`cover.${input.name}`, position, {
+          Cover.setPosition(toTarget("cover", input.target), position, {
             speed: Option.getOrUndefined(input.speed),
           }),
         );
@@ -681,33 +751,31 @@ const cover = domainCommand("cover", "c", "Cover actions", [
   entityActionCommand("cover", "stop-tilt", Cover.stopTilt, "Stop the tilt"),
   Command.make(
     "tilt-position",
-    { name: coverName, position: percentArgument },
+    { position: percentArgument, target: targetConfig("cover") },
     (input) =>
       Effect.gen(function* () {
         const position = yield* parsePercent(input.position);
         yield* callAction(
-          Cover.setTiltPosition(`cover.${input.name}`, position),
+          Cover.setTiltPosition(toTarget("cover", input.target), position),
         );
       }).pipe(withBridge),
   ).pipe(Command.withDescription("Set the tilt position")),
 ]);
-
-const climateName = nameArgument("Entity name without the climate. prefix");
 
 // Sets a mode the entity lists in an attribute, such as `fan_modes`.
 const climateModeCommand = (
   name: string,
   label: string,
   example: string,
-  toAction: (entityId: EntityId<"climate">, mode: string) => Action,
+  toAction: (target: Target, mode: string) => Action,
 ) =>
   Command.make(
     name,
     {
-      name: climateName,
       mode: Argument.String("mode").pipe(
         Argument.withDescription(`${label}, for example ${example}`),
       ),
+      target: targetConfig("climate"),
     },
     (input) =>
       Effect.gen(function* () {
@@ -715,7 +783,9 @@ const climateModeCommand = (
           return yield* failWith(`climate ${label.toLowerCase()} is required`);
         }
 
-        yield* callAction(toAction(`climate.${input.name}`, input.mode));
+        yield* callAction(
+          toAction(toTarget("climate", input.target), input.mode),
+        );
       }).pipe(withBridge),
   ).pipe(Command.withDescription(`Set the ${label.toLowerCase()}`));
 
@@ -729,23 +799,22 @@ const climate = domainCommand("climate", "cl", "Climate actions", [
   Command.make(
     "hvac-mode",
     {
-      name: climateName,
       mode: Argument.Literals("mode", HvacMode.literals).pipe(
         Argument.withDescription("HVAC mode"),
       ),
+      target: targetConfig("climate"),
     },
     (input) =>
-      callAction(Climate.setHvacMode(`climate.${input.name}`, input.mode)).pipe(
-        withBridge,
-      ),
+      callAction(
+        Climate.setHvacMode(toTarget("climate", input.target), input.mode),
+      ).pipe(withBridge),
   ).pipe(Command.withDescription("Set the HVAC mode")),
   Command.make(
     "temperature",
     {
-      name: climateName,
-      temperature: Argument.Finite("temperature").pipe(
-        Argument.withDescription("Target temperature"),
-        Argument.optional,
+      temperature: optionalFlag(
+        Flag.Finite("temperature"),
+        "Target temperature, or set a range instead",
       ),
       targetTempLow: optionalFlag(
         Flag.Finite("target-temp-low"),
@@ -759,6 +828,7 @@ const climate = domainCommand("climate", "cl", "Climate actions", [
         Flag.Literals("hvac-mode", HvacMode.literals),
         "HVAC mode to switch to",
       ),
+      target: targetConfig("climate"),
     },
     (input) =>
       Effect.gen(function* () {
@@ -775,25 +845,25 @@ const climate = domainCommand("climate", "cl", "Climate actions", [
         );
 
         yield* callAction(
-          Climate.setTemperature(`climate.${input.name}`, data),
+          Climate.setTemperature(toTarget("climate", input.target), data),
         );
       }).pipe(withBridge),
   ).pipe(
     Command.withDescription(
-      "Set the target temperature, or a range with --target-temp-low and --target-temp-high",
+      "Set the target temperature with --temperature, or a range with --target-temp-low and --target-temp-high",
     ),
   ),
   Command.make(
     "humidity",
     {
-      name: climateName,
       humidity: Argument.Int("humidity").pipe(
         Argument.withDescription("Target humidity in percent"),
       ),
+      target: targetConfig("climate"),
     },
     (input) =>
       callAction(
-        Climate.setHumidity(`climate.${input.name}`, input.humidity),
+        Climate.setHumidity(toTarget("climate", input.target), input.humidity),
       ).pipe(withBridge),
   ).pipe(Command.withDescription("Set the target humidity")),
   climateModeCommand(
@@ -812,13 +882,20 @@ const climate = domainCommand("climate", "cl", "Climate actions", [
   ),
 ]);
 
-const cameraName = nameArgument("Entity name without the camera. prefix");
-
 const serverFilenameArgument = Argument.String("filename").pipe(
   Argument.withDescription(
     "Path on the Home Assistant host, in allowlist_external_dirs",
   ),
 );
+
+// A single media player given by entity ID, object ID or name.
+const mediaPlayerFlag = (description: string) =>
+  Flag.String("media-player").pipe(
+    Flag.withDescription(`${description}: entity ID, object ID or name`),
+  );
+
+const resolveMediaPlayer = (value: string) =>
+  resolveOne("media_player", { entity_id: value });
 
 const camera = Command.make("camera").pipe(
   Command.withDescription("Camera actions"),
@@ -826,18 +903,24 @@ const camera = Command.make("camera").pipe(
     Command.make(
       "snapshot",
       {
-        name: cameraName,
         output: Argument.String("output").pipe(
           Argument.withDescription("File to write the image to"),
         ),
+        target: targetConfig("camera"),
       },
       (input) =>
         Effect.gen(function* () {
+          const target = toTarget("camera", input.target);
+
+          if (isEmptyTarget(target)) {
+            return yield* noTarget();
+          }
+
           const client = yield* BridgeClient;
           const fs = yield* FileSystem.FileSystem;
 
           const snapshot = yield* client
-            .CameraSnapshot({ entityId: `camera.${input.name}` })
+            .CameraSnapshot({ target })
             .pipe(
               Effect.mapError(
                 (error) => new CommandError({ message: error.message }),
@@ -875,10 +958,10 @@ const camera = Command.make("camera").pipe(
     ),
     Command.make(
       "server-snapshot",
-      { name: cameraName, filename: serverFilenameArgument },
+      { filename: serverFilenameArgument, target: targetConfig("camera") },
       (input) =>
         callAction(
-          Camera.snapshot(`camera.${input.name}`, input.filename),
+          Camera.snapshot(toTarget("camera", input.target), input.filename),
         ).pipe(withBridge),
     ).pipe(
       Command.withDescription(
@@ -888,7 +971,6 @@ const camera = Command.make("camera").pipe(
     Command.make(
       "record",
       {
-        name: cameraName,
         filename: serverFilenameArgument,
         duration: optionalFlag(
           Flag.Int("duration"),
@@ -898,10 +980,11 @@ const camera = Command.make("camera").pipe(
           Flag.Int("lookback"),
           "Seconds from before the call to include (default: 0)",
         ),
+        target: targetConfig("camera"),
       },
       (input) =>
         callAction(
-          Camera.record(`camera.${input.name}`, input.filename, {
+          Camera.record(toTarget("camera", input.target), input.filename, {
             duration: Option.getOrUndefined(input.duration),
             lookback: Option.getOrUndefined(input.lookback),
           }),
@@ -914,20 +997,17 @@ const camera = Command.make("camera").pipe(
     Command.make(
       "play-stream",
       {
-        name: cameraName,
-        mediaPlayer: Argument.String("media_player").pipe(
-          Argument.withDescription(
-            "Media player name without the media_player. prefix",
-          ),
-        ),
+        mediaPlayer: mediaPlayerFlag("Media player to play the stream on"),
+        target: targetConfig("camera"),
       },
       (input) =>
-        callAction(
-          Camera.playStream(
-            `camera.${input.name}`,
-            `media_player.${input.mediaPlayer}`,
-          ),
-        ).pipe(withBridge),
+        Effect.gen(function* () {
+          const mediaPlayer = yield* resolveMediaPlayer(input.mediaPlayer);
+
+          yield* callAction(
+            Camera.playStream(toTarget("camera", input.target), mediaPlayer),
+          );
+        }).pipe(withBridge),
     ).pipe(
       Command.withDescription("Play the camera's stream on a media player"),
     ),
@@ -938,18 +1018,15 @@ const codeFlag = optionalFlag(Flag.String("code"), "The lock's code");
 
 const lockCommand = (
   name: string,
-  toAction: (entityId: EntityId<"lock">, options: LockOptions) => Action,
+  toAction: (target: Target, options: LockOptions) => Action,
   description: string,
 ) =>
   Command.make(
     name,
-    {
-      name: nameArgument("Entity name without the lock. prefix"),
-      code: codeFlag,
-    },
+    { code: codeFlag, target: targetConfig("lock") },
     (input) =>
       callAction(
-        toAction(`lock.${input.name}`, {
+        toAction(toTarget("lock", input.target), {
           code: Option.getOrUndefined(input.code),
         }),
       ).pipe(withBridge),
@@ -980,8 +1057,6 @@ const inputButton = domainCommand(
   ],
 );
 
-const valveName = nameArgument("Entity name without the valve. prefix");
-
 const valve = domainCommand("valve", undefined, "Valve actions", [
   entityActionCommand("valve", "open", Valve.open, "Open the valve"),
   entityActionCommand("valve", "close", Valve.close, "Close the valve"),
@@ -994,12 +1069,14 @@ const valve = domainCommand("valve", undefined, "Valve actions", [
   entityActionCommand("valve", "stop", Valve.stop, "Stop the valve"),
   Command.make(
     "position",
-    { name: valveName, position: percentArgument },
+    { position: percentArgument, target: targetConfig("valve") },
     (input) =>
       Effect.gen(function* () {
         const position = yield* parsePercent(input.position);
 
-        yield* callAction(Valve.setPosition(`valve.${input.name}`, position));
+        yield* callAction(
+          Valve.setPosition(toTarget("valve", input.target), position),
+        );
       }).pipe(withBridge),
   ).pipe(Command.withDescription("Set the position")),
 ]);
@@ -1010,7 +1087,6 @@ const siren = domainCommand("siren", undefined, "Siren actions", [
   Command.make(
     "turn-on",
     {
-      name: nameArgument("Entity name without the siren. prefix"),
       tone: optionalFlag(
         Flag.String("tone"),
         "Tone, one of the siren's available_tones",
@@ -1020,15 +1096,16 @@ const siren = domainCommand("siren", undefined, "Siren actions", [
         Flag.Finite("volume-level"),
         "Volume from 0 to 1",
       ),
+      target: targetConfig("siren"),
     },
-    ({ name, ...flags }) =>
+    ({ target, ...flags }) =>
       Effect.gen(function* () {
         const data = yield* decodeData(
           "siren options",
           decodeSirenTurnOn(setFields(flags)),
         );
 
-        yield* callAction(Siren.turnOn(`siren.${name}`, data));
+        yield* callAction(Siren.turnOn(toTarget("siren", target), data));
       }).pipe(withBridge),
   ).pipe(Command.withAlias("on"), Command.withDescription("Turn on")),
   entityActionCommand("siren", "turn-off", Siren.turnOff, "Turn off").pipe(
@@ -1039,16 +1116,15 @@ const siren = domainCommand("siren", undefined, "Siren actions", [
   ),
 ]);
 
-const remoteName = nameArgument("Entity name without the remote. prefix");
-
+// Not --device, which picks remotes by their Home Assistant device.
 const deviceFlag = optionalFlag(
-  Flag.String("device"),
-  "Device the command is for",
+  Flag.String("remote-device"),
+  "Device the command is for, as the remote's integration names it",
 );
 
-const commandsArgument = Argument.String("command").pipe(
-  Argument.withDescription("Command to send; repeat for a sequence"),
-  Argument.atLeast(1),
+const commandsFlag = Flag.String("command").pipe(
+  Flag.withDescription("Command; repeat for a sequence"),
+  Flag.atLeast(1),
 );
 
 const decodeRemoteSendCommand = Schema.decodeUnknownEffect(
@@ -1063,15 +1139,15 @@ const remote = domainCommand("remote", undefined, "Remote actions", [
   Command.make(
     "turn-on",
     {
-      name: remoteName,
       activity: optionalFlag(
         Flag.String("activity"),
         "Activity, one of the remote's activity_list",
       ),
+      target: targetConfig("remote"),
     },
     (input) =>
       callAction(
-        Remote.turnOn(`remote.${input.name}`, {
+        Remote.turnOn(toTarget("remote", input.target), {
           activity: Option.getOrUndefined(input.activity),
         }),
       ).pipe(withBridge),
@@ -1085,8 +1161,7 @@ const remote = domainCommand("remote", undefined, "Remote actions", [
   Command.make(
     "send-command",
     {
-      name: remoteName,
-      command: commandsArgument,
+      command: commandsFlag,
       device: deviceFlag,
       num_repeats: optionalFlag(
         Flag.Int("num-repeats"),
@@ -1100,24 +1175,24 @@ const remote = domainCommand("remote", undefined, "Remote actions", [
         Flag.Finite("hold-secs"),
         "Seconds to hold each command (default: 0)",
       ),
+      target: targetConfig("remote"),
     },
-    ({ name, command, ...flags }) =>
+    ({ target, command, ...flags }) =>
       Effect.gen(function* () {
         const data = yield* decodeData(
           "remote command",
           decodeRemoteSendCommand({ command, ...setFields(flags) }),
         );
 
-        yield* callAction(Remote.sendCommand(`remote.${name}`, data));
+        yield* callAction(Remote.sendCommand(toTarget("remote", target), data));
       }).pipe(withBridge),
   ).pipe(Command.withDescription("Send commands")),
   Command.make(
     "learn-command",
     {
-      name: remoteName,
-      command: Argument.String("command").pipe(
-        Argument.withDescription("Name for each command to learn"),
-        Argument.atLeast(0),
+      command: Flag.String("command").pipe(
+        Flag.withDescription("Name for a command to learn; repeat for more"),
+        Flag.atLeast(0),
       ),
       device: deviceFlag,
       command_type: optionalFlag(
@@ -1132,8 +1207,9 @@ const remote = domainCommand("remote", undefined, "Remote actions", [
         Flag.Int("timeout"),
         "Seconds to wait for each command",
       ),
+      target: targetConfig("remote"),
     },
-    ({ name, command, ...flags }) =>
+    ({ target, command, ...flags }) =>
       Effect.gen(function* () {
         const data = yield* decodeData(
           "remote learn options",
@@ -1147,62 +1223,56 @@ const remote = domainCommand("remote", undefined, "Remote actions", [
           ),
         );
 
-        yield* callAction(Remote.learnCommand(`remote.${name}`, data));
+        yield* callAction(
+          Remote.learnCommand(toTarget("remote", target), data),
+        );
       }).pipe(withBridge),
   ).pipe(Command.withDescription("Learn commands from a physical remote")),
   Command.make(
     "delete-command",
-    { name: remoteName, command: commandsArgument, device: deviceFlag },
+    {
+      command: commandsFlag,
+      device: deviceFlag,
+      target: targetConfig("remote"),
+    },
     (input) =>
       callAction(
-        Remote.deleteCommand(`remote.${input.name}`, input.command, {
+        Remote.deleteCommand(toTarget("remote", input.target), input.command, {
           device: Option.getOrUndefined(input.device),
         }),
       ).pipe(withBridge),
   ).pipe(Command.withDescription("Delete learned commands")),
 ]);
 
-const entityName = (domain: string) =>
-  nameArgument(`Entity name without the ${domain}. prefix`);
-
 const cycleFlag = optionalFlag(
   Flag.Boolean("cycle"),
   "Wrap round at the end (the default); --no-cycle stops there",
 );
 
-const selectCommands = <const Domain extends string>(
-  domain: Domain,
+const selectCommands = (
+  domain: string,
   actions: {
-    readonly selectOption: (
-      entityId: EntityId<Domain>,
-      option: string,
-    ) => Action;
-    readonly selectFirst: (entityId: EntityId<Domain>) => Action;
-    readonly selectLast: (entityId: EntityId<Domain>) => Action;
-    readonly selectNext: (
-      entityId: EntityId<Domain>,
-      options: SelectStepOptions,
-    ) => Action;
+    readonly selectOption: (target: Target, option: string) => Action;
+    readonly selectFirst: (target: Target) => Action;
+    readonly selectLast: (target: Target) => Action;
+    readonly selectNext: (target: Target, options: SelectStepOptions) => Action;
     readonly selectPrevious: (
-      entityId: EntityId<Domain>,
+      target: Target,
       options: SelectStepOptions,
     ) => Action;
   },
 ) => {
   const stepCommand = (
     name: string,
-    toAction: (
-      entityId: EntityId<Domain>,
-      options: SelectStepOptions,
-    ) => Action,
+    toAction: (target: Target, options: SelectStepOptions) => Action,
     description: string,
   ) =>
     Command.make(
       name,
-      { name: entityName(domain), cycle: cycleFlag },
+      { cycle: cycleFlag, target: targetConfig(domain) },
       (input) =>
         callAction(
-          toAction(`${domain}.${input.name}`, {
+          toAction(toTarget(domain, input.target), {
             cycle: Option.getOrUndefined(input.cycle),
           }),
         ).pipe(withBridge),
@@ -1212,14 +1282,14 @@ const selectCommands = <const Domain extends string>(
     Command.make(
       "select-option",
       {
-        name: entityName(domain),
         option: Argument.String("option").pipe(
           Argument.withDescription("Option to select"),
         ),
+        target: targetConfig(domain),
       },
       (input) =>
         callAction(
-          actions.selectOption(`${domain}.${input.name}`, input.option),
+          actions.selectOption(toTarget(domain, input.target), input.option),
         ).pipe(withBridge),
     ).pipe(Command.withDescription("Select an option")),
     entityActionCommand(
@@ -1244,25 +1314,25 @@ const selectCommands = <const Domain extends string>(
 };
 
 // A `set-value` command whose value is checked by `decode` before sending.
-const setValueCommand = <const Domain extends string, A>(
-  domain: Domain,
+const setValueCommand = <A>(
+  domain: string,
   description: string,
   decode: (value: string) => Effect.Effect<A, CommandError>,
-  toAction: (entityId: EntityId<Domain>, value: A) => Action,
+  toAction: (target: Target, value: A) => Action,
 ) =>
   Command.make(
     "set-value",
     {
-      name: entityName(domain),
       value: Argument.String("value").pipe(
         Argument.withDescription(description),
       ),
+      target: targetConfig(domain),
     },
     (input) =>
       Effect.gen(function* () {
         const value = yield* decode(input.value);
 
-        yield* callAction(toAction(`${domain}.${input.name}`, value));
+        yield* callAction(toAction(toTarget(domain, input.target), value));
       }).pipe(withBridge),
   ).pipe(Command.withDescription("Set the value"));
 
@@ -1316,11 +1386,11 @@ const inputSelect = domainCommand(
     Command.make(
       "set-options",
       {
-        name: entityName("input_select"),
-        options: Argument.String("option").pipe(
-          Argument.withDescription("Option; repeat for each option"),
-          Argument.atLeast(1),
+        options: Flag.String("option").pipe(
+          Flag.withDescription("Option; repeat for each option"),
+          Flag.atLeast(1),
         ),
+        target: targetConfig("input_select"),
       },
       (input) =>
         Effect.gen(function* () {
@@ -1331,7 +1401,7 @@ const inputSelect = domainCommand(
           }
 
           yield* callAction(
-            InputSelect.setOptions(`input_select.${input.name}`, [
+            InputSelect.setOptions(toTarget("input_select", input.target), [
               first,
               ...rest,
             ]),
@@ -1394,7 +1464,6 @@ const inputDateTime = domainCommand(
     Command.make(
       "set-datetime",
       {
-        name: entityName("input_datetime"),
         date: optionalFlag(Flag.String("date"), "Date as YYYY-MM-DD"),
         time: optionalFlag(Flag.String("time"), "Time as HH:MM or HH:MM:SS"),
         datetime: optionalFlag(
@@ -1405,8 +1474,9 @@ const inputDateTime = domainCommand(
           Flag.Finite("timestamp"),
           "Seconds since the Unix epoch",
         ),
+        target: targetConfig("input_datetime"),
       },
-      ({ name, ...flags }) =>
+      ({ target, ...flags }) =>
         Effect.gen(function* () {
           const data = yield* decodeData(
             "date and time",
@@ -1414,7 +1484,7 @@ const inputDateTime = domainCommand(
           );
 
           yield* callAction(
-            InputDateTime.setDateTime(`input_datetime.${name}`, data),
+            InputDateTime.setDateTime(toTarget("input_datetime", target), data),
           );
         }).pipe(withBridge),
     ).pipe(
@@ -1472,17 +1542,17 @@ const parseVariables = (value: Option.Option<string>) =>
     decodeData("variables", decodeScriptVariables(json)),
   );
 
-const scriptName = entityName("script");
-
 const script = domainCommand("script", undefined, "Script actions", [
   Command.make(
     "turn-on",
-    { name: scriptName, variables: variablesFlag },
+    { variables: variablesFlag, target: targetConfig("script") },
     (input) =>
       Effect.gen(function* () {
         const variables = yield* parseVariables(input.variables);
 
-        yield* callAction(Script.turnOn(`script.${input.name}`, variables));
+        yield* callAction(
+          Script.turnOn(toTarget("script", input.target), variables),
+        );
       }).pipe(withBridge),
   ).pipe(
     Command.withAlias("on"),
@@ -1500,16 +1570,22 @@ const script = domainCommand("script", undefined, "Script actions", [
     Script.toggle,
     "Start or stop the script",
   ).pipe(Command.withAlias("t")),
-  Command.make("run", { name: scriptName, variables: variablesFlag }, (input) =>
-    Effect.gen(function* () {
-      const variables = yield* parseVariables(input.variables);
+  Command.make(
+    "run",
+    { variables: variablesFlag, target: targetConfig("script") },
+    (input) =>
+      Effect.gen(function* () {
+        const variables = yield* parseVariables(input.variables);
 
-      const response = yield* callAction(
-        Script.run(`script.${input.name}`, variables),
-      );
+        const script = yield* resolveOne(
+          "script",
+          toTarget("script", input.target),
+        );
 
-      yield* printJson(response);
-    }).pipe(withBridge),
+        const response = yield* callAction(Script.run(script, variables));
+
+        yield* printJson(response);
+      }).pipe(withBridge),
   ).pipe(
     Command.withDescription(
       "Run the script, wait for it to finish and print its response as JSON",
@@ -1517,8 +1593,6 @@ const script = domainCommand("script", undefined, "Script actions", [
   ),
   reloadCommand("script", Script.reload),
 ]);
-
-const automationName = entityName("automation");
 
 const automation = domainCommand(
   "automation",
@@ -1534,15 +1608,15 @@ const automation = domainCommand(
     Command.make(
       "turn-off",
       {
-        name: automationName,
         stopActions: optionalFlag(
           Flag.Boolean("stop-actions"),
           "Stop running actions (the default); --no-stop-actions lets them finish",
         ),
+        target: targetConfig("automation"),
       },
       (input) =>
         callAction(
-          Automation.turnOff(`automation.${input.name}`, {
+          Automation.turnOff(toTarget("automation", input.target), {
             stopActions: Option.getOrUndefined(input.stopActions),
           }),
         ).pipe(withBridge),
@@ -1556,15 +1630,15 @@ const automation = domainCommand(
     Command.make(
       "trigger",
       {
-        name: automationName,
         skipCondition: optionalFlag(
           Flag.Boolean("skip-condition"),
           "Skip the conditions (the default); --no-skip-condition checks them",
         ),
+        target: targetConfig("automation"),
       },
       (input) =>
         callAction(
-          Automation.trigger(`automation.${input.name}`, {
+          Automation.trigger(toTarget("automation", input.target), {
             skipCondition: Option.getOrUndefined(input.skipCondition),
           }),
         ).pipe(withBridge),
@@ -1590,10 +1664,10 @@ const sceneEntitiesDescription =
 const scene = domainCommand("scene", undefined, "Scene actions", [
   Command.make(
     "turn-on",
-    { name: entityName("scene"), transition: transitionFlag },
+    { transition: transitionFlag, target: targetConfig("scene") },
     (input) =>
       callAction(
-        Scene.turnOn(`scene.${input.name}`, {
+        Scene.turnOn(toTarget("scene", input.target), {
           transition: Option.getOrUndefined(input.transition),
         }),
       ).pipe(withBridge),
@@ -1678,25 +1752,23 @@ const decodeDuration = Schema.decodeUnknownEffect(DurationValue);
 const parseDuration = (value: string) =>
   decodeData("duration", decodeDuration(parseInputNumberValue(value) ?? value));
 
-const timerName = entityName("timer");
-
 const timer = domainCommand("timer", undefined, "Timer actions", [
   Command.make(
     "start",
     {
-      name: timerName,
-      duration: Argument.String("duration").pipe(
-        Argument.withDescription(
-          "Seconds or HH:MM:SS (default: the timer's own duration)",
-        ),
-        Argument.optional,
+      duration: optionalFlag(
+        Flag.String("duration"),
+        "Seconds or HH:MM:SS (default: the timer's own duration)",
       ),
+      target: targetConfig("timer"),
     },
     (input) =>
       Effect.gen(function* () {
         const duration = yield* parseOptional(input.duration, parseDuration);
 
-        yield* callAction(Timer.start(`timer.${input.name}`, duration));
+        yield* callAction(
+          Timer.start(toTarget("timer", input.target), duration),
+        );
       }).pipe(withBridge),
   ).pipe(Command.withDescription("Start or restart the timer")),
   entityActionCommand("timer", "pause", Timer.pause, "Pause the timer"),
@@ -1705,38 +1777,45 @@ const timer = domainCommand("timer", undefined, "Timer actions", [
   Command.make(
     "change",
     {
-      name: timerName,
       duration: Argument.String("duration").pipe(
         Argument.withDescription(
           "Seconds or HH:MM:SS to add; negative to take away, after --",
         ),
       ),
+      target: targetConfig("timer"),
     },
     (input) =>
       Effect.gen(function* () {
         const duration = yield* parseDuration(input.duration);
 
-        yield* callAction(Timer.change(`timer.${input.name}`, duration));
+        yield* callAction(
+          Timer.change(toTarget("timer", input.target), duration),
+        );
       }).pipe(withBridge),
   ).pipe(Command.withDescription("Add time to a running timer")),
   reloadCommand("timer", Timer.reload),
 ]);
 
 const schedule = domainCommand("schedule", undefined, "Schedule actions", [
-  Command.make("get", { name: entityName("schedule") }, (input) =>
+  Command.make("get", { target: targetConfig("schedule") }, (input) =>
     Effect.gen(function* () {
-      const entityId: EntityId<"schedule"> = `schedule.${input.name}`;
-      const response = yield* callAction(Schedule.getSchedule(entityId));
+      const response = yield* callAction(
+        Schedule.getSchedule(toTarget("schedule", input.target)),
+      );
 
-      const week = yield* Schedule.scheduleFrom(entityId, response).pipe(
+      const schedules = yield* Schedule.schedulesFrom(response).pipe(
         Effect.mapError(
           (error) => new CommandError({ message: error.message }),
         ),
       );
 
-      yield* printJson(week);
+      yield* printJson(schedules);
     }).pipe(withBridge),
-  ).pipe(Command.withDescription("Print the schedule's week as JSON")),
+  ).pipe(
+    Command.withDescription(
+      "Print each schedule's week as JSON, keyed by entity ID",
+    ),
+  ),
   reloadCommand("schedule", Schedule.reload),
 ]);
 
@@ -1814,8 +1893,8 @@ const anyEntityCommand = (
   toAction: (target: Target) => Action,
   description: string,
 ) =>
-  Command.make(name, { entityIds: entityIdsArgument }, (input) =>
-    callAction(toAction({ entity_id: input.entityIds })).pipe(withBridge),
+  Command.make(name, { target: targetConfig(undefined) }, (input) =>
+    callAction(toAction(toTarget(undefined, input.target))).pipe(withBridge),
   ).pipe(Command.withAlias(alias), Command.withDescription(description));
 
 const systemCommand = (
@@ -1836,19 +1915,19 @@ const homeAssistant = domainCommand(
       "turn-on",
       "on",
       HomeAssistantCore.turnOn,
-      "Turn on entities of any domain",
+      "Turn on entities in any domain",
     ),
     anyEntityCommand(
       "turn-off",
       "off",
       HomeAssistantCore.turnOff,
-      "Turn off entities of any domain",
+      "Turn off entities in any domain",
     ),
     anyEntityCommand(
       "toggle",
       "t",
       HomeAssistantCore.toggle,
-      "Toggle entities of any domain",
+      "Toggle entities in any domain",
     ),
     Command.make("update-entity", { entityIds: entityIdsArgument }, (input) =>
       callAction(HomeAssistantCore.updateEntity(input.entityIds)).pipe(
@@ -1941,27 +2020,27 @@ const homeAssistant = domainCommand(
 );
 
 // A command taking an entity name and one value argument.
-const valueCommand = <const Domain extends string, A>(
-  domain: Domain,
+const valueCommand = <A>(
+  domain: string,
   name: string,
   argument: { readonly name: string; readonly description: string },
   parse: (value: string) => Effect.Effect<A, CommandError>,
-  toAction: (entityId: EntityId<Domain>, value: A) => Action,
+  toAction: (target: Target, value: A) => Action,
   description: string,
 ) =>
   Command.make(
     name,
     {
-      name: entityName(domain),
       value: Argument.String(argument.name).pipe(
         Argument.withDescription(argument.description),
       ),
+      target: targetConfig(domain),
     },
     (input) =>
       Effect.gen(function* () {
         const value = yield* parse(input.value);
 
-        yield* callAction(toAction(`${domain}.${input.name}`, value));
+        yield* callAction(toAction(toTarget(domain, input.target), value));
       }).pipe(withBridge),
   ).pipe(Command.withDescription(description));
 
@@ -1981,21 +2060,21 @@ const fan = domainCommand("fan", undefined, "Fan actions", [
   Command.make(
     "turn-on",
     {
-      name: entityName("fan"),
       percentage: optionalFlag(Flag.Int("percentage"), "Speed from 0 to 100"),
       preset_mode: optionalFlag(
         Flag.String("preset-mode"),
         "Preset mode, one of the fan's preset_modes",
       ),
+      target: targetConfig("fan"),
     },
-    ({ name, ...flags }) =>
+    ({ target, ...flags }) =>
       Effect.gen(function* () {
         const data = yield* decodeData(
           "fan options",
           decodeFanTurnOn(setFields(flags)),
         );
 
-        yield* callAction(Fan.turnOn(`fan.${name}`, data));
+        yield* callAction(Fan.turnOn(toTarget("fan", target), data));
       }).pipe(withBridge),
   ).pipe(Command.withAlias("on"), Command.withDescription("Turn on")),
   entityActionCommand("fan", "turn-off", Fan.turnOff, "Turn off").pipe(
@@ -2020,10 +2099,13 @@ const fan = domainCommand("fan", undefined, "Fan actions", [
   ).map(([command, toAction, description]) =>
     Command.make(
       command,
-      { name: entityName("fan"), step: fanStepFlag },
+      { step: fanStepFlag, target: targetConfig("fan") },
       (input) =>
         callAction(
-          toAction(`fan.${input.name}`, Option.getOrUndefined(input.step)),
+          toAction(
+            toTarget("fan", input.target),
+            Option.getOrUndefined(input.step),
+          ),
         ).pipe(withBridge),
     ).pipe(Command.withDescription(description)),
   ),
@@ -2101,7 +2183,6 @@ const waterHeater = domainCommand(
     Command.make(
       "temperature",
       {
-        name: entityName("water_heater"),
         temperature: Argument.String("temperature").pipe(
           Argument.withDescription("Target temperature in the entity's unit"),
         ),
@@ -2109,6 +2190,7 @@ const waterHeater = domainCommand(
           Flag.String("operation-mode"),
           "Also switch to this operation mode",
         ),
+        target: targetConfig("water_heater"),
       },
       (input) =>
         Effect.gen(function* () {
@@ -2116,7 +2198,7 @@ const waterHeater = domainCommand(
 
           yield* callAction(
             WaterHeater.setTemperature(
-              `water_heater.${input.name}`,
+              toTarget("water_heater", input.target),
               temperature,
               { operationMode: Option.getOrUndefined(input.operationMode) },
             ),
@@ -2142,10 +2224,10 @@ const waterHeater = domainCommand(
   ],
 );
 
-const simpleCommands = <const Domain extends string>(
-  domain: Domain,
+const simpleCommands = (
+  domain: string,
   commands: ReadonlyArray<
-    readonly [string, (entityId: EntityId<Domain>) => Action, string]
+    readonly [string, (target: Target) => Action, string]
   >,
 ) =>
   commands.map(([name, toAction, description]) =>
@@ -2154,8 +2236,6 @@ const simpleCommands = <const Domain extends string>(
 
 const printResponse = (action: Action) =>
   callAction(action).pipe(Effect.flatMap(printJson));
-
-const mediaPlayerName = entityName("media_player");
 
 const decodePlayMedia = Schema.decodeUnknownEffect(MediaPlayerPlayMediaData);
 
@@ -2262,7 +2342,6 @@ const mediaPlayer = domainCommand(
     Command.make(
       "play-media",
       {
-        name: mediaPlayerName,
         media_content_id: Argument.String("content_id").pipe(
           Argument.withDescription("Media to play, such as a URL"),
         ),
@@ -2278,8 +2357,9 @@ const mediaPlayer = domainCommand(
           Flag.Boolean("announce"),
           "Pause what's playing to announce the media",
         ),
+        target: targetConfig("media_player"),
       },
-      ({ name, media_content_id, media_content_type, ...flags }) =>
+      ({ target, media_content_id, media_content_type, ...flags }) =>
         Effect.gen(function* () {
           const data = yield* decodeData(
             "media",
@@ -2291,37 +2371,39 @@ const mediaPlayer = domainCommand(
           );
 
           yield* callAction(
-            MediaPlayer.playMedia(`media_player.${name}`, data),
+            MediaPlayer.playMedia(toTarget("media_player", target), data),
           );
         }).pipe(withBridge),
     ).pipe(Command.withDescription("Play media")),
     Command.make(
       "join",
       {
-        name: mediaPlayerName,
-        members: Argument.String("member").pipe(
-          Argument.withDescription(
-            "Player to group with this one, without media_player.; repeat for more",
+        members: Flag.String("member").pipe(
+          Flag.withDescription(
+            "Player to group with these, as an entity ID, object ID or name; repeat for more",
           ),
-          Argument.atLeast(1),
+          Flag.atLeast(1),
         ),
+        target: targetConfig("media_player"),
       },
       (input) =>
-        callAction(
-          MediaPlayer.join(
-            `media_player.${input.name}`,
-            input.members.map(
-              (member): EntityId<"media_player"> => `media_player.${member}`,
-            ),
-          ),
-        ).pipe(withBridge),
-    ).pipe(Command.withDescription("Group players with this one")),
+        Effect.gen(function* () {
+          const members = yield* Effect.forEach(
+            input.members,
+            resolveMediaPlayer,
+          );
+
+          yield* callAction(
+            MediaPlayer.join(toTarget("media_player", input.target), members),
+          );
+        }).pipe(withBridge),
+    ).pipe(Command.withDescription("Group other players with these")),
     Command.make(
       "browse",
-      { name: mediaPlayerName, ...mediaLocationFlags },
-      ({ name, ...location }) =>
+      { ...mediaLocationFlags, target: targetConfig("media_player") },
+      ({ target, ...location }) =>
         printResponse(
-          MediaPlayer.browseMedia(`media_player.${name}`, {
+          MediaPlayer.browseMedia(toTarget("media_player", target), {
             mediaContentType: Option.getOrUndefined(location.mediaContentType),
             mediaContentId: Option.getOrUndefined(location.mediaContentId),
           }),
@@ -2330,15 +2412,15 @@ const mediaPlayer = domainCommand(
     Command.make(
       "search",
       {
-        name: mediaPlayerName,
         query: Argument.String("query").pipe(
           Argument.withDescription("Text to search for"),
         ),
         ...mediaLocationFlags,
+        target: targetConfig("media_player"),
       },
-      ({ name, query, ...location }) =>
+      ({ target, query, ...location }) =>
         printResponse(
-          MediaPlayer.search(`media_player.${name}`, query, {
+          MediaPlayer.search(toTarget("media_player", target), query, {
             mediaContentType: Option.getOrUndefined(location.mediaContentType),
             mediaContentId: Option.getOrUndefined(location.mediaContentId),
           }),
@@ -2364,16 +2446,16 @@ const vacuum = domainCommand("vacuum", undefined, "Vacuum actions", [
   Command.make(
     "clean-area",
     {
-      name: entityName("vacuum"),
-      areas: Argument.String("area_id").pipe(
-        Argument.withDescription("Area ID to clean; repeat for more"),
-        Argument.atLeast(1),
+      areas: Flag.String("clean-area").pipe(
+        Flag.withDescription("Area ID to clean; repeat for more"),
+        Flag.atLeast(1),
       ),
+      target: targetConfig("vacuum"),
     },
     (input) =>
-      callAction(Vacuum.cleanArea(`vacuum.${input.name}`, input.areas)).pipe(
-        withBridge,
-      ),
+      callAction(
+        Vacuum.cleanArea(toTarget("vacuum", input.target), input.areas),
+      ).pipe(withBridge),
   ).pipe(Command.withDescription("Clean areas")),
   valueCommand(
     "vacuum",
@@ -2386,7 +2468,6 @@ const vacuum = domainCommand("vacuum", undefined, "Vacuum actions", [
   Command.make(
     "send-command",
     {
-      name: entityName("vacuum"),
       command: Argument.String("command").pipe(
         Argument.withDescription("Command the integration understands"),
       ),
@@ -2394,6 +2475,7 @@ const vacuum = domainCommand("vacuum", undefined, "Vacuum actions", [
         Flag.String("params"),
         'Parameters as JSON, such as {"speed":2}',
       ),
+      target: targetConfig("vacuum"),
     },
     (input) =>
       Effect.gen(function* () {
@@ -2402,7 +2484,11 @@ const vacuum = domainCommand("vacuum", undefined, "Vacuum actions", [
         );
 
         yield* callAction(
-          Vacuum.sendCommand(`vacuum.${input.name}`, input.command, params),
+          Vacuum.sendCommand(
+            toTarget("vacuum", input.target),
+            input.command,
+            params,
+          ),
         );
       }).pipe(withBridge),
   ).pipe(Command.withDescription("Send a raw command")),
@@ -2417,23 +2503,22 @@ const lawnMower = domainCommand("lawn_mower", undefined, "Lawn mower actions", [
   ]),
 ]);
 
-const codeCommands = <const Domain extends string>(
-  domain: Domain,
+const codeCommands = (
+  domain: string,
   commands: ReadonlyArray<
-    readonly [
-      string,
-      (entityId: EntityId<Domain>, options: LockOptions) => Action,
-      string,
-    ]
+    readonly [string, (target: Target, options: LockOptions) => Action, string]
   >,
 ) =>
   commands.map(([name, toAction, description]) =>
-    Command.make(name, { name: entityName(domain), code: codeFlag }, (input) =>
-      callAction(
-        toAction(`${domain}.${input.name}`, {
-          code: Option.getOrUndefined(input.code),
-        }),
-      ).pipe(withBridge),
+    Command.make(
+      name,
+      { code: codeFlag, target: targetConfig(domain) },
+      (input) =>
+        callAction(
+          toAction(toTarget(domain, input.target), {
+            code: Option.getOrUndefined(input.code),
+          }),
+        ).pipe(withBridge),
     ).pipe(Command.withDescription(description)),
   );
 
@@ -2460,7 +2545,6 @@ const update = domainCommand("update", undefined, "Update actions", [
   Command.make(
     "install",
     {
-      name: entityName("update"),
       version: optionalFlag(
         Flag.String("version"),
         "Version to install (default: the latest)",
@@ -2469,10 +2553,11 @@ const update = domainCommand("update", undefined, "Update actions", [
         Flag.Boolean("backup"),
         "Back up first, where the integration supports it",
       ),
+      target: targetConfig("update"),
     },
     (input) =>
       callAction(
-        Update.install(`update.${input.name}`, {
+        Update.install(toTarget("update", input.target), {
           version: Option.getOrUndefined(input.version),
           backup: Option.getOrUndefined(input.backup),
         }),
@@ -2500,10 +2585,14 @@ const messageArgument = Argument.String("message").pipe(
 const notify = domainCommand("notify", undefined, "Notification actions", [
   Command.make(
     "send-message",
-    { name: entityName("notify"), message: messageArgument, title: titleFlag },
+    {
+      message: messageArgument,
+      title: titleFlag,
+      target: targetConfig("notify"),
+    },
     (input) =>
       callAction(
-        Notify.sendMessage(`notify.${input.name}`, {
+        Notify.sendMessage(toTarget("notify", input.target), {
           message: input.message,
           title: Option.getOrUndefined(input.title),
         }),
@@ -2587,11 +2676,8 @@ const tts = domainCommand("tts", undefined, "Text-to-speech actions", [
   Command.make(
     "speak",
     {
-      name: entityName("tts"),
-      mediaPlayer: Argument.String("media_player").pipe(
-        Argument.withDescription("Media player name without media_player."),
-      ),
       message: messageArgument,
+      mediaPlayer: mediaPlayerFlag("Media player to speak on"),
       language: optionalFlag(
         Flag.String("language"),
         "Language, such as en-GB",
@@ -2604,6 +2690,7 @@ const tts = domainCommand("tts", undefined, "Text-to-speech actions", [
         Flag.String("options"),
         "Engine options, such as a voice, as a JSON object",
       ),
+      target: targetConfig("tts"),
     },
     (input) =>
       Effect.gen(function* () {
@@ -2612,24 +2699,19 @@ const tts = domainCommand("tts", undefined, "Text-to-speech actions", [
           parseJsonObject("options"),
         );
 
+        const mediaPlayer = yield* resolveMediaPlayer(input.mediaPlayer);
+
         yield* callAction(
-          Tts.speak(
-            `tts.${input.name}`,
-            `media_player.${input.mediaPlayer}`,
-            input.message,
-            {
-              language: Option.getOrUndefined(input.language),
-              cache: Option.getOrUndefined(input.cache),
-              options,
-            },
-          ),
+          Tts.speak(toTarget("tts", input.target), mediaPlayer, input.message, {
+            language: Option.getOrUndefined(input.language),
+            cache: Option.getOrUndefined(input.cache),
+            options,
+          }),
         );
       }).pipe(withBridge),
   ).pipe(Command.withDescription("Speak a message on a media player")),
   systemCommand("clear-cache", Tts.clearCache, "Clear the speech cache"),
 ]);
-
-const todoName = entityName("todo");
 
 const todoStatusFlag = Flag.Literals("status", ["needs_action", "completed"]);
 
@@ -2652,16 +2734,16 @@ const todo = domainCommand("todo", undefined, "To-do list actions", [
   Command.make(
     "get",
     {
-      name: todoName,
       status: todoStatusFlag.pipe(
         Flag.withDescription("Only items with this status; repeat for both"),
         Flag.atLeast(0),
       ),
+      target: targetConfig("todo"),
     },
     (input) =>
       printResponse(
         Todo.getItems(
-          `todo.${input.name}`,
+          toTarget("todo", input.target),
           input.status.length > 0 ? input.status : undefined,
         ),
       ).pipe(withBridge),
@@ -2669,30 +2751,30 @@ const todo = domainCommand("todo", undefined, "To-do list actions", [
   Command.make(
     "add",
     {
-      name: todoName,
       item: Argument.String("item").pipe(Argument.withDescription("Item name")),
       ...todoFieldFlags,
+      target: targetConfig("todo"),
     },
-    ({ name, item, ...flags }) =>
+    ({ target, item, ...flags }) =>
       Effect.gen(function* () {
         const fields = yield* decodeData(
           "item",
           decodeTodoItemFields(setFields(flags)),
         );
 
-        yield* callAction(Todo.addItem(`todo.${name}`, item, fields));
+        yield* callAction(Todo.addItem(toTarget("todo", target), item, fields));
       }).pipe(withBridge),
   ).pipe(Command.withDescription("Add an item")),
   Command.make(
     "update",
     {
-      name: todoName,
       item: itemArgument,
       rename: optionalFlag(Flag.String("rename"), "New name"),
       status: optionalFlag(todoStatusFlag, "New status"),
       ...todoFieldFlags,
+      target: targetConfig("todo"),
     },
-    ({ name, item, rename, status, ...flags }) =>
+    ({ target, item, rename, status, ...flags }) =>
       Effect.gen(function* () {
         const fields = yield* decodeData(
           "item",
@@ -2700,7 +2782,7 @@ const todo = domainCommand("todo", undefined, "To-do list actions", [
         );
 
         yield* callAction(
-          Todo.updateItem(`todo.${name}`, item, {
+          Todo.updateItem(toTarget("todo", target), item, {
             ...fields,
             rename: Option.getOrUndefined(rename),
             status: Option.getOrUndefined(status),
@@ -2711,13 +2793,16 @@ const todo = domainCommand("todo", undefined, "To-do list actions", [
   Command.make(
     "remove",
     {
-      name: todoName,
-      items: itemArgument.pipe(Argument.atLeast(1)),
+      items: Flag.String("item").pipe(
+        Flag.withDescription("Item name or UID; repeat for more"),
+        Flag.atLeast(1),
+      ),
+      target: targetConfig("todo"),
     },
     (input) =>
-      callAction(Todo.removeItem(`todo.${input.name}`, input.items)).pipe(
-        withBridge,
-      ),
+      callAction(
+        Todo.removeItem(toTarget("todo", input.target), input.items),
+      ).pipe(withBridge),
   ).pipe(Command.withDescription("Remove items")),
   entityActionCommand(
     "todo",
@@ -2726,8 +2811,6 @@ const todo = domainCommand("todo", undefined, "To-do list actions", [
     "Remove completed items",
   ),
 ]);
-
-const calendarName = entityName("calendar");
 
 const isDateOnly = (value: string) => /^\d{4}-\d{1,2}-\d{1,2}$/.test(value);
 
@@ -2778,11 +2861,11 @@ const calendar = domainCommand("calendar", undefined, "Calendar actions", [
   Command.make(
     "events",
     {
-      name: calendarName,
       days: Flag.Int("days").pipe(
         Flag.withDescription("Days ahead to read, from now"),
         Flag.withDefault(7),
       ),
+      target: targetConfig("calendar"),
     },
     (input) =>
       Effect.gen(function* () {
@@ -2790,18 +2873,16 @@ const calendar = domainCommand("calendar", undefined, "Calendar actions", [
           return yield* failWith("days must be at least 1");
         }
 
-        const entityId: EntityId<"calendar"> = `calendar.${input.name}`;
-
         const start = new Date();
 
         const response = yield* callAction(
-          Calendar.getEvents(entityId, {
+          Calendar.getEvents(toTarget("calendar", input.target), {
             start,
             end: new Date(start.getTime() + input.days * 86_400_000),
           }),
         );
 
-        const events = yield* Calendar.eventsFrom(entityId, response).pipe(
+        const events = yield* Calendar.eventsFrom(response).pipe(
           Effect.mapError(
             (error) => new CommandError({ message: error.message }),
           ),
@@ -2809,11 +2890,14 @@ const calendar = domainCommand("calendar", undefined, "Calendar actions", [
 
         yield* printJson(events);
       }).pipe(withBridge),
-  ).pipe(Command.withDescription("Print upcoming events as JSON")),
+  ).pipe(
+    Command.withDescription(
+      "Print upcoming events as JSON, keyed by calendar entity ID",
+    ),
+  ),
   Command.make(
     "create-event",
     {
-      name: calendarName,
       summary: Argument.String("summary").pipe(
         Argument.withDescription("Event title"),
       ),
@@ -2835,6 +2919,7 @@ const calendar = domainCommand("calendar", undefined, "Calendar actions", [
       ),
       description: optionalFlag(Flag.String("description"), "Description"),
       location: optionalFlag(Flag.String("location"), "Location"),
+      target: targetConfig("calendar"),
     },
     (input) =>
       Effect.gen(function* () {
@@ -2842,7 +2927,7 @@ const calendar = domainCommand("calendar", undefined, "Calendar actions", [
 
         yield* callAction(
           CalendarActions.createEvent(
-            `calendar.${input.name}`,
+            toTarget("calendar", input.target),
             input.summary,
             when,
             {
@@ -2859,15 +2944,15 @@ const weather = domainCommand("weather", undefined, "Weather actions", [
   Command.make(
     "forecast",
     {
-      name: entityName("weather"),
       type: Flag.Literals("type", ["daily", "hourly", "twice_daily"]).pipe(
         Flag.withDescription("Forecast type"),
         Flag.withDefault("daily"),
       ),
+      target: targetConfig("weather"),
     },
     (input) =>
       printResponse(
-        Weather.getForecasts(`weather.${input.name}`, input.type),
+        Weather.getForecasts(toTarget("weather", input.target), input.type),
       ).pipe(withBridge),
   ).pipe(Command.withDescription("Print the forecast as JSON")),
 ]);
@@ -2941,14 +3026,11 @@ const aiTask = domainCommand("ai_task", undefined, "AI task actions", [
     "generate-data",
     {
       ...taskArguments,
-      entity: optionalFlag(
-        Flag.String("entity"),
-        "AI task entity name without ai_task. (default: the preferred one)",
-      ),
       structure: optionalFlag(
         Flag.String("structure"),
         "Output structure as a JSON object of selectors",
       ),
+      target: targetConfig("ai_task"),
     },
     (input) =>
       Effect.gen(function* () {
@@ -2957,14 +3039,16 @@ const aiTask = domainCommand("ai_task", undefined, "AI task actions", [
           parseJsonObject("structure"),
         );
 
+        const target = toTarget("ai_task", input.target);
+
+        // Without a target, Home Assistant uses the preferred AI task entity.
+        const entityId = isEmptyTarget(target)
+          ? undefined
+          : yield* resolveOne("ai_task", target);
+
         yield* printResponse(
           AiTask.generateData(input.taskName, input.instructions, {
-            entityId: Option.getOrUndefined(
-              Option.map(
-                input.entity,
-                (entity): EntityId<"ai_task"> => `ai_task.${entity}`,
-              ),
-            ),
+            entityId,
             structure,
           }),
         );
@@ -2972,15 +3056,18 @@ const aiTask = domainCommand("ai_task", undefined, "AI task actions", [
   ).pipe(Command.withDescription("Generate data and print it as JSON")),
   Command.make(
     "generate-image",
-    { name: entityName("ai_task"), ...taskArguments },
+    { ...taskArguments, target: targetConfig("ai_task") },
     (input) =>
-      printResponse(
-        AiTask.generateImage(
-          `ai_task.${input.name}`,
-          input.taskName,
-          input.instructions,
-        ),
-      ).pipe(withBridge),
+      Effect.gen(function* () {
+        const entityId = yield* resolveOne(
+          "ai_task",
+          toTarget("ai_task", input.target),
+        );
+
+        yield* printResponse(
+          AiTask.generateImage(entityId, input.taskName, input.instructions),
+        );
+      }).pipe(withBridge),
   ).pipe(Command.withDescription("Generate an image and print its details")),
 ]);
 
@@ -3131,7 +3218,8 @@ type EntityOutputOptions = Command.Command.Config.Infer<
   typeof entityOutputFlags
 >;
 
-// Checks the output flags and returns how to print each entity update.
+// Plain text, bar JSON and one --field without --json describe one entity;
+// --json and several fields print objects keyed by entity ID.
 const entityFormatter = ({
   json,
   fields,
@@ -3147,29 +3235,73 @@ const entityFormatter = ({
       return yield* failWith("use --text or --icon, not both");
     }
 
-    return (update: EntityUpdate) => {
-      if (barJson) {
-        return entityBar(update.state, update.name, options);
-      }
+    const [onlyField] = fields;
+    const keyed = json || fields.length > 1;
 
-      if (fields.length > 0) {
-        return entityFields(update.state, update.name, fields, json);
-      }
+    return {
+      keyed,
+      line: (update: EntityUpdate) => {
+        if (barJson) {
+          return entityBar(update.state, update.name, options);
+        }
 
-      return json ? JSON.stringify(update) : update.state.state;
+        return onlyField === undefined
+          ? update.state.state
+          : entityField(update.state, update.name, onlyField);
+      },
+      value: (update: EntityUpdate): Schema.Json =>
+        fields.length > 0
+          ? entityFieldValues(update.state, update.name, fields)
+          : update,
     };
   });
 
-const entityIdArgument = (description: string) =>
-  Argument.String("entity_id").pipe(Argument.withDescription(description));
+const keyedByEntity = (
+  updates: ReadonlyArray<EntityUpdate>,
+  value: (update: EntityUpdate) => Schema.Json,
+) =>
+  JSON.stringify(
+    Object.fromEntries(
+      updates.map((update) => [update.state.entity_id, value(update)]),
+    ),
+  );
 
-const watchEntity = Command.make(
-  "entity",
-  {
-    entityId: entityIdArgument("Entity to watch, for example light.office"),
-    ...entityOutputFlags,
-  },
-  ({ entityId, ...output }) =>
+// Drops lines that repeat the entity's previous line.
+const changedPerEntity = <E, R>(
+  lines: Stream.Stream<readonly [entityId: string, line: string], E, R>,
+) =>
+  Stream.unwrap(
+    Effect.sync(() => {
+      const previous = new Map<string, string>();
+
+      return lines.pipe(
+        Stream.filter(([entityId, line]) => {
+          if (previous.get(entityId) === line) {
+            return false;
+          }
+
+          previous.set(entityId, line);
+
+          return true;
+        }),
+        Stream.map(([, line]) => line),
+      );
+    }),
+  );
+
+const entityReadConfig = {
+  domain: optionalFlag(
+    Flag.String("domain"),
+    "Only entities in this domain, such as light",
+  ),
+  ...entityOutputFlags,
+  target: targetConfig(undefined),
+};
+
+const watch = Command.make(
+  "watch",
+  entityReadConfig,
+  ({ domain, target, ...output }) =>
     Effect.gen(function* () {
       const format = yield* entityFormatter(output);
 
@@ -3179,51 +3311,78 @@ const watchEntity = Command.make(
         );
       }
 
-      const client = yield* BridgeClient;
-      yield* client.WatchEntity({ entityId }).pipe(
-        Stream.map(format),
-        Stream.changes,
+      const updates = watchUpdates(
+        toTarget(undefined, target),
+        Option.getOrUndefined(domain),
+      );
+
+      yield* (
+        format.keyed
+          ? updates.pipe(
+              Stream.map(
+                (update) =>
+                  [
+                    update.state.entity_id,
+                    keyedByEntity([update], format.value),
+                  ] as const,
+              ),
+            )
+          : updates.pipe(
+              singleEntity,
+              Stream.map(
+                (update) =>
+                  [update.state.entity_id, format.line(update)] as const,
+              ),
+            )
+      ).pipe(
+        changedPerEntity,
         Stream.runForEach((line) => Console.log(line)),
       );
     }).pipe(withBridge),
 ).pipe(
-  Command.withAlias("e"),
-  Command.withDescription("Print an entity's state now and on every change"),
-);
-
-const watch = Command.make("watch").pipe(
   Command.withAlias("w"),
-  Command.withDescription("Watch entities through the bridge"),
-  Command.withSubcommands([watchEntity]),
+  Command.withDescription(
+    "Print the state of every entity a target matches now and on every change",
+  ),
 );
 
-const getEntity = Command.make(
-  "entity",
-  {
-    entityId: entityIdArgument("Entity to read, for example light.office"),
-    ...entityOutputFlags,
-  },
-  ({ entityId, ...output }) =>
+const get = Command.make(
+  "get",
+  entityReadConfig,
+  ({ domain, target, ...output }) =>
     Effect.gen(function* () {
       const format = yield* entityFormatter(output);
-      const client = yield* BridgeClient;
-      const update = yield* client.GetEntity({ entityId });
 
-      if (update === null) {
-        return yield* failWith(`entity ${entityId} not found`);
+      const updates = yield* getEntities(
+        toTarget(undefined, target),
+        Option.getOrUndefined(domain),
+      );
+
+      if (format.keyed) {
+        yield* Console.log(keyedByEntity(updates, format.value));
+
+        return;
       }
 
-      yield* Console.log(format(update));
+      const update = yield* exactlyOne(
+        updates,
+        ({ state }) => state.entity_id,
+      ).pipe(
+        Effect.mapError(
+          (error) =>
+            new CommandError({
+              message: `${error.message}; use --json or several --field flags for more than one`,
+            }),
+        ),
+      );
+
+      yield* Console.log(format.line(update));
     }).pipe(withBridge),
 ).pipe(
-  Command.withAlias("e"),
-  Command.withDescription("Print an entity's current state once"),
-);
-
-const get = Command.make("get").pipe(
   Command.withAlias("g"),
-  Command.withDescription("Read entities through the bridge"),
-  Command.withSubcommands([getEntity]),
+  Command.withDescription(
+    "Print the state of every entity a target matches once",
+  ),
 );
 
 const reportCliCause = (cause: Cause.Cause<unknown>) => {

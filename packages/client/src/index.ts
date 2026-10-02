@@ -9,3 +9,5 @@ export * from "./Rpcs.js";
 export * from "./Search.js";
 
 export * from "./socketPath.js";
+
+export * from "./Target.js";

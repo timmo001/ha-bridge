@@ -87,25 +87,20 @@ const renderTemplate = (template: string, source: Schema.Json) =>
     fieldText(fieldValue(source, path)),
   );
 
-// One field without --json prints the raw value; otherwise an object keyed by
-// path, with null for missing paths so every requested key is present.
-export const entityFields = (
+// One field's raw text, with objects and lists as JSON.
+export const entityField = (state: EntityState, name: string, path: string) =>
+  fieldText(fieldValue(fieldSource(state, name), path));
+
+// Every requested path, with null for missing ones so each key is present.
+export const entityFieldValues = (
   state: EntityState,
   name: string,
   paths: ReadonlyArray<string>,
-  json: boolean,
-) => {
+): Record<string, Schema.Json> => {
   const source = fieldSource(state, name);
-  const [only, ...rest] = paths;
 
-  if (!json && only !== undefined && rest.length === 0) {
-    return fieldText(fieldValue(source, only));
-  }
-
-  return JSON.stringify(
-    Object.fromEntries(
-      paths.map((path) => [path, fieldValue(source, path) ?? null]),
-    ),
+  return Object.fromEntries(
+    paths.map((path) => [path, fieldValue(source, path) ?? null]),
   );
 };
 

@@ -4,6 +4,11 @@ import type { Action } from "./Action.js";
 import { EntityState } from "./Entity.js";
 import { HomeAssistantConfig } from "./HomeAssistantConfig.js";
 import { HomeAssistantError } from "./HomeAssistantError.js";
+import {
+  ExtractedTarget,
+  type ExtractTargetOptions,
+  type Target,
+} from "./Target.js";
 
 const AuthMessage = Schema.Struct({
   type: Schema.Literals(["auth_required", "auth_ok", "auth_invalid"]),
@@ -44,9 +49,16 @@ export type HomeAssistantCommand =
         | "config/entity_registry/list_for_display"
         | "config/device_registry/list"
         | "config/area_registry/list"
-        | "config/floor_registry/list";
+        | "config/floor_registry/list"
+        | "config/label_registry/list";
     }
   | { readonly type: "subscribe_events"; readonly event_type: string }
+  | {
+      readonly type: "extract_from_target";
+      readonly target: Target;
+      readonly expand_group?: boolean | undefined;
+      readonly primary_entities_only?: boolean | undefined;
+    }
   | {
       readonly type: "call_service";
       readonly domain: string;
@@ -70,11 +82,19 @@ export interface HomeAssistantSession {
     action: Action,
   ) => Effect.Effect<Schema.Json | null, HomeAssistantError>;
   readonly getConfig: Effect.Effect<HomeAssistantConfig, HomeAssistantError>;
+  // What the target refers to, expanded by Home Assistant. Names aren't
+  // resolved; every field must hold IDs.
+  readonly extractTarget: (
+    target: Target,
+    options?: ExtractTargetOptions,
+  ) => Effect.Effect<ExtractedTarget, HomeAssistantError>;
   // Fails once the connection is lost; never succeeds.
   readonly closed: Effect.Effect<never, HomeAssistantError>;
 }
 
 const decodeConfig = Schema.decodeUnknownEffect(HomeAssistantConfig);
+
+const decodeExtractedTarget = Schema.decodeUnknownEffect(ExtractedTarget);
 
 const decodeActionResult = Schema.decodeUnknownEffect(
   Schema.Struct({ response: Schema.optionalKey(Schema.Json) }),
@@ -270,10 +290,27 @@ export const connect = Effect.fn("HomeAssistant.connect")(function* (options: {
     ),
   );
 
+  const extractTarget = Effect.fn("HomeAssistant.extractTarget")(function* (
+    target: Target,
+    extract?: ExtractTargetOptions,
+  ) {
+    const result = yield* request({
+      type: "extract_from_target",
+      target,
+      expand_group: extract?.expandGroup,
+      primary_entities_only: extract?.primaryEntitiesOnly,
+    });
+
+    return yield* decodeExtractedTarget(result).pipe(
+      Effect.mapError(failWith("decode extracted target")),
+    );
+  });
+
   return {
     request,
     callAction,
     getConfig,
+    extractTarget,
     closed,
   } satisfies HomeAssistantSession;
 });

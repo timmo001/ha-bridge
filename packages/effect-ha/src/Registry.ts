@@ -22,3 +22,13 @@ export const FloorRegistry = Schema.Array(
 );
 
 export type FloorRegistry = typeof FloorRegistry.Type;
+
+// `config/label_registry/list`
+export const LabelRegistry = Schema.Array(
+  Schema.Struct({
+    label_id: Schema.String,
+    name: Schema.String,
+  }),
+);
+
+export type LabelRegistry = typeof LabelRegistry.Type;

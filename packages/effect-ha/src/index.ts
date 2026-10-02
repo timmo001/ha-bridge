@@ -15,3 +15,5 @@ export * from "./HomeAssistantError.js";
 export * from "./naming.js";
 
 export * from "./Registry.js";
+
+export * from "./Target.js";

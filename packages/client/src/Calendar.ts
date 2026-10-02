@@ -1,17 +1,15 @@
 import { Effect } from "effect";
-import { Calendar, type EntityId } from "@timmo001/effect-ha";
+import { Calendar, type Target } from "@timmo001/effect-ha";
 import { BridgeClient } from "./BridgeClient.js";
 
-// Events on a calendar that overlap the range, via the bridge.
+// Events that overlap the range, keyed by calendar entity ID, via the bridge.
 export const getCalendarEvents = Effect.fn("getCalendarEvents")(function* (
-  entityId: EntityId<"calendar">,
+  target: Target,
   range: { readonly start: Date; readonly end: Date },
 ) {
   const client = yield* BridgeClient;
 
-  const response = yield* client.CallAction(
-    Calendar.getEvents(entityId, range),
-  );
+  const response = yield* client.CallAction(Calendar.getEvents(target, range));
 
-  return yield* Calendar.eventsFrom(entityId, response);
+  return yield* Calendar.eventsFrom(response);
 });

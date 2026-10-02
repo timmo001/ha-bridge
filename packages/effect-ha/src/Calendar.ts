@@ -1,6 +1,7 @@
 import { Effect, Schema } from "effect";
-import type { Action, EntityId } from "./Action.js";
+import type { Action } from "./Action.js";
 import { HomeAssistantError } from "./HomeAssistantError.js";
+import type { Target } from "./Target.js";
 
 // `start` and `end` are ISO dates for all-day events, date-times otherwise.
 export const CalendarEvent = Schema.Struct({
@@ -23,7 +24,7 @@ const decodeResponse = Schema.decodeUnknownEffect(CalendarEventsResponse);
 export const Calendar = {
   // `calendar.get_events` for the events that overlap the range.
   getEvents: (
-    entityId: EntityId<"calendar">,
+    target: Target,
     range: { readonly start: Date; readonly end: Date },
   ): Action => ({
     action: "calendar.get_events",
@@ -31,13 +32,21 @@ export const Calendar = {
       start_date_time: range.start.toISOString(),
       end_date_time: range.end.toISOString(),
     },
-    target: { entity_id: entityId },
+    target,
     return_response: true,
   }),
-  // Reads one calendar's events from a `calendar.get_events` response.
-  eventsFrom: (entityId: EntityId<"calendar">, response: Schema.Json | null) =>
+  // Reads each calendar's events, keyed by entity ID, from a
+  // `calendar.get_events` response.
+  eventsFrom: (response: Schema.Json | null) =>
     decodeResponse(response).pipe(
-      Effect.map((calendars) => calendars[entityId]?.events ?? []),
+      Effect.map((calendars) =>
+        Object.fromEntries(
+          Object.entries(calendars).map(([entityId, { events }]) => [
+            entityId,
+            events,
+          ]),
+        ),
+      ),
       Effect.mapError(
         (error) =>
           new HomeAssistantError({

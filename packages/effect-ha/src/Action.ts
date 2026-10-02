@@ -1,18 +1,6 @@
 import { Effect, Schema } from "effect";
 import { HomeAssistantError } from "./HomeAssistantError.js";
-
-const Ids = Schema.Union([Schema.String, Schema.Array(Schema.String)]);
-
-// What an action applies to, as in Home Assistant's action targets.
-export const Target = Schema.Struct({
-  entity_id: Schema.optionalKey(Ids),
-  device_id: Schema.optionalKey(Ids),
-  area_id: Schema.optionalKey(Ids),
-  floor_id: Schema.optionalKey(Ids),
-  label_id: Schema.optionalKey(Ids),
-});
-
-export type Target = typeof Target.Type;
+import { Target } from "./Target.js";
 
 // A Home Assistant action, such as `light.turn_on`, in the shape automations use.
 export const Action = Schema.Struct({
@@ -25,6 +13,11 @@ export const Action = Schema.Struct({
 export type Action = typeof Action.Type;
 
 export type EntityId<Domain extends string> = `${Domain}.${string}`;
+
+export const isEntityIdIn =
+  <const Domain extends string>(domain: Domain) =>
+  (entityId: string): entityId is EntityId<Domain> =>
+    entityId.startsWith(`${domain}.`);
 
 type ActionData = Readonly<Record<string, Schema.Json | undefined>>;
 
@@ -48,9 +41,6 @@ const onDomain = (action: string, data?: ActionData): Action => {
   return fields === undefined ? { action } : { action, data: fields };
 };
 
-const onEntity = (action: string, entityId: string, data?: ActionData) =>
-  onTarget(action, { entity_id: entityId }, data);
-
 const definedFields = (data: ActionData | undefined) => {
   const fields: Record<string, Schema.Json> = {};
 
@@ -63,13 +53,10 @@ const definedFields = (data: ActionData | undefined) => {
   return Object.keys(fields).length === 0 ? undefined : fields;
 };
 
-const switchable = <const Domain extends string>(domain: Domain) => ({
-  turnOn: (entityId: EntityId<Domain>) =>
-    onEntity(`${domain}.turn_on`, entityId),
-  turnOff: (entityId: EntityId<Domain>) =>
-    onEntity(`${domain}.turn_off`, entityId),
-  toggle: (entityId: EntityId<Domain>) =>
-    onEntity(`${domain}.toggle`, entityId),
+const switchable = (domain: string) => ({
+  turnOn: (target: Target) => onTarget(`${domain}.turn_on`, target),
+  turnOff: (target: Target) => onTarget(`${domain}.turn_off`, target),
+  toggle: (target: Target) => onTarget(`${domain}.toggle`, target),
 });
 
 // Reloads a helper domain's YAML configuration.
@@ -179,24 +166,22 @@ export const LightTurnOnData = LightTurnOnFields.check(
 export type LightTurnOnData = typeof LightTurnOnData.Type;
 
 export const Light = {
-  turnOn: (entityId: EntityId<"light">, data?: LightTurnOnData) =>
-    onEntity("light.turn_on", entityId, data),
-  turnOff: (entityId: EntityId<"light">, data?: LightTurnOffData) =>
-    onEntity("light.turn_off", entityId, data),
-  toggle: (entityId: EntityId<"light">, data?: LightTurnOnData) =>
-    onEntity("light.toggle", entityId, data),
+  turnOn: (target: Target, data?: LightTurnOnData) =>
+    onTarget("light.turn_on", target, data),
+  turnOff: (target: Target, data?: LightTurnOffData) =>
+    onTarget("light.turn_off", target, data),
+  toggle: (target: Target, data?: LightTurnOnData) =>
+    onTarget("light.toggle", target, data),
 };
 
 export const Switch = switchable("switch");
 
 export const InputNumber = {
   reload: reload("input_number"),
-  setValue: (entityId: EntityId<"input_number">, value: number) =>
-    onEntity("input_number.set_value", entityId, { value }),
-  increment: (entityId: EntityId<"input_number">) =>
-    onEntity("input_number.increment", entityId),
-  decrement: (entityId: EntityId<"input_number">) =>
-    onEntity("input_number.decrement", entityId),
+  setValue: (target: Target, value: number) =>
+    onTarget("input_number.set_value", target, { value }),
+  increment: (target: Target) => onTarget("input_number.increment", target),
+  decrement: (target: Target) => onTarget("input_number.decrement", target),
 };
 
 // `speed` must be one of the cover's `supported_speeds`.
@@ -205,31 +190,23 @@ export interface CoverMoveOptions {
 }
 
 export const Cover = {
-  open: (entityId: EntityId<"cover">, options?: CoverMoveOptions) =>
-    onEntity("cover.open_cover", entityId, { speed: options?.speed }),
-  close: (entityId: EntityId<"cover">, options?: CoverMoveOptions) =>
-    onEntity("cover.close_cover", entityId, { speed: options?.speed }),
-  toggle: (entityId: EntityId<"cover">) => onEntity("cover.toggle", entityId),
-  stop: (entityId: EntityId<"cover">) => onEntity("cover.stop_cover", entityId),
-  setPosition: (
-    entityId: EntityId<"cover">,
-    position: number,
-    options?: CoverMoveOptions,
-  ) =>
-    onEntity("cover.set_cover_position", entityId, {
+  open: (target: Target, options?: CoverMoveOptions) =>
+    onTarget("cover.open_cover", target, { speed: options?.speed }),
+  close: (target: Target, options?: CoverMoveOptions) =>
+    onTarget("cover.close_cover", target, { speed: options?.speed }),
+  toggle: (target: Target) => onTarget("cover.toggle", target),
+  stop: (target: Target) => onTarget("cover.stop_cover", target),
+  setPosition: (target: Target, position: number, options?: CoverMoveOptions) =>
+    onTarget("cover.set_cover_position", target, {
       position,
       speed: options?.speed,
     }),
-  openTilt: (entityId: EntityId<"cover">) =>
-    onEntity("cover.open_cover_tilt", entityId),
-  closeTilt: (entityId: EntityId<"cover">) =>
-    onEntity("cover.close_cover_tilt", entityId),
-  toggleTilt: (entityId: EntityId<"cover">) =>
-    onEntity("cover.toggle_cover_tilt", entityId),
-  stopTilt: (entityId: EntityId<"cover">) =>
-    onEntity("cover.stop_cover_tilt", entityId),
-  setTiltPosition: (entityId: EntityId<"cover">, tiltPosition: number) =>
-    onEntity("cover.set_cover_tilt_position", entityId, {
+  openTilt: (target: Target) => onTarget("cover.open_cover_tilt", target),
+  closeTilt: (target: Target) => onTarget("cover.close_cover_tilt", target),
+  toggleTilt: (target: Target) => onTarget("cover.toggle_cover_tilt", target),
+  stopTilt: (target: Target) => onTarget("cover.stop_cover_tilt", target),
+  setTiltPosition: (target: Target, tiltPosition: number) =>
+    onTarget("cover.set_cover_tilt_position", target, {
       tilt_position: tiltPosition,
     }),
 };
@@ -284,25 +261,20 @@ export type ClimateSetTemperatureData = typeof ClimateSetTemperatureData.Type;
 // `min_humidity` and `max_humidity`.
 export const Climate = {
   ...switchable("climate"),
-  setHvacMode: (entityId: EntityId<"climate">, hvacMode: HvacMode) =>
-    onEntity("climate.set_hvac_mode", entityId, { hvac_mode: hvacMode }),
-  setTemperature: (
-    entityId: EntityId<"climate">,
-    data: ClimateSetTemperatureData,
-  ) => onEntity("climate.set_temperature", entityId, data),
-  setHumidity: (entityId: EntityId<"climate">, humidity: number) =>
-    onEntity("climate.set_humidity", entityId, { humidity }),
-  setPresetMode: (entityId: EntityId<"climate">, presetMode: string) =>
-    onEntity("climate.set_preset_mode", entityId, { preset_mode: presetMode }),
-  setFanMode: (entityId: EntityId<"climate">, fanMode: string) =>
-    onEntity("climate.set_fan_mode", entityId, { fan_mode: fanMode }),
-  setSwingMode: (entityId: EntityId<"climate">, swingMode: string) =>
-    onEntity("climate.set_swing_mode", entityId, { swing_mode: swingMode }),
-  setSwingHorizontalMode: (
-    entityId: EntityId<"climate">,
-    swingHorizontalMode: string,
-  ) =>
-    onEntity("climate.set_swing_horizontal_mode", entityId, {
+  setHvacMode: (target: Target, hvacMode: HvacMode) =>
+    onTarget("climate.set_hvac_mode", target, { hvac_mode: hvacMode }),
+  setTemperature: (target: Target, data: ClimateSetTemperatureData) =>
+    onTarget("climate.set_temperature", target, data),
+  setHumidity: (target: Target, humidity: number) =>
+    onTarget("climate.set_humidity", target, { humidity }),
+  setPresetMode: (target: Target, presetMode: string) =>
+    onTarget("climate.set_preset_mode", target, { preset_mode: presetMode }),
+  setFanMode: (target: Target, fanMode: string) =>
+    onTarget("climate.set_fan_mode", target, { fan_mode: fanMode }),
+  setSwingMode: (target: Target, swingMode: string) =>
+    onTarget("climate.set_swing_mode", target, { swing_mode: swingMode }),
+  setSwingHorizontalMode: (target: Target, swingHorizontalMode: string) =>
+    onTarget("climate.set_swing_horizontal_mode", target, {
       swing_horizontal_mode: swingHorizontalMode,
     }),
 };
@@ -441,46 +413,39 @@ export interface CameraRecordOptions {
 // `allowlist_external_dirs`. `filename` is a template, so it can use values
 // such as `{{ entity_id.name }}`.
 export const Camera = {
-  turnOn: (entityId: EntityId<"camera">) =>
-    onEntity("camera.turn_on", entityId),
-  turnOff: (entityId: EntityId<"camera">) =>
-    onEntity("camera.turn_off", entityId),
-  enableMotionDetection: (entityId: EntityId<"camera">) =>
-    onEntity("camera.enable_motion_detection", entityId),
-  disableMotionDetection: (entityId: EntityId<"camera">) =>
-    onEntity("camera.disable_motion_detection", entityId),
-  snapshot: (entityId: EntityId<"camera">, filename: string) =>
-    onEntity("camera.snapshot", entityId, { filename }),
-  record: (
-    entityId: EntityId<"camera">,
-    filename: string,
-    options?: CameraRecordOptions,
-  ) =>
-    onEntity("camera.record", entityId, {
+  turnOn: (target: Target) => onTarget("camera.turn_on", target),
+  turnOff: (target: Target) => onTarget("camera.turn_off", target),
+  enableMotionDetection: (target: Target) =>
+    onTarget("camera.enable_motion_detection", target),
+  disableMotionDetection: (target: Target) =>
+    onTarget("camera.disable_motion_detection", target),
+  snapshot: (target: Target, filename: string) =>
+    onTarget("camera.snapshot", target, { filename }),
+  record: (target: Target, filename: string, options?: CameraRecordOptions) =>
+    onTarget("camera.record", target, {
       filename,
       duration: options?.duration,
       lookback: options?.lookback,
     }),
   // Plays the camera's stream on media players. HLS is the only format.
   playStream: (
-    entityId: EntityId<"camera">,
+    target: Target,
     mediaPlayer:
       EntityId<"media_player"> | ReadonlyArray<EntityId<"media_player">>,
     format?: "hls",
   ) =>
-    onEntity("camera.play_stream", entityId, {
+    onTarget("camera.play_stream", target, {
       media_player: mediaPlayer,
       format,
     }),
 };
 
 export const Button = {
-  press: (entityId: EntityId<"button">) => onEntity("button.press", entityId),
+  press: (target: Target) => onTarget("button.press", target),
 };
 
 export const InputButton = {
-  press: (entityId: EntityId<"input_button">) =>
-    onEntity("input_button.press", entityId),
+  press: (target: Target) => onTarget("input_button.press", target),
   reload: reload("input_button"),
 };
 
@@ -490,23 +455,22 @@ export interface LockOptions {
 }
 
 export const Lock = {
-  lock: (entityId: EntityId<"lock">, options?: LockOptions) =>
-    onEntity("lock.lock", entityId, { code: options?.code }),
-  unlock: (entityId: EntityId<"lock">, options?: LockOptions) =>
-    onEntity("lock.unlock", entityId, { code: options?.code }),
-  open: (entityId: EntityId<"lock">, options?: LockOptions) =>
-    onEntity("lock.open", entityId, { code: options?.code }),
+  lock: (target: Target, options?: LockOptions) =>
+    onTarget("lock.lock", target, { code: options?.code }),
+  unlock: (target: Target, options?: LockOptions) =>
+    onTarget("lock.unlock", target, { code: options?.code }),
+  open: (target: Target, options?: LockOptions) =>
+    onTarget("lock.open", target, { code: options?.code }),
 };
 
 export const Valve = {
-  open: (entityId: EntityId<"valve">) => onEntity("valve.open_valve", entityId),
-  close: (entityId: EntityId<"valve">) =>
-    onEntity("valve.close_valve", entityId),
-  toggle: (entityId: EntityId<"valve">) => onEntity("valve.toggle", entityId),
-  stop: (entityId: EntityId<"valve">) => onEntity("valve.stop_valve", entityId),
+  open: (target: Target) => onTarget("valve.open_valve", target),
+  close: (target: Target) => onTarget("valve.close_valve", target),
+  toggle: (target: Target) => onTarget("valve.toggle", target),
+  stop: (target: Target) => onTarget("valve.stop_valve", target),
   // `position` is 0 to 100.
-  setPosition: (entityId: EntityId<"valve">, position: number) =>
-    onEntity("valve.set_valve_position", entityId, { position }),
+  setPosition: (target: Target, position: number) =>
+    onTarget("valve.set_valve_position", target, { position }),
 };
 
 // `siren.turn_on` data. `tone` is one of the siren's `available_tones`.
@@ -522,8 +486,8 @@ export type SirenTurnOnData = typeof SirenTurnOnData.Type;
 
 export const Siren = {
   ...switchable("siren"),
-  turnOn: (entityId: EntityId<"siren">, data?: SirenTurnOnData) =>
-    onEntity("siren.turn_on", entityId, data),
+  turnOn: (target: Target, data?: SirenTurnOnData) =>
+    onTarget("siren.turn_on", target, data),
 };
 
 const NonNegativeInt = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
@@ -555,20 +519,18 @@ export type RemoteLearnCommandData = typeof RemoteLearnCommandData.Type;
 export const Remote = {
   ...switchable("remote"),
   // `activity` is one of the remote's `activity_list`.
-  turnOn: (
-    entityId: EntityId<"remote">,
-    options?: { readonly activity?: string },
-  ) => onEntity("remote.turn_on", entityId, { activity: options?.activity }),
-  sendCommand: (entityId: EntityId<"remote">, data: RemoteSendCommandData) =>
-    onEntity("remote.send_command", entityId, data),
-  learnCommand: (entityId: EntityId<"remote">, data?: RemoteLearnCommandData) =>
-    onEntity("remote.learn_command", entityId, data),
+  turnOn: (target: Target, options?: { readonly activity?: string }) =>
+    onTarget("remote.turn_on", target, { activity: options?.activity }),
+  sendCommand: (target: Target, data: RemoteSendCommandData) =>
+    onTarget("remote.send_command", target, data),
+  learnCommand: (target: Target, data?: RemoteLearnCommandData) =>
+    onTarget("remote.learn_command", target, data),
   deleteCommand: (
-    entityId: EntityId<"remote">,
+    target: Target,
     command: ReadonlyArray<string>,
     options?: { readonly device?: string },
   ) =>
-    onEntity("remote.delete_command", entityId, {
+    onTarget("remote.delete_command", target, {
       command,
       device: options?.device,
     }),
@@ -580,17 +542,15 @@ export interface SelectStepOptions {
   readonly cycle?: boolean;
 }
 
-const selectable = <const Domain extends string>(domain: Domain) => ({
-  selectOption: (entityId: EntityId<Domain>, option: string) =>
-    onEntity(`${domain}.select_option`, entityId, { option }),
-  selectFirst: (entityId: EntityId<Domain>) =>
-    onEntity(`${domain}.select_first`, entityId),
-  selectLast: (entityId: EntityId<Domain>) =>
-    onEntity(`${domain}.select_last`, entityId),
-  selectNext: (entityId: EntityId<Domain>, options?: SelectStepOptions) =>
-    onEntity(`${domain}.select_next`, entityId, { cycle: options?.cycle }),
-  selectPrevious: (entityId: EntityId<Domain>, options?: SelectStepOptions) =>
-    onEntity(`${domain}.select_previous`, entityId, { cycle: options?.cycle }),
+const selectable = (domain: string) => ({
+  selectOption: (target: Target, option: string) =>
+    onTarget(`${domain}.select_option`, target, { option }),
+  selectFirst: (target: Target) => onTarget(`${domain}.select_first`, target),
+  selectLast: (target: Target) => onTarget(`${domain}.select_last`, target),
+  selectNext: (target: Target, options?: SelectStepOptions) =>
+    onTarget(`${domain}.select_next`, target, { cycle: options?.cycle }),
+  selectPrevious: (target: Target, options?: SelectStepOptions) =>
+    onTarget(`${domain}.select_previous`, target, { cycle: options?.cycle }),
 });
 
 export const Select = selectable("select");
@@ -598,28 +558,26 @@ export const Select = selectable("select");
 export const InputSelect = {
   ...selectable("input_select"),
   // Replaces the options until Home Assistant restarts or reloads.
-  setOptions: (
-    entityId: EntityId<"input_select">,
-    options: readonly [string, ...Array<string>],
-  ) => onEntity("input_select.set_options", entityId, { options }),
+  setOptions: (target: Target, options: readonly [string, ...Array<string>]) =>
+    onTarget("input_select.set_options", target, { options }),
   reload: reload("input_select"),
 };
 
 // Core checks `value` against the entity's `min`, `max` and `step`.
 export const NumberEntity = {
-  setValue: (entityId: EntityId<"number">, value: number) =>
-    onEntity("number.set_value", entityId, { value }),
+  setValue: (target: Target, value: number) =>
+    onTarget("number.set_value", target, { value }),
 };
 
 // Core checks `value` against the entity's `min`, `max` and `pattern`.
 export const Text = {
-  setValue: (entityId: EntityId<"text">, value: string) =>
-    onEntity("text.set_value", entityId, { value }),
+  setValue: (target: Target, value: string) =>
+    onTarget("text.set_value", target, { value }),
 };
 
 export const InputText = {
-  setValue: (entityId: EntityId<"input_text">, value: string) =>
-    onEntity("input_text.set_value", entityId, { value }),
+  setValue: (target: Target, value: string) =>
+    onTarget("input_text.set_value", target, { value }),
   reload: reload("input_text"),
 };
 
@@ -646,18 +604,18 @@ export const DateTimeString = Schema.String.check(
 );
 
 export const DateEntity = {
-  setValue: (entityId: EntityId<"date">, date: string) =>
-    onEntity("date.set_value", entityId, { date }),
+  setValue: (target: Target, date: string) =>
+    onTarget("date.set_value", target, { date }),
 };
 
 export const TimeEntity = {
-  setValue: (entityId: EntityId<"time">, time: string) =>
-    onEntity("time.set_value", entityId, { time }),
+  setValue: (target: Target, time: string) =>
+    onTarget("time.set_value", target, { time }),
 };
 
 export const DateTimeEntity = {
-  setValue: (entityId: EntityId<"datetime">, datetime: string) =>
-    onEntity("datetime.set_value", entityId, { datetime }),
+  setValue: (target: Target, datetime: string) =>
+    onTarget("datetime.set_value", target, { datetime }),
 };
 
 const InputDateTimeSetFields = Schema.Struct({
@@ -689,22 +647,18 @@ export const InputDateTimeSetData = InputDateTimeSetFields.check(
 export type InputDateTimeSetData = typeof InputDateTimeSetData.Type;
 
 export const InputDateTime = {
-  setDateTime: (
-    entityId: EntityId<"input_datetime">,
-    data: InputDateTimeSetData,
-  ) => onEntity("input_datetime.set_datetime", entityId, data),
+  setDateTime: (target: Target, data: InputDateTimeSetData) =>
+    onTarget("input_datetime.set_datetime", target, data),
   reload: reload("input_datetime"),
 };
 
 export const Counter = {
-  increment: (entityId: EntityId<"counter">) =>
-    onEntity("counter.increment", entityId),
-  decrement: (entityId: EntityId<"counter">) =>
-    onEntity("counter.decrement", entityId),
-  reset: (entityId: EntityId<"counter">) => onEntity("counter.reset", entityId),
+  increment: (target: Target) => onTarget("counter.increment", target),
+  decrement: (target: Target) => onTarget("counter.decrement", target),
+  reset: (target: Target) => onTarget("counter.reset", target),
   // `value` is a whole number within the counter's `minimum` and `maximum`.
-  setValue: (entityId: EntityId<"counter">, value: number) =>
-    onEntity("counter.set_value", entityId, { value }),
+  setValue: (target: Target, value: number) =>
+    onTarget("counter.set_value", target, { value }),
 };
 
 // Values passed to a script as `variables`.
@@ -712,11 +666,10 @@ export type ScriptVariables = Readonly<Record<string, Schema.Json>>;
 
 export const Script = {
   // Starts the script without waiting for it to finish.
-  turnOn: (entityId: EntityId<"script">, variables?: ScriptVariables) =>
-    onEntity("script.turn_on", entityId, { variables }),
-  turnOff: (entityId: EntityId<"script">) =>
-    onEntity("script.turn_off", entityId),
-  toggle: (entityId: EntityId<"script">) => onEntity("script.toggle", entityId),
+  turnOn: (target: Target, variables?: ScriptVariables) =>
+    onTarget("script.turn_on", target, { variables }),
+  turnOff: (target: Target) => onTarget("script.turn_off", target),
+  toggle: (target: Target) => onTarget("script.toggle", target),
   // Runs the script through its own action and waits for it to finish. The
   // response is whatever the script returns with a `stop` action.
   run: (entityId: EntityId<"script">, variables?: ScriptVariables): Action => ({
@@ -727,26 +680,18 @@ export const Script = {
 };
 
 export const Automation = {
-  turnOn: (entityId: EntityId<"automation">) =>
-    onEntity("automation.turn_on", entityId),
+  turnOn: (target: Target) => onTarget("automation.turn_on", target),
   // `stopActions: false` lets running actions finish; Core stops them by
   // default.
-  turnOff: (
-    entityId: EntityId<"automation">,
-    options?: { readonly stopActions?: boolean },
-  ) =>
-    onEntity("automation.turn_off", entityId, {
+  turnOff: (target: Target, options?: { readonly stopActions?: boolean }) =>
+    onTarget("automation.turn_off", target, {
       stop_actions: options?.stopActions,
     }),
-  toggle: (entityId: EntityId<"automation">) =>
-    onEntity("automation.toggle", entityId),
+  toggle: (target: Target) => onTarget("automation.toggle", target),
   // Runs the actions. `skipCondition: false` checks the conditions first;
   // Core skips them by default.
-  trigger: (
-    entityId: EntityId<"automation">,
-    options?: { readonly skipCondition?: boolean },
-  ) =>
-    onEntity("automation.trigger", entityId, {
+  trigger: (target: Target, options?: { readonly skipCondition?: boolean }) =>
+    onTarget("automation.trigger", target, {
       skip_condition: options?.skipCondition,
     }),
   reload: reload("automation"),
@@ -785,14 +730,14 @@ export interface SceneTransitionOptions {
 }
 
 export const Scene = {
-  turnOn: (entityId: EntityId<"scene">, options?: SceneTransitionOptions) =>
-    onEntity("scene.turn_on", entityId, { transition: options?.transition }),
+  turnOn: (target: Target, options?: SceneTransitionOptions) =>
+    onTarget("scene.turn_on", target, { transition: options?.transition }),
   // Sets entity states without creating a scene.
   apply: (entities: SceneEntities, options?: SceneTransitionOptions) =>
     onDomain("scene.apply", { entities, transition: options?.transition }),
   create: (data: SceneCreateData) => onDomain("scene.create", data),
   // Deletes a scene made with `create`.
-  delete: (entityId: EntityId<"scene">) => onEntity("scene.delete", entityId),
+  delete: (target: Target) => onTarget("scene.delete", target),
   reload: reload("scene"),
 };
 
@@ -811,14 +756,14 @@ export type DurationValue = typeof DurationValue.Type;
 
 export const Timer = {
   // Starts or restarts the timer, for `duration` or its configured one.
-  start: (entityId: EntityId<"timer">, duration?: DurationValue) =>
-    onEntity("timer.start", entityId, { duration }),
-  pause: (entityId: EntityId<"timer">) => onEntity("timer.pause", entityId),
-  cancel: (entityId: EntityId<"timer">) => onEntity("timer.cancel", entityId),
-  finish: (entityId: EntityId<"timer">) => onEntity("timer.finish", entityId),
+  start: (target: Target, duration?: DurationValue) =>
+    onTarget("timer.start", target, { duration }),
+  pause: (target: Target) => onTarget("timer.pause", target),
+  cancel: (target: Target) => onTarget("timer.cancel", target),
+  finish: (target: Target) => onTarget("timer.finish", target),
   // Adds `duration` to a running timer; negative values shorten it.
-  change: (entityId: EntityId<"timer">, duration: DurationValue) =>
-    onEntity("timer.change", entityId, { duration }),
+  change: (target: Target, duration: DurationValue) =>
+    onTarget("timer.change", target, { duration }),
   reload: reload("timer"),
 };
 
@@ -846,34 +791,20 @@ const decodeScheduleResponse = Schema.decodeUnknownEffect(
 );
 
 export const Schedule = {
-  getSchedule: (entityId: EntityId<"schedule">): Action => ({
+  getSchedule: (target: Target): Action => ({
     action: "schedule.get_schedule",
-    target: { entity_id: entityId },
+    target,
     return_response: true,
   }),
-  // Reads one schedule's week from a `schedule.get_schedule` response.
-  scheduleFrom: (
-    entityId: EntityId<"schedule">,
-    response: Schema.Json | null,
-  ) =>
+  // Reads each schedule's week, keyed by entity ID, from a
+  // `schedule.get_schedule` response.
+  schedulesFrom: (response: Schema.Json | null) =>
     decodeScheduleResponse(response).pipe(
-      Effect.flatMap((schedules) => {
-        const week = schedules[entityId];
-
-        return week === undefined
-          ? Effect.fail(
-              new HomeAssistantError({
-                message: `no schedule for ${entityId} in the response`,
-              }),
-            )
-          : Effect.succeed(week);
-      }),
-      Effect.catchTag("SchemaError", (error) =>
-        Effect.fail(
+      Effect.mapError(
+        (error) =>
           new HomeAssistantError({
-            message: `decode schedule: ${error.message}`,
+            message: `decode schedules: ${error.message}`,
           }),
-        ),
       ),
     ),
   reload: reload("schedule"),
@@ -968,59 +899,54 @@ export type FanTurnOnData = typeof FanTurnOnData.Type;
 
 export const Fan = {
   ...switchable("fan"),
-  turnOn: (entityId: EntityId<"fan">, data?: FanTurnOnData) =>
-    onEntity("fan.turn_on", entityId, data),
+  turnOn: (target: Target, data?: FanTurnOnData) =>
+    onTarget("fan.turn_on", target, data),
   // `percentage` is 0 to 100; 0 turns the fan off.
-  setPercentage: (entityId: EntityId<"fan">, percentage: number) =>
-    onEntity("fan.set_percentage", entityId, { percentage }),
+  setPercentage: (target: Target, percentage: number) =>
+    onTarget("fan.set_percentage", target, { percentage }),
   // `step` is in percent; Core uses the fan's own step by default.
-  increaseSpeed: (entityId: EntityId<"fan">, step?: number) =>
-    onEntity("fan.increase_speed", entityId, { percentage_step: step }),
-  decreaseSpeed: (entityId: EntityId<"fan">, step?: number) =>
-    onEntity("fan.decrease_speed", entityId, { percentage_step: step }),
-  setPresetMode: (entityId: EntityId<"fan">, presetMode: string) =>
-    onEntity("fan.set_preset_mode", entityId, { preset_mode: presetMode }),
-  oscillate: (entityId: EntityId<"fan">, oscillating: boolean) =>
-    onEntity("fan.oscillate", entityId, { oscillating }),
-  setDirection: (entityId: EntityId<"fan">, direction: "forward" | "reverse") =>
-    onEntity("fan.set_direction", entityId, { direction }),
+  increaseSpeed: (target: Target, step?: number) =>
+    onTarget("fan.increase_speed", target, { percentage_step: step }),
+  decreaseSpeed: (target: Target, step?: number) =>
+    onTarget("fan.decrease_speed", target, { percentage_step: step }),
+  setPresetMode: (target: Target, presetMode: string) =>
+    onTarget("fan.set_preset_mode", target, { preset_mode: presetMode }),
+  oscillate: (target: Target, oscillating: boolean) =>
+    onTarget("fan.oscillate", target, { oscillating }),
+  setDirection: (target: Target, direction: "forward" | "reverse") =>
+    onTarget("fan.set_direction", target, { direction }),
 };
 
 export const Humidifier = {
   ...switchable("humidifier"),
   // `mode` is one of the humidifier's `available_modes`.
-  setMode: (entityId: EntityId<"humidifier">, mode: string) =>
-    onEntity("humidifier.set_mode", entityId, { mode }),
+  setMode: (target: Target, mode: string) =>
+    onTarget("humidifier.set_mode", target, { mode }),
   // `humidity` is a whole percentage.
-  setHumidity: (entityId: EntityId<"humidifier">, humidity: number) =>
-    onEntity("humidifier.set_humidity", entityId, { humidity }),
+  setHumidity: (target: Target, humidity: number) =>
+    onTarget("humidifier.set_humidity", target, { humidity }),
 };
 
 export const WaterHeater = {
-  turnOn: (entityId: EntityId<"water_heater">) =>
-    onEntity("water_heater.turn_on", entityId),
-  turnOff: (entityId: EntityId<"water_heater">) =>
-    onEntity("water_heater.turn_off", entityId),
+  turnOn: (target: Target) => onTarget("water_heater.turn_on", target),
+  turnOff: (target: Target) => onTarget("water_heater.turn_off", target),
   // `temperature` is in the entity's unit. `operationMode` also switches
   // mode, to one of the entity's `operation_list`.
   setTemperature: (
-    entityId: EntityId<"water_heater">,
+    target: Target,
     temperature: number,
     options?: { readonly operationMode?: string },
   ) =>
-    onEntity("water_heater.set_temperature", entityId, {
+    onTarget("water_heater.set_temperature", target, {
       temperature,
       operation_mode: options?.operationMode,
     }),
-  setOperationMode: (
-    entityId: EntityId<"water_heater">,
-    operationMode: string,
-  ) =>
-    onEntity("water_heater.set_operation_mode", entityId, {
+  setOperationMode: (target: Target, operationMode: string) =>
+    onTarget("water_heater.set_operation_mode", target, {
       operation_mode: operationMode,
     }),
-  setAwayMode: (entityId: EntityId<"water_heater">, awayMode: boolean) =>
-    onEntity("water_heater.set_away_mode", entityId, { away_mode: awayMode }),
+  setAwayMode: (target: Target, awayMode: boolean) =>
+    onTarget("water_heater.set_away_mode", target, { away_mode: awayMode }),
 };
 
 // `media_player.play_media` data. `media_content_type` is a type such as
@@ -1048,19 +974,18 @@ const mediaLocation = (location?: MediaLocation) => ({
   media_content_id: location?.mediaContentId,
 });
 
-const mediaPlayerAction =
-  (action: string) => (entityId: EntityId<"media_player">) =>
-    onEntity(`media_player.${action}`, entityId);
+const mediaPlayerAction = (action: string) => (target: Target) =>
+  onTarget(`media_player.${action}`, target);
 
 export const MediaPlayer = {
   ...switchable("media_player"),
   volumeUp: mediaPlayerAction("volume_up"),
   volumeDown: mediaPlayerAction("volume_down"),
   // `volume` is 0 to 1.
-  setVolume: (entityId: EntityId<"media_player">, volume: number) =>
-    onEntity("media_player.volume_set", entityId, { volume_level: volume }),
-  mute: (entityId: EntityId<"media_player">, muted: boolean) =>
-    onEntity("media_player.volume_mute", entityId, { is_volume_muted: muted }),
+  setVolume: (target: Target, volume: number) =>
+    onTarget("media_player.volume_set", target, { volume_level: volume }),
+  mute: (target: Target, muted: boolean) =>
+    onTarget("media_player.volume_mute", target, { is_volume_muted: muted }),
   play: mediaPlayerAction("media_play"),
   pause: mediaPlayerAction("media_pause"),
   playPause: mediaPlayerAction("media_play_pause"),
@@ -1068,47 +993,38 @@ export const MediaPlayer = {
   nextTrack: mediaPlayerAction("media_next_track"),
   previousTrack: mediaPlayerAction("media_previous_track"),
   // `position` is in seconds.
-  seek: (entityId: EntityId<"media_player">, position: number) =>
-    onEntity("media_player.media_seek", entityId, { seek_position: position }),
-  playMedia: (
-    entityId: EntityId<"media_player">,
-    data: MediaPlayerPlayMediaData,
-  ) => onEntity("media_player.play_media", entityId, data),
+  seek: (target: Target, position: number) =>
+    onTarget("media_player.media_seek", target, { seek_position: position }),
+  playMedia: (target: Target, data: MediaPlayerPlayMediaData) =>
+    onTarget("media_player.play_media", target, data),
   // `source` is one of the player's `source_list`.
-  selectSource: (entityId: EntityId<"media_player">, source: string) =>
-    onEntity("media_player.select_source", entityId, { source }),
+  selectSource: (target: Target, source: string) =>
+    onTarget("media_player.select_source", target, { source }),
   // `soundMode` is one of the player's `sound_mode_list`.
-  selectSoundMode: (entityId: EntityId<"media_player">, soundMode: string) =>
-    onEntity("media_player.select_sound_mode", entityId, {
+  selectSoundMode: (target: Target, soundMode: string) =>
+    onTarget("media_player.select_sound_mode", target, {
       sound_mode: soundMode,
     }),
   clearPlaylist: mediaPlayerAction("clear_playlist"),
-  setShuffle: (entityId: EntityId<"media_player">, shuffle: boolean) =>
-    onEntity("media_player.shuffle_set", entityId, { shuffle }),
-  setRepeat: (
-    entityId: EntityId<"media_player">,
-    repeat: "off" | "all" | "one",
-  ) => onEntity("media_player.repeat_set", entityId, { repeat }),
+  setShuffle: (target: Target, shuffle: boolean) =>
+    onTarget("media_player.shuffle_set", target, { shuffle }),
+  setRepeat: (target: Target, repeat: "off" | "all" | "one") =>
+    onTarget("media_player.repeat_set", target, { repeat }),
   // Groups other players with this one for synchronised playback.
-  join: (
-    entityId: EntityId<"media_player">,
-    members: ReadonlyArray<EntityId<"media_player">>,
-  ) => onEntity("media_player.join", entityId, { group_members: members }),
+  join: (target: Target, members: ReadonlyArray<EntityId<"media_player">>) =>
+    onTarget("media_player.join", target, { group_members: members }),
   unjoin: mediaPlayerAction("unjoin"),
   // Responds with the media under `location`, or the top level.
-  browseMedia: (
-    entityId: EntityId<"media_player">,
-    location?: MediaLocation,
-  ): Action => ({
-    ...onEntity("media_player.browse_media", entityId, mediaLocation(location)),
+  browseMedia: (target: Target, location?: MediaLocation): Action => ({
+    ...onTarget("media_player.browse_media", target, mediaLocation(location)),
     return_response: true,
   }),
   search: (
-    entityId: EntityId<"media_player">,
+    target: Target,
     query: string,
     location?: MediaLocation,
   ): Action => ({
-    ...onEntity("media_player.search_media", entityId, {
+    ...onTarget("media_player.search_media", target, {
       search_query: query,
       ...mediaLocation(location),
     }),
@@ -1116,8 +1032,8 @@ export const MediaPlayer = {
   }),
 };
 
-const vacuumAction = (action: string) => (entityId: EntityId<"vacuum">) =>
-  onEntity(`vacuum.${action}`, entityId);
+const vacuumAction = (action: string) => (target: Target) =>
+  onTarget(`vacuum.${action}`, target);
 
 export const Vacuum = {
   start: vacuumAction("start"),
@@ -1128,22 +1044,18 @@ export const Vacuum = {
   locate: vacuumAction("locate"),
   cleanSpot: vacuumAction("clean_spot"),
   // Cleans the areas mapped to the vacuum's segments, by area ID.
-  cleanArea: (entityId: EntityId<"vacuum">, areaIds: ReadonlyArray<string>) =>
-    onEntity("vacuum.clean_area", entityId, { cleaning_area_id: areaIds }),
+  cleanArea: (target: Target, areaIds: ReadonlyArray<string>) =>
+    onTarget("vacuum.clean_area", target, { cleaning_area_id: areaIds }),
   // `fanSpeed` is one of the vacuum's `fan_speed_list`.
-  setFanSpeed: (entityId: EntityId<"vacuum">, fanSpeed: string) =>
-    onEntity("vacuum.set_fan_speed", entityId, { fan_speed: fanSpeed }),
+  setFanSpeed: (target: Target, fanSpeed: string) =>
+    onTarget("vacuum.set_fan_speed", target, { fan_speed: fanSpeed }),
   // Sends a command the integration understands, with optional parameters.
-  sendCommand: (
-    entityId: EntityId<"vacuum">,
-    command: string,
-    params?: Schema.Json,
-  ) => onEntity("vacuum.send_command", entityId, { command, params }),
+  sendCommand: (target: Target, command: string, params?: Schema.Json) =>
+    onTarget("vacuum.send_command", target, { command, params }),
 };
 
-const lawnMowerAction =
-  (action: string) => (entityId: EntityId<"lawn_mower">) =>
-    onEntity(`lawn_mower.${action}`, entityId);
+const lawnMowerAction = (action: string) => (target: Target) =>
+  onTarget(`lawn_mower.${action}`, target);
 
 export const LawnMower = {
   startMowing: lawnMowerAction("start_mowing"),
@@ -1153,9 +1065,8 @@ export const LawnMower = {
 };
 
 const alarmAction =
-  (action: string) =>
-  (entityId: EntityId<"alarm_control_panel">, options?: LockOptions) =>
-    onEntity(`alarm_control_panel.${action}`, entityId, {
+  (action: string) => (target: Target, options?: LockOptions) =>
+    onTarget(`alarm_control_panel.${action}`, target, {
       code: options?.code,
     });
 
@@ -1174,16 +1085,15 @@ export const Update = {
   // Installs `version`, or the latest. `backup` backs up first, where the
   // integration supports it.
   install: (
-    entityId: EntityId<"update">,
+    target: Target,
     options?: { readonly version?: string; readonly backup?: boolean },
   ) =>
-    onEntity("update.install", entityId, {
+    onTarget("update.install", target, {
       version: options?.version,
       backup: options?.backup,
     }),
-  skip: (entityId: EntityId<"update">) => onEntity("update.skip", entityId),
-  clearSkipped: (entityId: EntityId<"update">) =>
-    onEntity("update.clear_skipped", entityId),
+  skip: (target: Target) => onTarget("update.skip", target),
+  clearSkipped: (target: Target) => onTarget("update.clear_skipped", target),
 };
 
 export interface NotifyMessage {
@@ -1193,8 +1103,8 @@ export interface NotifyMessage {
 
 export const Notify = {
   // Sends to a notify entity.
-  sendMessage: (entityId: EntityId<"notify">, message: NotifyMessage) =>
-    onEntity("notify.send_message", entityId, { ...message }),
+  sendMessage: (target: Target, message: NotifyMessage) =>
+    onTarget("notify.send_message", target, { ...message }),
   // Sends through a legacy notify action, such as `mobile_app_pixel`.
   // `data` is passed on to the integration.
   legacy: (
@@ -1227,12 +1137,12 @@ export interface TtsSpeakOptions {
 export const Tts = {
   // Speaks `message` with a TTS entity on a media player.
   speak: (
-    entityId: EntityId<"tts">,
+    target: Target,
     mediaPlayer: EntityId<"media_player">,
     message: string,
     options?: TtsSpeakOptions,
   ) =>
-    onEntity("tts.speak", entityId, {
+    onTarget("tts.speak", target, {
       media_player_entity_id: mediaPlayer,
       message,
       language: options?.language,
@@ -1263,40 +1173,34 @@ export type TodoItemFields = typeof TodoItemFields.Type;
 
 export const Todo = {
   // Responds with the list's items, optionally only those with `status`.
-  getItems: (
-    entityId: EntityId<"todo">,
-    status?: ReadonlyArray<TodoStatus>,
-  ): Action => ({
-    ...onEntity("todo.get_items", entityId, { status }),
+  getItems: (target: Target, status?: ReadonlyArray<TodoStatus>): Action => ({
+    ...onTarget("todo.get_items", target, { status }),
     return_response: true,
   }),
-  addItem: (
-    entityId: EntityId<"todo">,
-    item: string,
-    fields?: TodoItemFields,
-  ) => onEntity("todo.add_item", entityId, { item, ...fields }),
+  addItem: (target: Target, item: string, fields?: TodoItemFields) =>
+    onTarget("todo.add_item", target, { item, ...fields }),
   // `item` is the item's name or UID.
   updateItem: (
-    entityId: EntityId<"todo">,
+    target: Target,
     item: string,
     changes: TodoItemFields & {
       readonly rename?: string;
       readonly status?: TodoStatus;
     },
-  ) => onEntity("todo.update_item", entityId, { item, ...changes }),
-  removeItem: (entityId: EntityId<"todo">, items: ReadonlyArray<string>) =>
-    onEntity("todo.remove_item", entityId, { item: items }),
-  removeCompletedItems: (entityId: EntityId<"todo">) =>
-    onEntity("todo.remove_completed_items", entityId),
+  ) => onTarget("todo.update_item", target, { item, ...changes }),
+  removeItem: (target: Target, items: ReadonlyArray<string>) =>
+    onTarget("todo.remove_item", target, { item: items }),
+  removeCompletedItems: (target: Target) =>
+    onTarget("todo.remove_completed_items", target),
 };
 
 export const Weather = {
   // Responds with forecasts keyed by entity ID.
   getForecasts: (
-    entityId: EntityId<"weather">,
+    target: Target,
     type: "daily" | "hourly" | "twice_daily",
   ): Action => ({
-    ...onEntity("weather.get_forecasts", entityId, { type }),
+    ...onTarget("weather.get_forecasts", target, { type }),
     return_response: true,
   }),
 };
@@ -1365,13 +1269,12 @@ export const AiTask = {
 export const Image = {
   // Saves the image to `filename` on the Home Assistant host. The path must
   // be allowed by `allowlist_external_dirs`.
-  snapshot: (entityId: EntityId<"image">, filename: string) =>
-    onEntity("image.snapshot", entityId, { filename }),
+  snapshot: (target: Target, filename: string) =>
+    onTarget("image.snapshot", target, { filename }),
 };
 
 export const ImageProcessing = {
-  scan: (entityId: EntityId<"image_processing">) =>
-    onEntity("image_processing.scan", entityId),
+  scan: (target: Target) => onTarget("image_processing.scan", target),
 };
 
 // When a new event happens: all-day dates (end is exclusive), date-times,
@@ -1384,12 +1287,12 @@ export type CalendarEventWhen =
 // Adds an event to a calendar. `calendar.get_events` is on `Calendar`.
 export const CalendarActions = {
   createEvent: (
-    entityId: EntityId<"calendar">,
+    target: Target,
     summary: string,
     when: CalendarEventWhen,
     options?: { readonly description?: string; readonly location?: string },
   ) =>
-    onEntity("calendar.create_event", entityId, {
+    onTarget("calendar.create_event", target, {
       summary,
       start_date: "startDate" in when ? when.startDate : undefined,
       end_date: "endDate" in when ? when.endDate : undefined,

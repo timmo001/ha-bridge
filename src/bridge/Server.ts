@@ -20,11 +20,11 @@ const Handlers = BridgeRpcs.toLayer(
     const homeAssistant = yield* HomeAssistant;
 
     return BridgeRpcs.of({
-      GetEntity: ({ entityId }) => homeAssistant.getEntity(entityId),
-      WatchEntity: ({ entityId }) => homeAssistant.watchEntity(entityId),
+      GetEntities: (request) => homeAssistant.getEntities(request),
+      WatchEntities: (request) => homeAssistant.watchEntities(request),
       CallAction: (action) => homeAssistant.callAction(action),
       GetConfig: () => homeAssistant.getConfig,
-      CameraSnapshot: ({ entityId }) => homeAssistant.cameraSnapshot(entityId),
+      CameraSnapshot: ({ target }) => homeAssistant.cameraSnapshot(target),
       Search: (request) => homeAssistant.search(request),
     });
   }),

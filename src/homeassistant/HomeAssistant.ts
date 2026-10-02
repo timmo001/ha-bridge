@@ -25,42 +25,58 @@ import {
   FloorRegistry,
   friendlyName,
   HomeAssistantError,
+  isEntityIdIn,
+  LabelRegistry,
   type Action,
   type CameraSnapshot,
-  type EntityId,
   type HomeAssistantConfig,
   type HomeAssistantSession,
+  type Target,
 } from "@timmo001/effect-ha";
-import type {
-  EntityUpdate,
-  SearchQueryEmpty,
-  SearchRequest,
-  SearchResults,
+import {
+  TargetError,
+  type EntityUpdate,
+  type SearchQueryEmpty,
+  type SearchRequest,
+  type SearchResults,
+  type TargetRequest,
 } from "@timmo001/effect-ha-bridge";
 import { Search, selectResults } from "../search/Search.js";
 import {
-  emptyRegistries,
   matchesFilters,
   searchItems,
   searchKeys,
   toSearchMatch,
+} from "../search/items.js";
+import {
+  emptyRegistries,
   unavailableRegistries,
   type Registries,
-} from "../search/items.js";
+} from "./registries.js";
+import { exactlyOne, resolveTarget } from "./target.js";
 
 const searchKinds = ["entity", "device", "area"] as const;
 
 export interface HomeAssistantService {
-  readonly getEntity: (entityId: string) => Effect.Effect<EntityUpdate | null>;
-  // Emits the current state (when known), then every change.
-  readonly watchEntity: (entityId: string) => Stream.Stream<EntityUpdate>;
+  readonly getEntities: (
+    request: TargetRequest,
+  ) => Effect.Effect<
+    ReadonlyArray<EntityUpdate>,
+    HomeAssistantError | TargetError
+  >;
+  // Emits the current state of every matching entity, then every change.
+  // Waits for a connection, and expands the target again after reconnects
+  // and registry changes.
+  readonly watchEntities: (
+    request: TargetRequest,
+  ) => Stream.Stream<EntityUpdate, TargetError>;
   readonly callAction: (
     action: Action,
-  ) => Effect.Effect<Schema.Json | null, HomeAssistantError>;
+  ) => Effect.Effect<Schema.Json | null, HomeAssistantError | TargetError>;
   readonly getConfig: Effect.Effect<HomeAssistantConfig, HomeAssistantError>;
   readonly cameraSnapshot: (
-    entityId: EntityId<"camera">,
-  ) => Effect.Effect<CameraSnapshot, HomeAssistantError>;
+    target: Target,
+  ) => Effect.Effect<CameraSnapshot, HomeAssistantError | TargetError>;
   // Searches the cached states and registries; never asks Home Assistant.
   readonly search: (
     request: SearchRequest,
@@ -75,6 +91,7 @@ const registryEvents = [
   "device_registry_updated",
   "area_registry_updated",
   "floor_registry_updated",
+  "label_registry_updated",
 ];
 
 const registryRefreshDelay = "500 millis";
@@ -83,12 +100,19 @@ const registryRefreshDelay = "500 millis";
 // `get_states` snapshot; watchers re-read it instead of receiving every entity.
 // Publishing the whole snapshot would drop entities once a subscriber's buffer
 // (4096) is full, so a watched entity could stay stale after a reconnect.
+// `Registries` means the registries changed, so a target may now match other
+// entities.
 type CacheEvent = Data.TaggedEnum<{
   State: { readonly state: EntityState };
   Reset: {};
+  Registries: {};
 }>;
 
-const { State: stateEvent, Reset: cacheReset } = Data.taggedEnum<CacheEvent>();
+const {
+  State: stateEvent,
+  Reset: cacheReset,
+  Registries: registriesChanged,
+} = Data.taggedEnum<CacheEvent>();
 
 const decodeStates = Schema.decodeUnknownEffect(Schema.Array(EntityState));
 
@@ -99,6 +123,18 @@ const decodeDevices = Schema.decodeUnknownEffect(DeviceRegistry);
 const decodeAreas = Schema.decodeUnknownEffect(AreaRegistry);
 
 const decodeFloors = Schema.decodeUnknownEffect(FloorRegistry);
+
+const decodeLabels = Schema.decodeUnknownEffect(LabelRegistry);
+
+const actionDomain = (action: string) => {
+  const domain = action.split(".")[0];
+
+  // `homeassistant` actions apply to entities in any domain.
+  return domain === "homeassistant" ? undefined : domain;
+};
+
+const inDomain = (domain: string | undefined) => (entityId: string) =>
+  domain === undefined || entityId.startsWith(`${domain}.`);
 
 export class HomeAssistant extends Context.Service<
   HomeAssistant,
@@ -155,7 +191,7 @@ export class HomeAssistant extends Context.Service<
         function* (current: HomeAssistantSession) {
           const previous = yield* Ref.get(registries);
 
-          const [entities, devices, areas, floors] = yield* Effect.all(
+          const [entities, devices, areas, floors, labels] = yield* Effect.all(
             [
               load(
                 "entity registry",
@@ -185,6 +221,13 @@ export class HomeAssistant extends Context.Service<
                   .pipe(Effect.flatMap(decodeFloors)),
                 previous.floors,
               ),
+              load(
+                "label registry",
+                current
+                  .request({ type: "config/label_registry/list" })
+                  .pipe(Effect.flatMap(decodeLabels)),
+                previous.labels,
+              ),
             ],
             { concurrency: "unbounded" },
           );
@@ -194,6 +237,7 @@ export class HomeAssistant extends Context.Service<
             devices,
             areas,
             floors,
+            labels,
             namer:
               entities !== undefined && devices !== undefined
                 ? entityNamerFrom(entities, devices)
@@ -203,7 +247,7 @@ export class HomeAssistant extends Context.Service<
           yield* Ref.set(registries, next);
           yield* Effect.logInfo(
             "Cached registries",
-            `${entities?.entities.length ?? 0} entities, ${devices?.length ?? 0} devices, ${areas?.length ?? 0} areas`,
+            `${entities?.entities.length ?? 0} entities, ${devices?.length ?? 0} devices, ${areas?.length ?? 0} areas, ${labels?.length ?? 0} labels`,
           );
 
           return { previous, next };
@@ -211,7 +255,7 @@ export class HomeAssistant extends Context.Service<
       );
 
       // Re-sends only the states whose display name changed, so watchers
-      // print the new name.
+      // print the new name, then tells watchers to expand their targets again.
       const refreshNames = Effect.fn("HomeAssistant.refreshNames")(function* (
         current: HomeAssistantSession,
       ) {
@@ -225,6 +269,7 @@ export class HomeAssistant extends Context.Service<
             )
             .map((state) => stateEvent({ state })),
         );
+        yield* PubSub.publish(changes, registriesChanged());
       });
 
       const runSession = Effect.gen(function* () {
@@ -282,13 +327,14 @@ export class HomeAssistant extends Context.Service<
             states.set(state.entity_id, state);
           }
         });
+        // Set before the reset so watchers can expand their targets.
+        yield* Ref.set(session, Option.some(current));
         yield* PubSub.publish(changes, cacheReset());
         yield* Stream.fromQueue(registryChanges).pipe(
           Stream.debounce(registryRefreshDelay),
           Stream.runForEach(() => refreshNames(current)),
           Effect.forkScoped,
         );
-        yield* Ref.set(session, Option.some(current));
         yield* Effect.logInfo("Bridge subscribed to Home Assistant");
 
         return yield* current.closed;
@@ -303,37 +349,6 @@ export class HomeAssistant extends Context.Service<
         Effect.forkScoped,
       );
 
-      const getEntity = (entityId: string) =>
-        Effect.suspend(() => {
-          const state = states.get(entityId);
-
-          return state === undefined ? Effect.succeed(null) : withName(state);
-        });
-
-      const watchEntity = (entityId: string) =>
-        Stream.unwrap(
-          Effect.gen(function* () {
-            const subscription = yield* PubSub.subscribe(changes);
-            const current = states.get(entityId);
-
-            return Stream.concat(
-              Stream.fromIterable(current === undefined ? [] : [current]),
-              Stream.fromSubscription(subscription).pipe(
-                Stream.map((change) =>
-                  Match.value(change).pipe(
-                    Match.tag("Reset", () => states.get(entityId)),
-                    Match.tag("State", ({ state }) =>
-                      state.entity_id === entityId ? state : undefined,
-                    ),
-                    Match.exhaustive,
-                  ),
-                ),
-                Stream.filter((state) => state !== undefined),
-              ),
-            ).pipe(Stream.mapEffect(withName));
-          }),
-        );
-
       const connected = Ref.get(session).pipe(
         Effect.flatMap(Effect.fromOption),
         Effect.mapError(
@@ -344,8 +359,134 @@ export class HomeAssistant extends Context.Service<
         ),
       );
 
-      const callAction = (action: Action) =>
-        Effect.flatMap(connected, (current) => current.callAction(action));
+      const resolve = (target: Target, domain: string | undefined) =>
+        Effect.flatMap(Ref.get(registries), (current) =>
+          resolveTarget(target, { registries: current, states, domain }),
+        );
+
+      // The IDs of every entity the target refers to, as Home Assistant
+      // expands it.
+      const expandEntities = Effect.fn("HomeAssistant.expandEntities")(
+        function* (current: HomeAssistantSession, request: TargetRequest) {
+          const target = yield* resolve(request.target, request.domain);
+          const extracted = yield* current.extractTarget(target);
+
+          const missing = [
+            ...extracted.missing_devices.map((id) => `device ${id}`),
+            ...extracted.missing_areas.map((id) => `area ${id}`),
+            ...extracted.missing_floors.map((id) => `floor ${id}`),
+            ...extracted.missing_labels.map((id) => `label ${id}`),
+          ];
+
+          if (missing.length > 0) {
+            return yield* new TargetError({
+              message: `Home Assistant has no ${missing.join(", ")}`,
+            });
+          }
+
+          return extracted.referenced_entities.filter(inDomain(request.domain));
+        },
+      );
+
+      const knownStates = (entityIds: Iterable<string>) =>
+        Array.from(entityIds).flatMap((entityId) => {
+          const state = states.get(entityId);
+
+          return state === undefined ? [] : [state];
+        });
+
+      const getEntities = Effect.fn("HomeAssistant.getEntities")(function* (
+        request: TargetRequest,
+      ) {
+        const entityIds = yield* expandEntities(yield* connected, request);
+
+        return yield* Effect.forEach(knownStates(entityIds), withName);
+      });
+
+      const watchEntities = (request: TargetRequest) =>
+        Stream.unwrap(
+          Effect.gen(function* () {
+            const subscription = yield* PubSub.subscribe(changes);
+            const watched = yield* Ref.make<ReadonlySet<string>>(new Set());
+
+            // Expands the target again and returns the entities it newly
+            // matches. Keeps the last set while Home Assistant is unreachable.
+            const expand = Effect.gen(function* () {
+              const current = yield* Ref.get(session);
+
+              if (Option.isNone(current)) {
+                return [];
+              }
+
+              const entityIds = yield* expandEntities(
+                current.value,
+                request,
+              ).pipe(
+                Effect.catchTag("HomeAssistantError", (error) =>
+                  Effect.logWarning(
+                    "Could not expand a watched target",
+                    error.message,
+                  ).pipe(Effect.as(undefined)),
+                ),
+              );
+
+              if (entityIds === undefined) {
+                return [];
+              }
+
+              const previous = yield* Ref.getAndSet(
+                watched,
+                new Set(entityIds),
+              );
+
+              return entityIds.filter((entityId) => !previous.has(entityId));
+            });
+
+            const everyWatched = Effect.map(Ref.get(watched), knownStates);
+
+            yield* expand;
+
+            return Stream.concat(
+              Stream.fromIterable(yield* everyWatched),
+              Stream.fromSubscription(subscription).pipe(
+                Stream.mapEffect((change) =>
+                  Match.value(change).pipe(
+                    Match.tag("Reset", () =>
+                      Effect.andThen(expand, everyWatched),
+                    ),
+                    Match.tag("Registries", () =>
+                      Effect.map(expand, knownStates),
+                    ),
+                    Match.tag("State", ({ state }) =>
+                      Effect.map(Ref.get(watched), (current) =>
+                        current.has(state.entity_id) ? [state] : [],
+                      ),
+                    ),
+                    Match.exhaustive,
+                  ),
+                ),
+                Stream.flattenIterable,
+              ),
+            ).pipe(Stream.mapEffect(withName));
+          }),
+        );
+
+      const callAction = Effect.fn("HomeAssistant.callAction")(function* (
+        action: Action,
+      ) {
+        const current = yield* connected;
+
+        if (action.target === undefined) {
+          return yield* current.callAction(action);
+        }
+
+        const target = yield* resolve(
+          action.target,
+          actionDomain(action.action),
+        );
+
+        return yield* current.callAction({ ...action, target });
+      });
 
       const getConfig = Effect.flatMap(
         connected,
@@ -354,10 +495,24 @@ export class HomeAssistant extends Context.Service<
 
       const http = yield* HttpClient.HttpClient;
 
-      const snapshot = (entityId: EntityId<"camera">) =>
-        cameraSnapshot(config, entityId).pipe(
+      const snapshot = Effect.fn("HomeAssistant.cameraSnapshot")(function* (
+        target: Target,
+      ) {
+        const entityIds = yield* expandEntities(yield* connected, {
+          target,
+          domain: "camera",
+        });
+
+        const entityId = yield* exactlyOne(
+          entityIds.filter(isEntityIdIn("camera")),
+          (id) => id,
+          "camera",
+        );
+
+        return yield* cameraSnapshot(config, entityId).pipe(
           Effect.provideService(HttpClient.HttpClient, http),
         );
+      });
 
       const runSearch = Effect.fn("HomeAssistant.search")(function* (
         request: SearchRequest,
@@ -394,8 +549,8 @@ export class HomeAssistant extends Context.Service<
       });
 
       return HomeAssistant.of({
-        getEntity,
-        watchEntity,
+        getEntities,
+        watchEntities,
         callAction,
         getConfig,
         cameraSnapshot: snapshot,
