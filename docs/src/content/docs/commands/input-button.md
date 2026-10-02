@@ -47,7 +47,7 @@ FLAGS
 
 ```text
 DESCRIPTION
-  Reload input_button helpers from YAML
+  Reload the input_button YAML configuration
 
 USAGE
   ha-bridge input_button reload [flags]

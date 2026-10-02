@@ -106,7 +106,7 @@ FLAGS
 
 ```text
 DESCRIPTION
-  Reload scene helpers from YAML
+  Reload the scene YAML configuration
 
 USAGE
   ha-bridge scene reload [flags]

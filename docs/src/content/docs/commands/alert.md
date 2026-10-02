@@ -1,42 +1,40 @@
 ---
-title: ha-bridge input_boolean
-description: Arguments and flags for every ha-bridge input_boolean command.
+title: ha-bridge alert
+description: Arguments and flags for every ha-bridge alert command.
 sidebar:
-  label: input_boolean
+  label: alert
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->
 
-Every `ha-bridge input_boolean` command and its help, as `--help` prints it. Each also accepts the [global flags](/commands#global-flags).
+Every `ha-bridge alert` command and its help, as `--help` prints it. Each also accepts the [global flags](/commands#global-flags).
 
-## `ha-bridge input_boolean`
-
-Alias: `ha-bridge ib`
+## `ha-bridge alert`
 
 ```text
 DESCRIPTION
-  Input boolean actions
+  Alert actions
 
 USAGE
-  ha-bridge input_boolean <subcommand> [flags]
+  ha-bridge alert <subcommand> [flags]
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
-## `ha-bridge input_boolean turn-on`
+## `ha-bridge alert turn-on`
 
-Alias: `ha-bridge input_boolean on`
+Alias: `ha-bridge alert on`
 
 ```text
 DESCRIPTION
   Turn on
 
 USAGE
-  ha-bridge input_boolean turn-on [flags] [<entity_id...>]
+  ha-bridge alert turn-on [flags] [<entity_id...>]
 
 ARGUMENTS
-  entity_id... string    Entity ID, with or without the input_boolean. prefix; repeat for more (optional)
+  entity_id... string    Entity ID, with or without the alert. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -47,19 +45,19 @@ FLAGS
   --label string     Label ID or name; repeat for more
 ```
 
-## `ha-bridge input_boolean turn-off`
+## `ha-bridge alert turn-off`
 
-Alias: `ha-bridge input_boolean off`
+Alias: `ha-bridge alert off`
 
 ```text
 DESCRIPTION
   Turn off
 
 USAGE
-  ha-bridge input_boolean turn-off [flags] [<entity_id...>]
+  ha-bridge alert turn-off [flags] [<entity_id...>]
 
 ARGUMENTS
-  entity_id... string    Entity ID, with or without the input_boolean. prefix; repeat for more (optional)
+  entity_id... string    Entity ID, with or without the alert. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -70,19 +68,19 @@ FLAGS
   --label string     Label ID or name; repeat for more
 ```
 
-## `ha-bridge input_boolean toggle`
+## `ha-bridge alert toggle`
 
-Alias: `ha-bridge input_boolean t`
+Alias: `ha-bridge alert t`
 
 ```text
 DESCRIPTION
   Toggle
 
 USAGE
-  ha-bridge input_boolean toggle [flags] [<entity_id...>]
+  ha-bridge alert toggle [flags] [<entity_id...>]
 
 ARGUMENTS
-  entity_id... string    Entity ID, with or without the input_boolean. prefix; repeat for more (optional)
+  entity_id... string    Entity ID, with or without the alert. prefix; repeat for more (optional)
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -91,17 +89,4 @@ FLAGS
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
-```
-
-## `ha-bridge input_boolean reload`
-
-```text
-DESCRIPTION
-  Reload the input_boolean YAML configuration
-
-USAGE
-  ha-bridge input_boolean reload [flags]
-
-FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

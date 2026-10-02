@@ -133,7 +133,7 @@ FLAGS
 
 ```text
 DESCRIPTION
-  Reload timer helpers from YAML
+  Reload the timer YAML configuration
 
 USAGE
   ha-bridge timer reload [flags]

@@ -156,7 +156,7 @@ FLAGS
 
 ```text
 DESCRIPTION
-  Reload input_select helpers from YAML
+  Reload the input_select YAML configuration
 
 USAGE
   ha-bridge input_select reload [flags]

@@ -92,7 +92,7 @@ FLAGS
 
 ```text
 DESCRIPTION
-  Reload input_number helpers from YAML
+  Reload the input_number YAML configuration
 
 USAGE
   ha-bridge input_number reload [flags]

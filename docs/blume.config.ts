@@ -69,6 +69,8 @@ export default defineConfig({
           "/actions/calendars",
           "/actions/conversation",
           "/actions/images",
+          "/actions/alerts",
+          "/actions/system",
           "/actions/home-assistant",
         ],
       },

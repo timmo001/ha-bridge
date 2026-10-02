@@ -30,11 +30,20 @@ ha-bridge homeassistant reload-core-config
 ha-bridge homeassistant reload-custom-templates
 ha-bridge homeassistant reload-config-entry 01JABCDEF
 ha-bridge homeassistant save-persistent-states
-ha-bridge zone reload
-ha-bridge person reload
 ```
 
 `restart --safe-mode` starts without custom integrations. `stop` shuts Home Assistant down, and the bridge can't start it again.
+
+## Reloading YAML integrations
+
+Integrations set up in YAML whose only action is a reload each have a `reload` command: `bayesian`, `command_line`, `derivative`, `filter`, `generic_thermostat`, `history_stats`, `intent_script`, `min_max`, `person`, `rest`, `statistics`, `template`, `trend`, `universal` and `zone`.
+
+```bash
+ha-bridge template reload
+ha-bridge zone reload
+```
+
+Helpers and other domains with more actions, such as `input_boolean` and `automation`, have their own `reload` beside them.
 
 ## Location
 
@@ -57,7 +66,7 @@ ha-bridge homeassistant set-location 51.5072 -0.1276 --elevation 11
 | `homeassistant reload-config-entry` | `homeassistant.reload_config_entry` |
 | `homeassistant save-persistent-states` | `homeassistant.save_persistent_states` |
 | `homeassistant set-location` | `homeassistant.set_location` |
-| `zone reload` | `zone.reload` |
+| `template reload`, `zone reload` and the rest | `template.reload`, `zone.reload` and so on |
 | `person reload` | `person.reload` |
 
 See [`ha-bridge homeassistant`](/commands/homeassistant), [`ha-bridge zone`](/commands/zone) and [`ha-bridge person`](/commands/person) for every argument and flag.

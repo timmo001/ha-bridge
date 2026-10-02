@@ -64,7 +64,7 @@ FLAGS
 
 ```text
 DESCRIPTION
-  Reload group helpers from YAML
+  Reload the group YAML configuration
 
 USAGE
   ha-bridge group reload [flags]

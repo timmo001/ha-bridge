@@ -47,7 +47,7 @@ FLAGS
 
 ```text
 DESCRIPTION
-  Reload schedule helpers from YAML
+  Reload the schedule YAML configuration
 
 USAGE
   ha-bridge schedule reload [flags]

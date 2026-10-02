@@ -118,7 +118,7 @@ FLAGS
 
 ```text
 DESCRIPTION
-  Reload automation helpers from YAML
+  Reload the automation YAML configuration
 
 USAGE
   ha-bridge automation reload [flags]

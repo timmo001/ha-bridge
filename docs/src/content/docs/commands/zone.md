@@ -26,7 +26,7 @@ FLAGS
 
 ```text
 DESCRIPTION
-  Reload zone helpers from YAML
+  Reload the zone YAML configuration
 
 USAGE
   ha-bridge zone reload [flags]

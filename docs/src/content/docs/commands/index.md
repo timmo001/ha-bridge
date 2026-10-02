@@ -43,8 +43,6 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`timer`](/commands/timer) | None |
 | [`schedule`](/commands/schedule) | None |
 | [`group`](/commands/group) | None |
-| [`zone`](/commands/zone) | None |
-| [`person`](/commands/person) | None |
 | [`homeassistant`](/commands/homeassistant) | None |
 | [`fan`](/commands/fan) | None |
 | [`humidifier`](/commands/humidifier) | None |
@@ -65,6 +63,30 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`image`](/commands/image) | None |
 | [`image_processing`](/commands/image-processing) | None |
 | [`device_tracker`](/commands/device-tracker) | None |
+| [`alert`](/commands/alert) | None |
+| [`utility_meter`](/commands/utility-meter) | None |
+| [`logbook`](/commands/logbook) | None |
+| [`system_log`](/commands/system-log) | None |
+| [`logger`](/commands/logger) | None |
+| [`recorder`](/commands/recorder) | None |
+| [`frontend`](/commands/frontend) | None |
+| [`backup`](/commands/backup) | None |
+| [`wake_on_lan`](/commands/wake-on-lan) | `wol` |
+| [`bayesian`](/commands/bayesian) | None |
+| [`command_line`](/commands/command-line) | None |
+| [`derivative`](/commands/derivative) | None |
+| [`filter`](/commands/filter) | None |
+| [`generic_thermostat`](/commands/generic-thermostat) | None |
+| [`history_stats`](/commands/history-stats) | None |
+| [`intent_script`](/commands/intent-script) | None |
+| [`min_max`](/commands/min-max) | None |
+| [`person`](/commands/person) | None |
+| [`rest`](/commands/rest) | None |
+| [`statistics`](/commands/statistics) | None |
+| [`template`](/commands/template) | None |
+| [`trend`](/commands/trend) | None |
+| [`universal`](/commands/universal) | None |
+| [`zone`](/commands/zone) | None |
 | [`search`](/commands/search) | None |
 
 ## Global flags
@@ -121,8 +143,6 @@ SUBCOMMANDS
   timer               Timer actions
   schedule            Schedule actions
   group               Group actions
-  zone                Zone actions
-  person              Person actions
   homeassistant       Home Assistant actions
   fan                 Fan actions
   humidifier          Humidifier actions
@@ -143,5 +163,29 @@ SUBCOMMANDS
   image               Image actions
   image_processing    Image processing actions
   device_tracker      Device tracker actions
+  alert               Alert actions
+  utility_meter       Utility meter actions
+  logbook             Logbook actions
+  system_log          System log actions
+  logger              Logger actions
+  recorder            Recorder actions
+  frontend            Frontend actions
+  backup              Backup actions
+  wake_on_lan, wol    Wake on LAN actions
+  bayesian            Bayesian sensor actions
+  command_line        Command line actions
+  derivative          Derivative sensor actions
+  filter              Filter sensor actions
+  generic_thermostat  Generic thermostat actions
+  history_stats       History stats actions
+  intent_script       Intent script actions
+  min_max             Min/max sensor actions
+  person              Person actions
+  rest                RESTful actions
+  statistics          Statistics sensor actions
+  template            Template actions
+  trend               Trend sensor actions
+  universal           Universal media player actions
+  zone                Zone actions
   search              Search Home Assistant entities, devices and areas, and ha-bridge commands
 ```

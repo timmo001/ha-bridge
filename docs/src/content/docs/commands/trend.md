@@ -1,35 +1,35 @@
 ---
-title: ha-bridge person
-description: Arguments and flags for every ha-bridge person command.
+title: ha-bridge trend
+description: Arguments and flags for every ha-bridge trend command.
 sidebar:
-  label: person
+  label: trend
 ---
 
 <!-- Generated from src/index.ts by `mise run docs:gen`. Do not edit by hand. -->
 
-Every `ha-bridge person` command and its help, as `--help` prints it. Each also accepts the [global flags](/commands#global-flags).
+Every `ha-bridge trend` command and its help, as `--help` prints it. Each also accepts the [global flags](/commands#global-flags).
 
-## `ha-bridge person`
+## `ha-bridge trend`
 
 ```text
 DESCRIPTION
-  Person actions
+  Trend sensor actions
 
 USAGE
-  ha-bridge person <subcommand> [flags]
+  ha-bridge trend <subcommand> [flags]
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
-## `ha-bridge person reload`
+## `ha-bridge trend reload`
 
 ```text
 DESCRIPTION
-  Reload the person YAML configuration
+  Reload the trend YAML configuration
 
 USAGE
-  ha-bridge person reload [flags]
+  ha-bridge trend reload [flags]
 
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)

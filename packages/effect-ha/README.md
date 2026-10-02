@@ -99,7 +99,7 @@ const data = yield* Schema.decodeUnknownEffect(LightTurnOnData)({
 
 ## Calendar events
 
-`Calendar.getEvents` builds a `calendar.get_events` action and `Calendar.eventsFrom` reads its response, keyed by calendar entity ID. `Schedule.getSchedule` and `Schedule.schedulesFrom` work the same way for schedules:
+`Calendar.getEvents` builds a `calendar.get_events` action and `Calendar.eventsFrom` reads its response, keyed by calendar entity ID. `Schedule.getSchedule` and `Schedule.schedulesFrom` work the same way for schedules, and `Recorder.getStatistics` and `Recorder.statisticsFrom` for long-term statistics, keyed by statistic ID:
 
 ```ts
 const response = yield* session.callAction(

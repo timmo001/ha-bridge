@@ -48,7 +48,7 @@ FLAGS
 
 ```text
 DESCRIPTION
-  Reload input_text helpers from YAML
+  Reload the input_text YAML configuration
 
 USAGE
   ha-bridge input_text reload [flags]

@@ -51,7 +51,7 @@ FLAGS
 
 ```text
 DESCRIPTION
-  Reload input_datetime helpers from YAML
+  Reload the input_datetime YAML configuration
 
 USAGE
   ha-bridge input_datetime reload [flags]

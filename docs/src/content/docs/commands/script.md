@@ -118,7 +118,7 @@ FLAGS
 
 ```text
 DESCRIPTION
-  Reload script helpers from YAML
+  Reload the script YAML configuration
 
 USAGE
   ha-bridge script reload [flags]
