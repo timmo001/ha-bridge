@@ -1686,3 +1686,68 @@ export const Hassio = {
   mountReload: (deviceId: string) =>
     onDomain("hassio.mount_reload", { device_id: deviceId }),
 };
+
+// Values passed to a configured command, which its templates read.
+export type CommandVariables = Readonly<Record<string, Schema.Json>>;
+
+const decodeResponse =
+  <S extends Schema.Top>(schema: S, label: string) =>
+  (response: Schema.Json | null) =>
+    Schema.decodeUnknownEffect(schema)(response).pipe(
+      Effect.mapError(
+        (error) =>
+          new HomeAssistantError({
+            message: `decode ${label}: ${error.message}`,
+          }),
+      ),
+    );
+
+// Runs a command configured in YAML, such as `shell_command.backup_db`.
+// `returnResponse` waits for its result.
+const configuredCommand = (domain: string) => ({
+  run: (
+    name: string,
+    variables?: CommandVariables,
+    options?: { readonly returnResponse?: boolean },
+  ): Action => {
+    const action = onDomain(`${domain}.${name}`, variables);
+
+    return options?.returnResponse === true
+      ? { ...action, return_response: true }
+      : action;
+  },
+  reload: reload(domain),
+});
+
+export const ShellCommandResponse = Schema.Struct({
+  stdout: Schema.String,
+  stderr: Schema.String,
+  returncode: Schema.Int,
+});
+
+export type ShellCommandResponse = typeof ShellCommandResponse.Type;
+
+export const ShellCommand = {
+  ...configuredCommand("shell_command"),
+  responseFrom: decodeResponse(ShellCommandResponse, "shell command response"),
+};
+
+// `content` is parsed JSON for JSON responses, otherwise text.
+export const RestCommandResponse = Schema.Struct({
+  status: Schema.Int,
+  content: Schema.Json,
+  headers: Schema.Record(
+    Schema.String,
+    Schema.Union([Schema.String, Schema.Array(Schema.String)]),
+  ),
+});
+
+export type RestCommandResponse = typeof RestCommandResponse.Type;
+
+export const RestCommand = {
+  ...configuredCommand("rest_command"),
+  responseFrom: decodeResponse(RestCommandResponse, "REST command response"),
+};
+
+// A script's response is whatever it puts in `output`.
+export const PythonScript = configuredCommand("python_script");

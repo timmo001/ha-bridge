@@ -85,6 +85,10 @@ import {
   Backup,
   BackupFolder,
   Hassio,
+  HomeAssistantError,
+  PythonScript,
+  RestCommand,
+  ShellCommand,
   HassioBackupFullData,
   HassioBackupPartialData,
   HassioRestorePartialData,
@@ -3662,6 +3666,7 @@ const hassio = domainCommand("hassio", undefined, "Supervisor actions", [
       ),
       json: Flag.Boolean("json").pipe(
         Flag.withDescription("Send the input as a JSON object"),
+        Flag.withDefault(false),
       ),
     },
     (input) =>
@@ -3755,6 +3760,83 @@ const hassio = domainCommand("hassio", undefined, "Supervisor actions", [
       }).pipe(withBridge),
   ).pipe(Command.withDescription("Reload a network storage mount")),
 ]);
+
+const configuredCommandGroup = (
+  domain: string,
+  description: string,
+  commands: {
+    readonly run: (
+      name: string,
+      variables?: Readonly<Record<string, Schema.Json>>,
+      options?: { readonly returnResponse?: boolean },
+    ) => Action;
+    readonly reload: () => Action;
+  },
+  readResponse: (
+    response: Schema.Json | null,
+  ) => Effect.Effect<Schema.Json, HomeAssistantError>,
+) =>
+  domainCommand(domain, undefined, description, [
+    Command.make(
+      "run",
+      {
+        name: Argument.String("name").pipe(
+          Argument.withDescription(`Name, without ${domain}.`),
+        ),
+        data: optionalFlag(
+          Flag.String("data"),
+          'Data to pass, as a JSON object, such as \'{"room":"office"}\'',
+        ),
+        response: Flag.Boolean("response").pipe(
+          Flag.withDescription("Wait for the result and print it as JSON"),
+          Flag.withDefault(false),
+        ),
+      },
+      (input) =>
+        Effect.gen(function* () {
+          const data = yield* parseOptional(
+            input.data,
+            parseJsonObject("data"),
+          );
+
+          const result = yield* callAction(
+            commands.run(input.name, data, { returnResponse: input.response }),
+          );
+
+          if (input.response) {
+            yield* printJson(
+              yield* readResponse(result).pipe(
+                Effect.mapError(
+                  (error) => new CommandError({ message: error.message }),
+                ),
+              ),
+            );
+          }
+        }).pipe(withBridge),
+    ).pipe(Command.withDescription("Run one")),
+    reloadCommand(domain, commands.reload),
+  ]);
+
+const shellCommand = configuredCommandGroup(
+  "shell_command",
+  "Shell command actions",
+  ShellCommand,
+  ShellCommand.responseFrom,
+);
+
+const restCommand = configuredCommandGroup(
+  "rest_command",
+  "REST command actions",
+  RestCommand,
+  RestCommand.responseFrom,
+);
+
+const pythonScript = configuredCommandGroup(
+  "python_script",
+  "Python script actions",
+  PythonScript,
+  Effect.succeed,
+);
 
 const yamlReloadDescriptions: Record<YamlReloadDomain, string> = {
   bayesian: "Bayesian sensor actions",
@@ -4117,6 +4199,9 @@ const commands = [
   backup,
   wakeOnLan,
   hassio,
+  shellCommand,
+  restCommand,
+  pythonScript,
   ...yamlReloadCommands,
 ] as const;
 
