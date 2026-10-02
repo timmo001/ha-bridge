@@ -16,8 +16,11 @@ The socket is at the [socket path](/configuration#socket-path), in a directory o
 | `CallAction` | `{ "action": string, "data"?: object, "target"?: object, "return_response"?: boolean }` | The action's response when `return_response` is `true`, otherwise `null` |
 | `GetConfig` | `null` | Home Assistant's config, such as `time_zone`, `location_name` and `version` |
 | `CameraSnapshot` | `{ "entityId": "camera.<name>" }` | `{ "contentType": string, "data": string }`, with the image bytes base64-encoded in `data` |
+| `Search` | `{ "query": string, "kinds"?: ("entity" \| "device" \| "area")[], "domain"?: string, "area"?: string, "deviceClass"?: string, "limit"?: number, "offset"?: number }` | `{ "results": SearchMatch[], "total": number, "unavailable": string[] }` |
 
 An entity update is `{ "state": EntityState, "name": string }`. `state` is the state object Home Assistant sends, with `entity_id`, `state`, `attributes`, `last_changed`, `last_reported`, `last_updated` and `context` (`id`, `parent_id`, `user_id`); everything past `state` can be missing. `name` is the display name described in [Bar JSON](/using/bar-json#output). `WatchEntity` sends the current state again when the entity's display name changes.
+
+A search match is `{ "kind", "id", "name", "score", "matched" }` plus `domain`, `deviceClass`, `device`, `parentDevice`, `area` and `floor` when they're known. `total` counts every close match before `offset` and `limit` (default 20) are applied, and `unavailable` lists any registries the bridge couldn't load, such as `area_registry`. `Search` reads only the bridge's cache, and fails with `SearchQueryEmpty` (`{ "_tag": "SearchQueryEmpty" }`) when the query has no words. [Searching](/using/search) describes the matching.
 
 `CallAction`, `GetConfig` and `CameraSnapshot` fail with `HomeAssistantError` (`{ "_tag": "HomeAssistantError", "message": string }`) when Home Assistant rejects the request or the bridge isn't connected to it. `CallAction` takes the same `action`, `data` and `target` keys as actions in Home Assistant automations.
 

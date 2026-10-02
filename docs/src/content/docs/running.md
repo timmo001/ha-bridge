@@ -21,7 +21,7 @@ systemctl --user status ha-bridge.service
 journalctl --user -u ha-bridge.service -f
 ```
 
-A healthy start logs `Bridge listening`, `Cached entity naming` and `Bridge subscribed to Home Assistant`.
+A healthy start logs `Bridge listening`, `Cached registries` and `Bridge subscribed to Home Assistant`.
 
 The service restarts 5 seconds after it fails, for example when it starts before you've run [setup](/configuration).
 
@@ -37,7 +37,7 @@ When the bridge connects to Home Assistant, it:
 
 1. Authenticates with your token.
 2. Subscribes to `state_changed` events, then reads every entity's state into its cache.
-3. Reads the entity and device registries, so watchers get the same display names the Home Assistant frontend shows.
+3. Reads the entity, device, area and floor registries, so watchers get the same display names the Home Assistant frontend shows and [search](/using/search) can match devices and areas.
 
 If the connection drops, the bridge reconnects every 5 seconds. Watchers stay connected to the bridge and get every entity's fresh state once it's back. Actions fail with "the bridge is not connected to Home Assistant" until then.
 

@@ -54,5 +54,6 @@
   "/commands/ai-task",
   "/commands/image",
   "/commands/image-processing",
-  "/commands/device-tracker"
+  "/commands/device-tracker",
+  "/commands/search"
 ]

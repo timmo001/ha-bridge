@@ -64,6 +64,7 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`image`](/commands/image) | None |
 | [`image_processing`](/commands/image-processing) | None |
 | [`device_tracker`](/commands/device-tracker) | None |
+| [`search`](/commands/search) | None |
 
 ## Global flags
 
@@ -140,4 +141,5 @@ SUBCOMMANDS
   image               Image actions
   image_processing    Image processing actions
   device_tracker      Device tracker actions
+  search              Search Home Assistant entities, devices and areas, and ha-bridge commands
 ```

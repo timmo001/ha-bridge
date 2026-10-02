@@ -20,7 +20,7 @@ description: The JSON lines that watchers print for status bars, shells and scri
 
 `text`, `tooltip` and `class` match Waybar's custom module JSON, so Waybar reads the line as it is and ignores `name`.
 
-`name` is built the way the Home Assistant frontend names entities: the device name and the entity's own name together, such as `Living Room Thermostat Temperature`. The bridge reads the entity and device registries when it connects and again shortly after either registry changes, so a rename shows in running watchers without a restart and costs no extra request per watcher. When the registries don't give a name, the entity's `friendly_name` is used.
+`name` is built the way Home Assistant dashboards name entities: the parent device name (for a child device), the device name and the entity's own name together, such as `Living Room Thermostat Temperature`. The bridge reads the registries when it connects and again shortly after any of them changes, so a rename shows in running watchers without a restart and costs no extra request per watcher. When the registries don't give a name, the entity's `friendly_name` is used.
 
 `watch entity` skips a line identical to the one before it, so an attribute change that doesn't change the output prints nothing.
 

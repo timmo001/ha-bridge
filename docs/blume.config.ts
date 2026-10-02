@@ -76,6 +76,7 @@ export default defineConfig({
         label: "Using",
         items: [
           "/using/watching",
+          "/using/search",
           "/using/bar-json",
           "/using/completions",
           "/using/protocol",
