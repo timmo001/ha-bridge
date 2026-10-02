@@ -3085,81 +3085,99 @@ const textFlag = (name: string, description: string) =>
     Flag.withDefault(""),
   );
 
+const entityOutputFlags = {
+  json: Flag.Boolean("json").pipe(
+    Flag.withDescription("Print the full entity update as JSON"),
+    Flag.withDefault(false),
+  ),
+  fields: Flag.String("field").pipe(
+    Flag.withDescription(
+      "Print only this field, such as state or attributes.brightness; repeat for more",
+    ),
+    Flag.atLeast(0),
+  ),
+  barJson: Flag.Boolean("bar-json").pipe(
+    Flag.withDescription("Print one bar JSON object per state"),
+    Flag.withDefault(false),
+  ),
+  icon: textFlag("icon", "Same as --text"),
+  text: textFlag(
+    "text",
+    "Text template shown instead of the state, such as {attributes.brightness}",
+  ),
+  textOn: textFlag("text-on", "Text appended when the entity is on"),
+  textOff: textFlag("text-off", "Text appended when the entity is off"),
+  tooltip: textFlag(
+    "tooltip",
+    "Tooltip template when no on or off tooltip applies",
+  ),
+  tooltipOn: textFlag("tooltip-on", "Tooltip when the entity is on"),
+  tooltipOff: textFlag("tooltip-off", "Tooltip when the entity is off"),
+  className: textFlag(
+    "class",
+    "Class template when no on or off class applies",
+  ),
+  classOn: textFlag("class-on", "Class when the entity is on"),
+  classOff: textFlag("class-off", "Class when the entity is off"),
+  onStates: Flag.String("on-state").pipe(
+    Flag.withDescription(
+      "State that counts as on; repeat for more (default: on)",
+    ),
+    Flag.atLeast(0),
+  ),
+};
+
+type EntityOutputOptions = Command.Command.Config.Infer<
+  typeof entityOutputFlags
+>;
+
+// Checks the output flags and returns how to print each entity update.
+const entityFormatter = ({
+  json,
+  fields,
+  barJson,
+  ...options
+}: EntityOutputOptions) =>
+  Effect.gen(function* () {
+    if (barJson && (json || fields.length > 0)) {
+      return yield* failWith("--bar-json can't be used with --json or --field");
+    }
+
+    if (options.icon !== "" && options.text !== "") {
+      return yield* failWith("use --text or --icon, not both");
+    }
+
+    return (update: EntityUpdate) => {
+      if (barJson) {
+        return entityBar(update.state, update.name, options);
+      }
+
+      if (fields.length > 0) {
+        return entityFields(update.state, update.name, fields, json);
+      }
+
+      return json ? JSON.stringify(update) : update.state.state;
+    };
+  });
+
+const entityIdArgument = (description: string) =>
+  Argument.String("entity_id").pipe(Argument.withDescription(description));
+
 const watchEntity = Command.make(
   "entity",
   {
-    entityId: Argument.String("entity_id").pipe(
-      Argument.withDescription("Entity to watch, for example light.office"),
-    ),
-    json: Flag.Boolean("json").pipe(
-      Flag.withDescription("Print the full entity update as JSON"),
-      Flag.withDefault(false),
-    ),
-    fields: Flag.String("field").pipe(
-      Flag.withDescription(
-        "Print only this field, such as state or attributes.brightness; repeat for more",
-      ),
-      Flag.atLeast(0),
-    ),
-    barJson: Flag.Boolean("bar-json").pipe(
-      Flag.withDescription("Print one bar JSON object per state"),
-      Flag.withDefault(false),
-    ),
-    icon: textFlag("icon", "Same as --text"),
-    text: textFlag(
-      "text",
-      "Text template shown instead of the state, such as {attributes.brightness}",
-    ),
-    textOn: textFlag("text-on", "Text appended when the entity is on"),
-    textOff: textFlag("text-off", "Text appended when the entity is off"),
-    tooltip: textFlag(
-      "tooltip",
-      "Tooltip template when no on or off tooltip applies",
-    ),
-    tooltipOn: textFlag("tooltip-on", "Tooltip when the entity is on"),
-    tooltipOff: textFlag("tooltip-off", "Tooltip when the entity is off"),
-    className: textFlag(
-      "class",
-      "Class template when no on or off class applies",
-    ),
-    classOn: textFlag("class-on", "Class when the entity is on"),
-    classOff: textFlag("class-off", "Class when the entity is off"),
-    onStates: Flag.String("on-state").pipe(
-      Flag.withDescription(
-        "State that counts as on; repeat for more (default: on)",
-      ),
-      Flag.atLeast(0),
-    ),
+    entityId: entityIdArgument("Entity to watch, for example light.office"),
+    ...entityOutputFlags,
   },
-  ({ entityId, json, fields, barJson, ...options }) =>
+  ({ entityId, ...output }) =>
     Effect.gen(function* () {
-      if (barJson && (json || fields.length > 0)) {
-        return yield* failWith(
-          "--bar-json can't be used with --json or --field",
-        );
-      }
+      const format = yield* entityFormatter(output);
 
-      if (options.icon !== "" && options.text !== "") {
-        return yield* failWith("use --text or --icon, not both");
-      }
-
-      if (!barJson && !json && fields.length === 0) {
+      if (!output.barJson && !output.json && output.fields.length === 0) {
         yield* Effect.logWarning(
           "Watch output is plain text. Use --json, --field or --bar-json for output in scripts and bars.",
         );
       }
-
-      const format = (update: EntityUpdate) => {
-        if (barJson) {
-          return entityBar(update.state, update.name, options);
-        }
-
-        if (fields.length > 0) {
-          return entityFields(update.state, update.name, fields, json);
-        }
-
-        return json ? JSON.stringify(update) : update.state.state;
-      };
 
       const client = yield* BridgeClient;
       yield* client.WatchEntity({ entityId }).pipe(
@@ -3177,6 +3195,35 @@ const watch = Command.make("watch").pipe(
   Command.withAlias("w"),
   Command.withDescription("Watch entities through the bridge"),
   Command.withSubcommands([watchEntity]),
+);
+
+const getEntity = Command.make(
+  "entity",
+  {
+    entityId: entityIdArgument("Entity to read, for example light.office"),
+    ...entityOutputFlags,
+  },
+  ({ entityId, ...output }) =>
+    Effect.gen(function* () {
+      const format = yield* entityFormatter(output);
+      const client = yield* BridgeClient;
+      const update = yield* client.GetEntity({ entityId });
+
+      if (update === null) {
+        return yield* failWith(`entity ${entityId} not found`);
+      }
+
+      yield* Console.log(format(update));
+    }).pipe(withBridge),
+).pipe(
+  Command.withAlias("e"),
+  Command.withDescription("Print an entity's current state once"),
+);
+
+const get = Command.make("get").pipe(
+  Command.withAlias("g"),
+  Command.withDescription("Read entities through the bridge"),
+  Command.withSubcommands([getEntity]),
 );
 
 const reportCliCause = (cause: Cause.Cause<unknown>) => {
@@ -3207,6 +3254,7 @@ const reportCliCause = (cause: Cause.Cause<unknown>) => {
 const commands = [
   serve,
   setup,
+  get,
   watch,
   assistSatellite,
   domainCommand("input_boolean", "ib", "Input boolean actions", [

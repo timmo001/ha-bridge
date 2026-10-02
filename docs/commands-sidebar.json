@@ -2,6 +2,7 @@
   "/commands",
   "/commands/serve",
   "/commands/setup",
+  "/commands/get",
   "/commands/watch",
   "/commands/assist-satellite",
   "/commands/input-boolean",

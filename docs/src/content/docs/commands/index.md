@@ -11,6 +11,7 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | --- | --- |
 | [`serve`](/commands/serve) | None |
 | [`setup`](/commands/setup) | None |
+| [`get`](/commands/get) | `g` |
 | [`watch`](/commands/watch) | `w` |
 | [`assist_satellite`](/commands/assist-satellite) | `as` |
 | [`input_boolean`](/commands/input-boolean) | `ib` |
@@ -88,6 +89,7 @@ GLOBAL FLAGS
 SUBCOMMANDS
   serve               Hold the shared Home Assistant connection and serve it on the bridge socket
   setup               Set the Home Assistant URL and access token
+  get, g              Read entities through the bridge
   watch, w            Watch entities through the bridge
   assist_satellite, as Assist satellite actions
   input_boolean, ib   Input boolean actions
