@@ -71,6 +71,7 @@ export default defineConfig({
           "/actions/images",
           "/actions/alerts",
           "/actions/system",
+          "/actions/supervisor",
           "/actions/home-assistant",
         ],
       },

@@ -63,6 +63,7 @@
   "/commands/frontend",
   "/commands/backup",
   "/commands/wake-on-lan",
+  "/commands/hassio",
   "/commands/bayesian",
   "/commands/command-line",
   "/commands/derivative",

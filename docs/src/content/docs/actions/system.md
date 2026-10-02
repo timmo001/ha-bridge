@@ -75,7 +75,7 @@ ha-bridge frontend reload-themes
 
 ## Backups
 
-`backup create` backs up Home Assistant to the default location, and `backup create-automatic` backs up with the automatic backup settings. On an installation with the Supervisor, `backup create` isn't available; use `hassio` instead.
+`backup create` backs up Home Assistant to the default location, and `backup create-automatic` backs up with the automatic backup settings. On an installation with the Supervisor, `backup create` isn't available; use [`hassio backup-full`](/actions/supervisor) instead.
 
 ```bash
 ha-bridge backup create-automatic

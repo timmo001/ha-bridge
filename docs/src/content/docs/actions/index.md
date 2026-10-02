@@ -68,6 +68,7 @@ Commands that need one entity, such as `script run`, `camera snapshot` and `assi
 | [Images and device trackers](/actions/images) | `image`, `image_processing`, `device_tracker` | None | Save images, scan and report locations |
 | [Alerts and utility meters](/actions/alerts) | `alert`, `utility_meter` | None | Acknowledge alerts, reset and calibrate meters |
 | [System](/actions/system) | `logbook`, `system_log`, `logger`, `recorder`, `frontend`, `backup`, `wake_on_lan` | `wol` | Logs, log levels, history, themes, backups and wake on LAN |
+| [Supervisor](/actions/supervisor) | `hassio` | None | Apps, backups, restores, host and mounts |
 | [Home Assistant](/actions/home-assistant) | `homeassistant`, `template`, `zone` and other YAML integrations | None | Any entity, restart, reload and location |
 
 [Commands](/commands) lists every argument and flag. Any other action can be called from your own app with [`CallAction`](/libraries).

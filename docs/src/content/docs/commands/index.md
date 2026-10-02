@@ -72,6 +72,7 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`frontend`](/commands/frontend) | None |
 | [`backup`](/commands/backup) | None |
 | [`wake_on_lan`](/commands/wake-on-lan) | `wol` |
+| [`hassio`](/commands/hassio) | None |
 | [`bayesian`](/commands/bayesian) | None |
 | [`command_line`](/commands/command-line) | None |
 | [`derivative`](/commands/derivative) | None |
@@ -172,6 +173,7 @@ SUBCOMMANDS
   frontend            Frontend actions
   backup              Backup actions
   wake_on_lan, wol    Wake on LAN actions
+  hassio              Supervisor actions
   bayesian            Bayesian sensor actions
   command_line        Command line actions
   derivative          Derivative sensor actions
