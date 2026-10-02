@@ -13,6 +13,7 @@ import { Socket } from "effect/socket";
 import type { Action } from "./Action.js";
 import { HomeAssistantConfig } from "./HomeAssistantConfig.js";
 import { HomeAssistantError } from "./HomeAssistantError.js";
+import type { FireEventRequest } from "./Event.js";
 import type { TemplateRequest } from "./Template.js";
 import {
   ExtractedTarget,
@@ -59,6 +60,11 @@ export type HomeAssistantCommand =
         | "config/label_registry/list";
     }
   | { readonly type: "unsubscribe_events"; readonly subscription: number }
+  | {
+      readonly type: "fire_event";
+      readonly event_type: string;
+      readonly event_data?: FireEventRequest["event_data"] | undefined;
+    }
   | {
       readonly type: "extract_from_target";
       readonly target: Target;

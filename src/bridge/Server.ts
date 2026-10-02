@@ -28,6 +28,8 @@ const Handlers = BridgeRpcs.toLayer(
       Search: (request) => homeAssistant.search(request),
       RenderTemplate: (request) => homeAssistant.renderTemplate(request),
       WatchTemplate: (request) => homeAssistant.watchTemplate(request),
+      WatchEvents: (request) => homeAssistant.watchEvents(request),
+      FireEvent: (request) => homeAssistant.fireEvent(request),
     });
   }),
 );

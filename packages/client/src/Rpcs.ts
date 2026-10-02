@@ -9,6 +9,9 @@ import {
   TemplateRender,
   TemplateRequest,
   TemplateUpdate,
+  FireEventRequest,
+  HomeAssistantEvent,
+  WatchEventsRequest,
 } from "@timmo001/effect-ha";
 import { EntityUpdate } from "./Entity.js";
 import { SearchEmpty, SearchRequest, SearchResults } from "./Search.js";
@@ -61,6 +64,19 @@ export class BridgeRpcs extends RpcGroup.make(
     success: TemplateUpdate,
     error: HomeAssistantError,
     stream: true,
+  }),
+  // Every event of `event_type`, or of every type, following reconnects.
+  // Most types need an admin token.
+  Rpc.make("WatchEvents", {
+    payload: WatchEventsRequest,
+    success: HomeAssistantEvent,
+    error: HomeAssistantError,
+    stream: true,
+  }),
+  // Fires an event on Home Assistant's event bus. Needs an admin token.
+  Rpc.make("FireEvent", {
+    payload: FireEventRequest,
+    error: HomeAssistantError,
   }),
   // Fuzzy search over cached entities, devices and areas, or a list of
   // them without a query. Only a target needs Home Assistant.

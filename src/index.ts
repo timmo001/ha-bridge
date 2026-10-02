@@ -4068,6 +4068,74 @@ const template = domainCommand(
   ],
 );
 
+const eventCommand = Command.make("event").pipe(
+  Command.withDescription(
+    "Watch and fire events on Home Assistant's event bus",
+  ),
+  Command.withSubcommands([
+    Command.make(
+      "watch",
+      {
+        eventType: Argument.String("event-type").pipe(
+          Argument.withDescription(
+            "Event type, such as call_service; every type when left out. Most need an admin token",
+          ),
+          Argument.optional,
+        ),
+      },
+      (input) =>
+        Effect.gen(function* () {
+          const client = yield* BridgeClient;
+
+          yield* client
+            .WatchEvents({
+              event_type: Option.getOrUndefined(input.eventType),
+            })
+            .pipe(
+              Stream.catchTag("HomeAssistantError", (error) =>
+                Stream.fromEffect(
+                  failWith(`could not watch events: ${error.message}`),
+                ),
+              ),
+              Stream.runForEach((event) => Console.log(JSON.stringify(event))),
+            );
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withAlias("w"),
+      Command.withDescription("Print each event as a line of JSON"),
+    ),
+    Command.make(
+      "fire",
+      {
+        eventType: Argument.String("event-type").pipe(
+          Argument.withDescription("Event type, such as my_event"),
+        ),
+        data: optionalFlag(
+          Flag.String("data"),
+          'Event data as a JSON object, such as \'{"room":"office"}\'',
+        ),
+      },
+      (input) =>
+        Effect.gen(function* () {
+          const eventData = yield* parseOptional(
+            input.data,
+            parseJsonObject("data"),
+          );
+
+          const client = yield* BridgeClient;
+
+          yield* client
+            .FireEvent({ event_type: input.eventType, event_data: eventData })
+            .pipe(
+              Effect.catchTag("HomeAssistantError", (error) =>
+                failWith(`could not fire the event: ${error.message}`),
+              ),
+            );
+        }).pipe(withBridge),
+    ).pipe(Command.withDescription("Fire an event. Needs an admin token")),
+  ]),
+);
+
 const serve = Command.make("serve", {}, () =>
   Effect.flatMap(socketPath, serveBridge).pipe(
     Effect.provide(
@@ -4413,6 +4481,7 @@ const commands = [
   googleAssistant,
   lovelace,
   template,
+  eventCommand,
   ...yamlReloadCommands,
 ] as const;
 

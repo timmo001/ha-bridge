@@ -36,6 +36,9 @@ import {
   type TemplateRender,
   type TemplateRequest,
   TemplateUpdate,
+  HomeAssistantEvent,
+  type FireEventRequest,
+  type WatchEventsRequest,
   type HomeAssistantSubscription,
 } from "@timmo001/effect-ha";
 import {
@@ -92,6 +95,14 @@ export interface HomeAssistantService {
   readonly watchTemplate: (
     request: TemplateRequest,
   ) => Stream.Stream<TemplateUpdate, HomeAssistantError>;
+  // Every event of a type, or of every type, following reconnects. Fails
+  // when Home Assistant refuses the subscription.
+  readonly watchEvents: (
+    request: WatchEventsRequest,
+  ) => Stream.Stream<HomeAssistantEvent, HomeAssistantError>;
+  readonly fireEvent: (
+    request: FireEventRequest,
+  ) => Effect.Effect<void, HomeAssistantError>;
   // Searches the cached states and registries. Only a target asks Home
   // Assistant, to expand it.
   readonly search: (
@@ -143,6 +154,16 @@ const decodeTemplateUpdate = (event: Schema.Json) =>
       (error) =>
         new HomeAssistantError({
           message: `decode template render: ${error.message}`,
+        }),
+    ),
+  );
+
+const decodeEvent = (event: Schema.Json) =>
+  Schema.decodeUnknownEffect(HomeAssistantEvent)(event).pipe(
+    Effect.mapError(
+      (error) =>
+        new HomeAssistantError({
+          message: `decode event: ${error.message}`,
         }),
     ),
   );
@@ -594,6 +615,19 @@ export class HomeAssistant extends Context.Service<
           Stream.mapEffect(decodeTemplateUpdate),
         );
 
+      const watchEvents = (request: WatchEventsRequest) =>
+        followSessions({ type: "subscribe_events", ...request }).pipe(
+          Stream.mapEffect(decodeEvent),
+        );
+
+      const fireEvent = Effect.fn("HomeAssistant.fireEvent")(function* (
+        request: FireEventRequest,
+      ) {
+        const current = yield* connected;
+
+        yield* current.request({ type: "fire_event", ...request });
+      });
+
       const callAction = Effect.fn("HomeAssistant.callAction")(function* (
         action: Action,
       ) {
@@ -728,6 +762,8 @@ export class HomeAssistant extends Context.Service<
         cameraSnapshot: snapshot,
         renderTemplate,
         watchTemplate,
+        watchEvents,
+        fireEvent,
         search: runSearch,
       });
     }),

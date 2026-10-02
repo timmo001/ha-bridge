@@ -16,6 +16,22 @@ export const HomeAssistantEvent = Schema.Struct({
 
 export type HomeAssistantEvent = typeof HomeAssistantEvent.Type;
 
+// Events to watch, of one type or every type.
+export const WatchEventsRequest = Schema.Struct({
+  // Every event when left out; most types need an admin token.
+  event_type: Schema.optional(Schema.String),
+});
+
+export type WatchEventsRequest = typeof WatchEventsRequest.Type;
+
+// An event to fire on Home Assistant's event bus. Needs an admin token.
+export const FireEventRequest = Schema.Struct({
+  event_type: Schema.String,
+  event_data: Schema.optional(Schema.Record(Schema.String, Schema.Json)),
+});
+
+export type FireEventRequest = typeof FireEventRequest.Type;
+
 // A `state_changed` event. `new_state` is null when the entity was removed.
 export const StateChangedEvent = Schema.Struct({
   event_type: Schema.Literal("state_changed"),
