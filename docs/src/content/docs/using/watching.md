@@ -13,7 +13,28 @@ Watch commands print an entity's state straight away, then again on every change
 ha-bridge watch entity input_boolean.guest_mode
 ```
 
-Without `--bar-json` it prints the raw state on each line and warns on stderr that scripts should use JSON. With `--bar-json` it prints one JSON object per line for status bars and scripts:
+Without an output flag it prints the raw state on each line and warns on stderr that scripts should use JSON.
+
+`--json` prints the full entity update, the same shape the [bridge protocol](/using/protocol#rpcs) sends, including Home Assistant's timestamps and context:
+
+```bash
+ha-bridge watch entity sun.sun --json
+# {"state":{"entity_id":"sun.sun","state":"above_horizon","attributes":{...},"last_changed":"...","last_reported":"...","last_updated":"...","context":{...}},"name":"Sun"}
+```
+
+`--field` picks values by path, the same paths as [bar templates](/using/bar-json#templates). One field prints its raw value; several, or one with `--json`, print an object keyed by path, with `null` for anything missing:
+
+```bash
+ha-bridge watch entity light.office --field state
+# on
+
+ha-bridge watch entity light.office --field state --field attributes.brightness
+# {"state":"on","attributes.brightness":128}
+```
+
+A line identical to the one before it is skipped, so `--field state` only prints when the state changes.
+
+With `--bar-json` it prints one JSON object per line for status bars and scripts:
 
 ```bash
 ha-bridge watch entity input_boolean.guest_mode \
@@ -45,4 +66,4 @@ ha-bridge climate watch air_conditioner
 
 ## When the bridge goes away
 
-A watcher prints nothing until the bridge has a state for the entity, then keeps running across Home Assistant reconnects. It exits with status 1 when it can't reach the bridge, or when the bridge stops. Run watchers under something that restarts them, such as Waybar's `restart-interval` or a systemd unit with `Restart=on-failure`.
+A watcher prints nothing until the bridge has a state for the entity, then keeps running across Home Assistant reconnects. When an entity or its device is renamed in Home Assistant, watchers print again with the new name. It exits with status 1 when it can't reach the bridge, or when the bridge stops. Run watchers under something that restarts them, such as Waybar's `restart-interval` or a systemd unit with `Restart=on-failure`.

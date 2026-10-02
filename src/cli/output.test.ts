@@ -4,17 +4,22 @@ import {
   climateStateText,
   coverStateText,
   entityBar,
+  entityFields,
   stateTextBar,
 } from "./output.js";
 
 const noOptions = {
   icon: "",
+  text: "",
   textOn: "",
   textOff: "",
+  tooltip: "",
   tooltipOn: "",
   tooltipOff: "",
+  className: "",
   classOn: "",
   classOff: "",
+  onStates: [],
 };
 
 const temperature: EntityState = {
@@ -61,6 +66,77 @@ describe("bar JSON", () => {
 
     expect(stateTextBar(curtain, "Curtains", coverStateText)).toBe(
       `{"class":"open","name":"Curtains","text":"open","tooltip":"open"}`,
+    );
+  });
+
+  test("renders templates, leaving missing paths empty", () => {
+    const light: EntityState = {
+      entity_id: "light.office",
+      state: "on",
+      attributes: { brightness: 128 },
+    };
+
+    expect(
+      entityBar(light, "Office", {
+        ...noOptions,
+        text: "{attributes.brightness}%",
+        tooltip: "{name}: {attributes.color_mode}",
+      }),
+    ).toBe(`{"class":"on","name":"Office","text":"128%","tooltip":"Office: "}`);
+  });
+
+  test("keeps a set template that renders empty", () => {
+    const player: EntityState = { entity_id: "media_player.tv", state: "off" };
+
+    expect(
+      entityBar(player, "", {
+        ...noOptions,
+        text: "{attributes.media_title}",
+      }),
+    ).toBe(`{"class":"off","text":"","tooltip":"off"}`);
+  });
+
+  test("uses --on-state to choose the on flags", () => {
+    const curtain: EntityState = { entity_id: "cover.curtain", state: "open" };
+
+    expect(
+      entityBar(curtain, "", {
+        ...noOptions,
+        classOn: "opened",
+        classOff: "shut",
+        onStates: ["open"],
+      }),
+    ).toBe(`{"class":"opened","text":"open","tooltip":"open"}`);
+  });
+});
+
+describe("entityFields", () => {
+  const light: EntityState = {
+    entity_id: "light.office",
+    state: "on",
+    attributes: { brightness: 128, hs_color: [30, 50] },
+  };
+
+  test("prints one string field raw", () => {
+    expect(entityFields(light, "Office", ["state"], false)).toBe("on");
+  });
+
+  test("prints one object field as JSON", () => {
+    expect(entityFields(light, "Office", ["attributes.hs_color"], false)).toBe(
+      "[30,50]",
+    );
+  });
+
+  test("prints several fields as an object with null for missing", () => {
+    expect(
+      entityFields(
+        light,
+        "Office",
+        ["state", "attributes.hs_color.0", "attributes.missing"],
+        false,
+      ),
+    ).toBe(
+      `{"state":"on","attributes.hs_color.0":30,"attributes.missing":null}`,
     );
   });
 });

@@ -113,6 +113,7 @@ import {
   climateStateText,
   coverStateText,
   entityBar,
+  entityFields,
   stateTextBar,
 } from "./cli/output.js";
 import { BridgeConfig } from "./config/Config.js";
@@ -3080,36 +3081,82 @@ const watchEntity = Command.make(
     entityId: Argument.String("entity_id").pipe(
       Argument.withDescription("Entity to watch, for example light.office"),
     ),
+    json: Flag.Boolean("json").pipe(
+      Flag.withDescription("Print the full entity update as JSON"),
+      Flag.withDefault(false),
+    ),
+    fields: Flag.String("field").pipe(
+      Flag.withDescription(
+        "Print only this field, such as state or attributes.brightness; repeat for more",
+      ),
+      Flag.atLeast(0),
+    ),
     barJson: Flag.Boolean("bar-json").pipe(
       Flag.withDescription("Print one bar JSON object per state"),
       Flag.withDefault(false),
     ),
-    icon: textFlag("icon", "Text to show instead of the state"),
+    icon: textFlag("icon", "Same as --text"),
+    text: textFlag(
+      "text",
+      "Text template shown instead of the state, such as {attributes.brightness}",
+    ),
     textOn: textFlag("text-on", "Text appended when the entity is on"),
     textOff: textFlag("text-off", "Text appended when the entity is off"),
+    tooltip: textFlag(
+      "tooltip",
+      "Tooltip template when no on or off tooltip applies",
+    ),
     tooltipOn: textFlag("tooltip-on", "Tooltip when the entity is on"),
     tooltipOff: textFlag("tooltip-off", "Tooltip when the entity is off"),
+    className: textFlag(
+      "class",
+      "Class template when no on or off class applies",
+    ),
     classOn: textFlag("class-on", "Class when the entity is on"),
     classOff: textFlag("class-off", "Class when the entity is off"),
+    onStates: Flag.String("on-state").pipe(
+      Flag.withDescription(
+        "State that counts as on; repeat for more (default: on)",
+      ),
+      Flag.atLeast(0),
+    ),
   },
-  ({ entityId, barJson, ...options }) =>
+  ({ entityId, json, fields, barJson, ...options }) =>
     Effect.gen(function* () {
-      if (!barJson) {
-        yield* Effect.logWarning(
-          "Watch output is plain text without --bar-json. Use --bar-json for stable JSON output in scripts and bars.",
+      if (barJson && (json || fields.length > 0)) {
+        return yield* failWith(
+          "--bar-json can't be used with --json or --field",
         );
       }
 
-      const client = yield* BridgeClient;
-      yield* client
-        .WatchEntity({ entityId })
-        .pipe(
-          Stream.runForEach(({ state, name }: EntityUpdate) =>
-            Console.log(
-              barJson ? entityBar(state, name, options) : state.state,
-            ),
-          ),
+      if (options.icon !== "" && options.text !== "") {
+        return yield* failWith("use --text or --icon, not both");
+      }
+
+      if (!barJson && !json && fields.length === 0) {
+        yield* Effect.logWarning(
+          "Watch output is plain text. Use --json, --field or --bar-json for output in scripts and bars.",
         );
+      }
+
+      const format = (update: EntityUpdate) => {
+        if (barJson) {
+          return entityBar(update.state, update.name, options);
+        }
+
+        if (fields.length > 0) {
+          return entityFields(update.state, update.name, fields, json);
+        }
+
+        return json ? JSON.stringify(update) : update.state.state;
+      };
+
+      const client = yield* BridgeClient;
+      yield* client.WatchEntity({ entityId }).pipe(
+        Stream.map(format),
+        Stream.changes,
+        Stream.runForEach((line) => Console.log(line)),
+      );
     }).pipe(withBridge),
 ).pipe(
   Command.withAlias("e"),

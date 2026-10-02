@@ -1,3 +1,4 @@
+import { Predicate, Schema } from "effect";
 import {
   numberAttribute,
   stateWithUnit,
@@ -7,12 +8,16 @@ import {
 
 export interface EntityBarOptions {
   readonly icon: string;
+  readonly text: string;
   readonly textOn: string;
   readonly textOff: string;
+  readonly tooltip: string;
   readonly tooltipOn: string;
   readonly tooltipOff: string;
+  readonly className: string;
   readonly classOn: string;
   readonly classOff: string;
+  readonly onStates: ReadonlyArray<string>;
 }
 
 interface BarPayload {
@@ -39,23 +44,100 @@ const appendBarText = (baseText: string, label: string) => {
   return baseText === "" ? label : `${baseText} ${label}`;
 };
 
+// Field paths and templates read the state plus these derived values.
+const fieldSource = (state: EntityState, name: string): Schema.Json => ({
+  ...state,
+  name,
+  unit: stringAttribute(state, "unit_of_measurement") ?? "",
+  state_with_unit: stateWithUnit(state),
+});
+
+const isJsonArray = Schema.is(Schema.Array(Schema.Json));
+
+const isJsonObject = Schema.is(Schema.Record(Schema.String, Schema.Json));
+
+const fieldStep = (
+  value: Schema.Json | undefined,
+  key: string,
+): Schema.Json | undefined => {
+  if (isJsonArray(value)) {
+    return /^\d+$/.test(key) ? value[Number(key)] : undefined;
+  }
+
+  return isJsonObject(value) && Object.hasOwn(value, key)
+    ? value[key]
+    : undefined;
+};
+
+// Dotted path such as attributes.hs_color.0; number parts index lists.
+const fieldValue = (source: Schema.Json, path: string) =>
+  path.split(".").reduce(fieldStep, source);
+
+const fieldText = (value: Schema.Json | undefined) =>
+  Predicate.isString(value)
+    ? value
+    : Predicate.isNullish(value)
+      ? ""
+      : JSON.stringify(value);
+
+const renderTemplate = (template: string, source: Schema.Json) =>
+  template.replaceAll(/\{([^{}]+)\}/g, (_, path: string) =>
+    fieldText(fieldValue(source, path)),
+  );
+
+// One field without --json prints the raw value; otherwise an object keyed by
+// path, with null for missing paths so every requested key is present.
+export const entityFields = (
+  state: EntityState,
+  name: string,
+  paths: ReadonlyArray<string>,
+  json: boolean,
+) => {
+  const source = fieldSource(state, name);
+  const [only, ...rest] = paths;
+
+  if (!json && only !== undefined && rest.length === 0) {
+    return fieldText(fieldValue(source, only));
+  }
+
+  return JSON.stringify(
+    Object.fromEntries(
+      paths.map((path) => [path, fieldValue(source, path) ?? null]),
+    ),
+  );
+};
+
+// A set flag wins even when its template renders empty.
 export const entityBar = (
   state: EntityState,
   name: string,
   options: EntityBarOptions,
 ) => {
-  const on = state.state === "on";
+  const source = fieldSource(state, name);
+  const render = (template: string) => renderTemplate(template, source);
+
+  const pick = (template: string, fallback: string) =>
+    template === "" ? fallback : render(template);
+
+  const on = (
+    options.onStates.length === 0 ? ["on"] : options.onStates
+  ).includes(state.state);
 
   const text = appendBarText(
-    options.icon || stateWithUnit(state),
-    on ? options.textOn : options.textOff,
+    pick(options.icon || options.text, stateWithUnit(state)),
+    render(on ? options.textOn : options.textOff),
   );
 
   return encodeBar({
     text,
-    tooltip:
-      (on ? options.tooltipOn : options.tooltipOff) || stateWithUnit(state),
-    className: (on ? options.classOn : options.classOff) || state.state,
+    tooltip: pick(
+      (on ? options.tooltipOn : options.tooltipOff) || options.tooltip,
+      stateWithUnit(state),
+    ),
+    className: pick(
+      (on ? options.classOn : options.classOff) || options.className,
+      state.state,
+    ),
     name,
   });
 };

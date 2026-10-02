@@ -17,7 +17,7 @@ The socket is at the [socket path](/configuration#socket-path), in a directory o
 | `GetConfig` | `null` | Home Assistant's config, such as `time_zone`, `location_name` and `version` |
 | `CameraSnapshot` | `{ "entityId": "camera.<name>" }` | `{ "contentType": string, "data": string }`, with the image bytes base64-encoded in `data` |
 
-An entity update is `{ "state": EntityState, "name": string }`, where `state` is the state object Home Assistant sends (`entity_id`, `state`, `attributes` and timestamps) and `name` is the display name described in [Bar JSON](/using/bar-json#output).
+An entity update is `{ "state": EntityState, "name": string }`. `state` is the state object Home Assistant sends, with `entity_id`, `state`, `attributes`, `last_changed`, `last_reported`, `last_updated` and `context` (`id`, `parent_id`, `user_id`); everything past `state` can be missing. `name` is the display name described in [Bar JSON](/using/bar-json#output). `WatchEntity` sends the current state again when the entity's display name changes.
 
 `CallAction`, `GetConfig` and `CameraSnapshot` fail with `HomeAssistantError` (`{ "_tag": "HomeAssistantError", "message": string }`) when Home Assistant rejects the request or the bridge isn't connected to it. `CallAction` takes the same `action`, `data` and `target` keys as actions in Home Assistant automations.
 
