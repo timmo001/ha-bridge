@@ -17,7 +17,7 @@ compatibility: Requires the Home Assistant core and frontend checkouts beside ha
 - `Camera.ts`: REST, not WebSocket. `/api/camera_proxy/<entity_id>` with a bearer token.
 - `naming.ts`: display names from the registries, ported from the frontend's `compute_entity_name.ts` and `strip_prefix_from_entity_name.ts`. Keep it in step with those files.
 
-The bridge's `src/homeassistant/HomeAssistant.ts` drives the session: it subscribes to `state_changed` before calling `get_states` so no change is lost, caches every state, fetches the registries for naming on a best-effort basis and reconnects after 5 seconds.
+The bridge's `src/homeassistant/HomeAssistant.ts` drives the session: it subscribes to `state_changed` and the entity and device registry events before calling `get_states` so no change is lost, caches every state, fetches the registries for naming on a best-effort basis (again 500 ms after registry events stop) and reconnects after 5 seconds.
 
 ## Wire basics
 
@@ -26,12 +26,12 @@ The bridge's `src/homeassistant/HomeAssistant.ts` drives the session: it subscri
 - Results are `{ id, type: "result", success, result }` or `{ ..., success: false, error: { code, message } }`. `HomeAssistantError` keeps only the message.
 - Events are `{ id, type: "event", event }`, where `id` is the id of the subscribing request.
 - `call_service` succeeds with `{ context, response? }`; `response` is present only when `return_response` was sent.
-- `state_changed` subscriptions, `config/entity_registry/list_for_display` and `config/device_registry/list` work for non-admin users. Other events and most registry commands need an admin token.
-- Core drops a client whose outgoing queue reaches 4096 messages, so the reader must keep up. Keep `onState` cheap.
+- `state_changed`, `entity_registry_updated` and `device_registry_updated` subscriptions, `config/entity_registry/list_for_display` and `config/device_registry/list` work for non-admin users. Other events and most registry commands need an admin token.
+- Core drops a client whose outgoing queue reaches 4096 messages, so the reader must keep up. Keep `onState` and `onEvent` cheap.
 
 ## Traps in the current code
 
-- `dispatch` ignores the event `id` and only handles `state_changed`. A second subscription needs events routed by subscription id.
+- `dispatch` ignores the event `id`. It sends `state_changed` to `onState` and only the event type of anything else to `onEvent`; a consumer that needs other event data needs events routed by subscription id.
 - Frames that fail to decode are logged at debug level and dropped. A new reply type, such as `pong`, must be added to the decoded union, or the request waits until the connection closes.
 - Don't send `supported_features` with `coalesce_messages` until the reader splits JSON arrays; Core then batches several messages into one frame.
 - `list_for_display` uses compact keys (`ei`, `di`, `en`). `config/device_registry/list` returns full devices mixed with stripped child devices that have `parent_device_id` but no `connections`; see the frontend's `src/data/ws-device_registry.ts` before relying on fields beyond `id` and the names.

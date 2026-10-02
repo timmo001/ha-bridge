@@ -6,6 +6,7 @@ import {
   Match,
   Option,
   PubSub,
+  Queue,
   Ref,
   Schema,
   Stream,
@@ -46,6 +47,11 @@ export interface HomeAssistantService {
 
 const reconnectDelay = "5 seconds";
 
+// Both are allowed for non-admin tokens. The frontend waits the same 500 ms.
+const registryEvents = ["entity_registry_updated", "device_registry_updated"];
+
+const registryRefreshDelay = "500 millis";
+
 // `State` is one entity change. `Reset` means the cache was replaced from a
 // `get_states` snapshot; watchers re-read it instead of receiving every entity.
 // Publishing the whole snapshot would drop entities once a subscriber's buffer
@@ -77,10 +83,13 @@ export class HomeAssistant extends Context.Service<
       const session = yield* Ref.make(Option.none<HomeAssistantSession>());
       const changes = yield* PubSub.sliding<CacheEvent>(4096);
 
+      const nameWith = (names: EntityNamer | undefined, state: EntityState) =>
+        displayName(names, state.entity_id, friendlyName(state));
+
       const withName = (state: EntityState) =>
         Effect.map(Ref.get(namer), (current) => ({
           state,
-          name: displayName(current, state.entity_id, friendlyName(state)),
+          name: nameWith(current, state),
         }));
 
       const store = (state: EntityState) =>
@@ -106,13 +115,69 @@ export class HomeAssistant extends Context.Service<
         );
       });
 
+      // Re-sends only the states whose display name changed, so watchers
+      // print the new name.
+      const refreshNames = Effect.fn("HomeAssistant.refreshNames")(
+        function* (current: HomeAssistantSession) {
+          const previous = yield* Ref.get(namer);
+          yield* refreshNamer(current);
+          const next = yield* Ref.get(namer);
+
+          yield* PubSub.publishAll(
+            changes,
+            Array.from(states.values())
+              .filter(
+                (state) => nameWith(previous, state) !== nameWith(next, state),
+              )
+              .map((state) => stateEvent({ state })),
+          );
+        },
+        Effect.catch((error) =>
+          Effect.logWarning("Could not refresh entity names", error.message),
+        ),
+      );
+
       const runSession = Effect.gen(function* () {
-        const current = yield* connect({ ...config, onState: store });
+        const registryChanges = yield* Queue.sliding<void>(1);
+
+        const current = yield* connect({
+          ...config,
+          onState: store,
+          // Only mark the change; the reader must keep up with Home Assistant.
+          onEvent: (eventType) =>
+            registryEvents.includes(eventType)
+              ? Effect.asVoid(Queue.offer(registryChanges, undefined))
+              : Effect.void,
+        });
+
         // Subscribe before the snapshot so no change falls between them.
         yield* current.request({
           type: "subscribe_events",
           event_type: "state_changed",
         });
+        yield* Effect.forEach(
+          registryEvents,
+          (event_type) =>
+            current.request({ type: "subscribe_events", event_type }),
+          { discard: true },
+        ).pipe(
+          Effect.catch((error) =>
+            Effect.logWarning(
+              "Could not subscribe to registry changes",
+              error.message,
+            ),
+          ),
+        );
+        // Naming is best-effort; friendly names are the fallback. It runs
+        // before the snapshot so the first states already use registry names.
+        yield* refreshNamer(current).pipe(
+          Effect.catch((error) =>
+            Effect.logWarning(
+              "Could not fetch registries for naming",
+              error.message,
+            ),
+          ),
+        );
 
         const snapshot = yield* current.request({ type: "get_states" }).pipe(
           Effect.flatMap(decodeStates),
@@ -132,14 +197,10 @@ export class HomeAssistant extends Context.Service<
           }
         });
         yield* PubSub.publish(changes, cacheReset());
-        // Naming is best-effort; friendly names are the fallback.
-        yield* refreshNamer(current).pipe(
-          Effect.catch((error) =>
-            Effect.logWarning(
-              "Could not fetch registries for naming",
-              error.message,
-            ),
-          ),
+        yield* Stream.fromQueue(registryChanges).pipe(
+          Stream.debounce(registryRefreshDelay),
+          Stream.runForEach(() => refreshNames(current)),
+          Effect.forkScoped,
         );
         yield* Ref.set(session, Option.some(current));
         yield* Effect.logInfo("Bridge subscribed to Home Assistant");
