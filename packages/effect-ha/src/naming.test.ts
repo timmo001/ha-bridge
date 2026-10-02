@@ -14,6 +14,7 @@ const namer = entityNamerFrom(
       { ei: "sensor.brand", di: "office", en: "Office Philips level" },
       { ei: "sensor.loose", en: "Loose sensor" },
       { ei: "switch.outlet", di: "outlet", en: "Power" },
+      { ei: "light.bar", di: "bar", en: "Bar Plug " },
     ],
   },
   [
@@ -21,6 +22,7 @@ const namer = entityNamerFrom(
     { id: "fan", name: "Fan", name_by_user: "Desk fan" },
     { id: "strip", name: "Power strip" },
     { id: "outlet", name: "Outlet 1", parent_device_id: "strip" },
+    { id: "bar", name: "Bar Plug" },
   ],
 );
 
@@ -58,5 +60,9 @@ describe("displayName", () => {
     expect(displayName(namer, "switch.outlet", "x")).toBe(
       "Power strip Outlet 1 Power",
     );
+  });
+
+  test("uses the device name when the entity name only adds spaces", () => {
+    expect(displayName(namer, "light.bar", "x")).toBe("Bar Plug");
   });
 });

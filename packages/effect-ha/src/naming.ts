@@ -138,7 +138,7 @@ export const entityNameParts = (
 
   if (device === undefined) {
     return {
-      entity: entry.name || undefined,
+      entity: entry.name.trim() || undefined,
       device: undefined,
       parentDevice: undefined,
     };
@@ -149,7 +149,7 @@ export const entityNameParts = (
   const parentDevice =
     parentId === undefined ? undefined : namer.deviceNames.get(parentId);
 
-  let entity: string | undefined = entry.name;
+  let entity: string | undefined = entry.name.trim();
 
   if (entity === "" || entity === device) {
     entity = undefined;
