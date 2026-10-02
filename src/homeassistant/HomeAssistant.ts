@@ -39,6 +39,11 @@ import {
   HomeAssistantEvent,
   type FireEventRequest,
   type WatchEventsRequest,
+  type History,
+  historyFrom,
+  type LogbookEntry,
+  logbookEventFrom,
+  logbookFrom,
   type HomeAssistantSubscription,
 } from "@timmo001/effect-ha";
 import {
@@ -48,6 +53,9 @@ import {
   type SearchRequest,
   type SearchResults,
   type TargetRequest,
+  type HistoryRequest,
+  type LogbookRequest,
+  type WatchLogbookRequest,
 } from "@timmo001/effect-ha-bridge";
 import { Search, selectResults } from "../search/Search.js";
 import {
@@ -103,6 +111,19 @@ export interface HomeAssistantService {
   readonly fireEvent: (
     request: FireEventRequest,
   ) => Effect.Effect<void, HomeAssistantError>;
+  readonly getHistory: (
+    request: HistoryRequest,
+  ) => Effect.Effect<History, HomeAssistantError | TargetError>;
+  readonly getLogbook: (
+    request: LogbookRequest,
+  ) => Effect.Effect<
+    ReadonlyArray<LogbookEntry>,
+    HomeAssistantError | TargetError
+  >;
+  // New logbook entries, carrying on from the moment of each reconnect.
+  readonly watchLogbook: (
+    request: WatchLogbookRequest,
+  ) => Stream.Stream<LogbookEntry, HomeAssistantError | TargetError>;
   // Searches the cached states and registries. Only a target asks Home
   // Assistant, to expand it.
   readonly search: (
@@ -552,17 +573,25 @@ export class HomeAssistant extends Context.Service<
           }),
         );
 
-      // A subscription's events on each session in turn, subscribing again
-      // after every reconnect. Fails only when Home Assistant refuses it.
-      const followSessions = (subscription: HomeAssistantSubscription) =>
+      // A subscription's events on each session in turn, building it and
+      // subscribing again after every reconnect. Fails only when building it
+      // fails or Home Assistant refuses it.
+      const followSessions = <E>(
+        subscriptionFor: (
+          current: HomeAssistantSession,
+        ) => Effect.Effect<HomeAssistantSubscription, E>,
+      ) =>
         SubscriptionRef.changes(session).pipe(
           Stream.switchMap(
             Option.match({
               onNone: () => Stream.empty,
               onSome: (current) =>
                 Stream.unwrap(
-                  Effect.map(current.subscribe(subscription), (events) =>
-                    events.pipe(Stream.catch(() => Stream.empty)),
+                  subscriptionFor(current).pipe(
+                    Effect.flatMap(current.subscribe),
+                    Effect.map((events) =>
+                      events.pipe(Stream.catch(() => Stream.empty)),
+                    ),
                   ),
                 ),
             }),
@@ -611,14 +640,17 @@ export class HomeAssistant extends Context.Service<
       );
 
       const watchTemplate = (request: TemplateRequest) =>
-        followSessions(templateSubscription(request)).pipe(
-          Stream.mapEffect(decodeTemplateUpdate),
-        );
+        followSessions(() =>
+          Effect.succeed(templateSubscription(request)),
+        ).pipe(Stream.mapEffect(decodeTemplateUpdate));
 
       const watchEvents = (request: WatchEventsRequest) =>
-        followSessions({ type: "subscribe_events", ...request }).pipe(
-          Stream.mapEffect(decodeEvent),
-        );
+        followSessions(() =>
+          Effect.succeed<HomeAssistantSubscription>({
+            type: "subscribe_events",
+            ...request,
+          }),
+        ).pipe(Stream.mapEffect(decodeEvent));
 
       const fireEvent = Effect.fn("HomeAssistant.fireEvent")(function* (
         request: FireEventRequest,
@@ -627,6 +659,78 @@ export class HomeAssistant extends Context.Service<
 
         yield* current.request({ type: "fire_event", ...request });
       });
+
+      const getHistory = Effect.fn("HomeAssistant.getHistory")(function* (
+        request: HistoryRequest,
+      ) {
+        const current = yield* connected;
+        const entityIds = yield* expandEntities(current, request);
+
+        if (entityIds.length === 0) {
+          return {};
+        }
+
+        const result = yield* current.request({
+          type: "history/history_during_period",
+          start_time: request.start_time,
+          end_time: request.end_time,
+          entity_ids: entityIds,
+          no_attributes: request.no_attributes,
+          significant_changes_only: request.all_changes !== true,
+        });
+
+        return yield* historyFrom(result);
+      });
+
+      // The entities and devices a logbook request is for; all of them
+      // without a target.
+      const logbookScope = Effect.fn("HomeAssistant.logbookScope")(function* (
+        current: HomeAssistantSession,
+        request: WatchLogbookRequest,
+      ) {
+        if (request.target === undefined) {
+          return {};
+        }
+
+        const extracted = yield* extract(current, {
+          target: request.target,
+          domain: request.domain,
+        });
+
+        return {
+          entity_ids: extracted.referenced_entities.filter(
+            inDomain(request.domain),
+          ),
+          device_ids: extracted.referenced_devices,
+        };
+      });
+
+      const getLogbook = Effect.fn("HomeAssistant.getLogbook")(function* (
+        request: LogbookRequest,
+      ) {
+        const current = yield* connected;
+
+        const result = yield* current.request({
+          type: "logbook/get_events",
+          start_time: request.start_time,
+          end_time: request.end_time,
+          ...(yield* logbookScope(current, request)),
+        });
+
+        return yield* logbookFrom(result);
+      });
+
+      const watchLogbook = (request: WatchLogbookRequest) =>
+        followSessions((current) =>
+          Effect.map(
+            logbookScope(current, request),
+            (scope): HomeAssistantSubscription => ({
+              type: "logbook/event_stream",
+              start_time: new Date().toISOString(),
+              ...scope,
+            }),
+          ),
+        ).pipe(Stream.mapEffect(logbookEventFrom), Stream.flattenIterable);
 
       const callAction = Effect.fn("HomeAssistant.callAction")(function* (
         action: Action,
@@ -764,6 +868,9 @@ export class HomeAssistant extends Context.Service<
         watchTemplate,
         watchEvents,
         fireEvent,
+        getHistory,
+        getLogbook,
+        watchLogbook,
         search: runSearch,
       });
     }),

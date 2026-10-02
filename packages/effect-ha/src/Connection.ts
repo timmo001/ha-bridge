@@ -30,7 +30,7 @@ const ResultMessage = Schema.Struct({
   id: Schema.Finite,
   type: Schema.Literal("result"),
   success: Schema.Boolean,
-  result: Schema.optionalKey(Schema.Unknown),
+  result: Schema.optionalKey(Schema.NullOr(Schema.Json)),
   error: Schema.optionalKey(Schema.Struct({ message: Schema.String })),
 });
 
@@ -66,6 +66,16 @@ export type HomeAssistantCommand =
       readonly event_data?: FireEventRequest["event_data"] | undefined;
     }
   | {
+      readonly type: "history/history_during_period";
+      // ISO times.
+      readonly start_time: string;
+      readonly end_time?: string | undefined;
+      readonly entity_ids: ReadonlyArray<string>;
+      readonly no_attributes?: boolean | undefined;
+      readonly significant_changes_only?: boolean | undefined;
+    }
+  | ({ readonly type: "logbook/get_events" } & LogbookQuery)
+  | {
       readonly type: "extract_from_target";
       readonly target: Target;
       readonly expand_group?: boolean | undefined;
@@ -96,7 +106,17 @@ export type HomeAssistantSubscription =
       readonly timeout?: number | undefined;
       // Sends render errors and warnings as events.
       readonly report_errors?: boolean | undefined;
-    };
+    }
+  | ({ readonly type: "logbook/event_stream" } & LogbookQuery);
+
+// Logbook entries between ISO times, for some entities and devices, or all
+// of them when both are left out.
+export interface LogbookQuery {
+  readonly start_time: string;
+  readonly end_time?: string | undefined;
+  readonly entity_ids?: ReadonlyArray<string> | undefined;
+  readonly device_ids?: ReadonlyArray<string> | undefined;
+}
 
 type OutgoingMessage =
   | ((HomeAssistantCommand | HomeAssistantSubscription) & {
@@ -107,7 +127,7 @@ type OutgoingMessage =
 export interface HomeAssistantSession {
   readonly request: (
     command: HomeAssistantCommand,
-  ) => Effect.Effect<unknown, HomeAssistantError>;
+  ) => Effect.Effect<Schema.Json | null, HomeAssistantError>;
   // Succeeds with the action's response when `return_response` is set, otherwise null.
   readonly callAction: (
     action: Action,
@@ -227,7 +247,7 @@ export const connect = Effect.fn("HomeAssistant.connect")(function* (options: {
 
   const pending = new Map<
     number,
-    Deferred.Deferred<unknown, HomeAssistantError>
+    Deferred.Deferred<Schema.Json | null, HomeAssistantError>
   >();
 
   // Events wait here until their stream reads them, so the reader keeps up
@@ -250,7 +270,7 @@ export const connect = Effect.fn("HomeAssistant.connect")(function* (options: {
       }
 
       yield* message.success
-        ? Deferred.succeed(deferred, message.result)
+        ? Deferred.succeed(deferred, message.result ?? null)
         : Deferred.fail(
             deferred,
             new HomeAssistantError({
@@ -281,7 +301,11 @@ export const connect = Effect.fn("HomeAssistant.connect")(function* (options: {
     command: HomeAssistantCommand | HomeAssistantSubscription,
   ) =>
     Effect.gen(function* () {
-      const deferred = yield* Deferred.make<unknown, HomeAssistantError>();
+      const deferred = yield* Deferred.make<
+        Schema.Json | null,
+        HomeAssistantError
+      >();
+
       pending.set(id, deferred);
 
       return yield* write({ ...command, id }).pipe(

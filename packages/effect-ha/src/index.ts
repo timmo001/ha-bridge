@@ -14,6 +14,8 @@ export * from "./HomeAssistantConfig.js";
 
 export * from "./HomeAssistantError.js";
 
+export * from "./History.js";
+
 export * from "./naming.js";
 
 export * from "./Registry.js";

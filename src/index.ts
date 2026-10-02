@@ -3,6 +3,7 @@ import {
   Cause,
   Console,
   Data,
+  Duration,
   Effect,
   FileSystem,
   Layer,
@@ -38,6 +39,7 @@ import {
   DeviceTracker,
   DeviceTrackerSeeData,
   DurationValue,
+  type LogbookEntry,
   Fan,
   FanTurnOnData,
   Group,
@@ -3219,7 +3221,199 @@ const utilityMeter = domainCommand(
   ],
 );
 
+// An ISO time, or a duration before now, such as "2 hours".
+const parseTime = (label: string) => (value: string) =>
+  Option.match(Schema.decodeOption(Schema.DurationFromString)(value), {
+    onSome: (duration) =>
+      Effect.succeed(
+        new Date(Date.now() - Duration.toMillis(duration)).toISOString(),
+      ),
+    onNone: () => {
+      const time = Date.parse(value);
+
+      return Number.isNaN(time)
+        ? failWith(
+            `${label} must be an ISO time or a duration, such as "2 hours"`,
+          )
+        : Effect.succeed(new Date(time).toISOString());
+    },
+  });
+
+const timeRangeConfig = {
+  start: Flag.String("start").pipe(
+    Flag.withDescription(
+      'Start, as an ISO time or a duration before now, such as "2 hours"',
+    ),
+    Flag.withDefault("1 day"),
+  ),
+  end: optionalFlag(
+    Flag.String("end"),
+    "End, as an ISO time or a duration before now; now when left out",
+  ),
+  json: Flag.Boolean("json").pipe(
+    Flag.withDescription("Print JSON"),
+    Flag.withDefault(false),
+  ),
+};
+
+const parseTimeRange = (input: {
+  readonly start: string;
+  readonly end: Option.Option<string>;
+}) =>
+  Effect.all({
+    start_time: parseTime("--start")(input.start),
+    end_time: parseOptional(input.end, parseTime("--end")),
+  });
+
+// The target's entities and devices, or everything for an empty target.
+const optionalTarget = (target: Target) =>
+  isEmptyTarget(target) ? undefined : target;
+
+const logbookLine = (entry: LogbookEntry) =>
+  [
+    entry.when,
+    [entry.name ?? entry.entity_id ?? "", entry.message ?? entry.state ?? ""]
+      .filter((part) => part !== "")
+      .join(" "),
+  ].join("\t");
+
+const historyCommand = domainCommand(
+  "history",
+  undefined,
+  "Read recorded entity history",
+  [
+    Command.make(
+      "get",
+      {
+        ...timeRangeConfig,
+        noAttributes: Flag.Boolean("no-attributes").pipe(
+          Flag.withDescription("Leave out attributes"),
+          Flag.withDefault(false),
+        ),
+        allChanges: Flag.Boolean("all-changes").pipe(
+          Flag.withDescription(
+            "Include changes to attributes only, for entities that leave them out by default",
+          ),
+          Flag.withDefault(false),
+        ),
+        target: targetConfig(undefined),
+      },
+      (input) =>
+        Effect.gen(function* () {
+          const target = toTarget(undefined, input.target);
+
+          if (isEmptyTarget(target)) {
+            return yield* noTarget();
+          }
+
+          const range = yield* parseTimeRange(input);
+          const client = yield* BridgeClient;
+
+          const history = yield* client
+            .GetHistory({
+              target,
+              ...range,
+              no_attributes: input.noAttributes,
+              all_changes: input.allChanges,
+            })
+            .pipe(
+              Effect.catchTags({
+                HomeAssistantError: (error) =>
+                  failWith(`could not read history: ${error.message}`),
+                TargetError: (error) => failWith(error.message),
+              }),
+            );
+
+          if (input.json) {
+            return yield* Console.log(JSON.stringify(history));
+          }
+
+          yield* Effect.forEach(Object.entries(history), ([entityId, states]) =>
+            Effect.forEach(states, (state) =>
+              Console.log(
+                [state.last_changed, entityId, state.state].join("\t"),
+              ),
+            ),
+          );
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Print the target's states, one line per change: time, entity ID and state",
+      ),
+    ),
+  ],
+);
+
 const logbook = domainCommand("logbook", undefined, "Logbook actions", [
+  Command.make(
+    "get",
+    { ...timeRangeConfig, target: targetConfig(undefined) },
+    (input) =>
+      Effect.gen(function* () {
+        const range = yield* parseTimeRange(input);
+        const client = yield* BridgeClient;
+
+        const entries = yield* client
+          .GetLogbook({
+            target: optionalTarget(toTarget(undefined, input.target)),
+            ...range,
+          })
+          .pipe(
+            Effect.catchTags({
+              HomeAssistantError: (error) =>
+                failWith(`could not read the logbook: ${error.message}`),
+              TargetError: (error) => failWith(error.message),
+            }),
+          );
+
+        yield* input.json
+          ? Console.log(JSON.stringify(entries))
+          : Effect.forEach(entries, (entry) => Console.log(logbookLine(entry)));
+      }).pipe(withBridge),
+  ).pipe(
+    Command.withDescription(
+      "Print logbook entries for the target, or every entry without one",
+    ),
+  ),
+  Command.make(
+    "watch",
+    {
+      json: Flag.Boolean("json").pipe(
+        Flag.withDescription("Print each entry as JSON"),
+        Flag.withDefault(false),
+      ),
+      target: targetConfig(undefined),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const client = yield* BridgeClient;
+
+        yield* client
+          .WatchLogbook({
+            target: optionalTarget(toTarget(undefined, input.target)),
+          })
+          .pipe(
+            Stream.catchTags({
+              HomeAssistantError: (error) =>
+                Stream.fromEffect(
+                  failWith(`could not watch the logbook: ${error.message}`),
+                ),
+              TargetError: (error) =>
+                Stream.fromEffect(failWith(error.message)),
+            }),
+            Stream.runForEach((entry) =>
+              Console.log(
+                input.json ? JSON.stringify(entry) : logbookLine(entry),
+              ),
+            ),
+          );
+      }).pipe(withBridge),
+  ).pipe(
+    Command.withAlias("w"),
+    Command.withDescription(
+      "Print new logbook entries for the target, or every entry without one",
+    ),
+  ),
   Command.make(
     "log",
     {
@@ -4482,6 +4676,7 @@ const commands = [
   lovelace,
   template,
   eventCommand,
+  historyCommand,
   ...yamlReloadCommands,
 ] as const;
 

@@ -11,9 +11,16 @@ import {
   TemplateUpdate,
   FireEventRequest,
   HomeAssistantEvent,
+  History,
+  LogbookEntry,
   WatchEventsRequest,
 } from "@timmo001/effect-ha";
 import { EntityUpdate } from "./Entity.js";
+import {
+  HistoryRequest,
+  LogbookRequest,
+  WatchLogbookRequest,
+} from "./History.js";
 import { SearchEmpty, SearchRequest, SearchResults } from "./Search.js";
 import { TargetError, TargetRequest } from "./Target.js";
 
@@ -77,6 +84,24 @@ export class BridgeRpcs extends RpcGroup.make(
   Rpc.make("FireEvent", {
     payload: FireEventRequest,
     error: HomeAssistantError,
+  }),
+  // Each entity's recorded states, keyed by entity ID.
+  Rpc.make("GetHistory", {
+    payload: HistoryRequest,
+    success: History,
+    error: TargetFailure,
+  }),
+  Rpc.make("GetLogbook", {
+    payload: LogbookRequest,
+    success: Schema.Array(LogbookEntry),
+    error: TargetFailure,
+  }),
+  // Each new logbook entry. After a reconnect, it carries on from then.
+  Rpc.make("WatchLogbook", {
+    payload: WatchLogbookRequest,
+    success: LogbookEntry,
+    error: TargetFailure,
+    stream: true,
   }),
   // Fuzzy search over cached entities, devices and areas, or a list of
   // them without a query. Only a target needs Home Assistant.
