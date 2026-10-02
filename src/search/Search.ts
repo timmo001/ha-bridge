@@ -126,132 +126,135 @@ export class Search extends Context.Service<Search, SearchService>()(
 ) {
   /** Fuse.js-backed search with token matching across weighted fields. */
   static readonly layer = Layer.succeed(Search, {
-    fuzzy: Effect.fn("Search.fuzzy")(function* <T, Name extends string>({
+    fuzzy: <T, Name extends string>({
       items,
       query,
       keys,
       primary,
       overrides = {},
-    }: SearchInput<T, Name>) {
-      const trimmed = query.trim();
+    }: SearchInput<T, Name>) =>
+      Effect.sync((): SearchResults<T, Name> => {
+        const trimmed = query.trim();
 
-      if (trimmed === "") return { results: [], total: 0 };
+        if (trimmed === "") return { results: [], total: 0 };
 
-      const fuse = new Fuse(items, {
-        keys: keys.map(({ name, weight, getFn }) => ({
-          name,
-          weight,
-          getFn: (item: T) => getFn(item) ?? undefined,
-        })),
-        threshold: overrides.threshold ?? 0.3,
-        minMatchCharLength: overrides.minMatchCharLength ?? 2,
-        ignoreDiacritics: true,
-        ignoreLocation: true,
-        includeScore: true,
-        includeMatches: true,
-      });
+        const fuse = new Fuse(items, {
+          keys: keys.map(({ name, weight, getFn }) => ({
+            name,
+            weight,
+            getFn: (item: T) => getFn(item) ?? undefined,
+          })),
+          threshold: overrides.threshold ?? 0.3,
+          minMatchCharLength: overrides.minMatchCharLength ?? 2,
+          ignoreDiacritics: true,
+          ignoreLocation: true,
+          includeScore: true,
+          includeMatches: true,
+        });
 
-      const names = new Set<string>(keys.map(({ name }) => name));
+        const names = new Set<string>(keys.map(({ name }) => name));
 
-      const normalise = (value: string) =>
-        value
-          .normalize("NFD")
-          .replace(/\p{Diacritic}/gu, "")
-          .toLowerCase();
+        const normalise = (value: string) =>
+          value
+            .normalize("NFD")
+            .replace(/\p{Diacritic}/gu, "")
+            .toLowerCase();
 
-      const terms = normalise(trimmed).split(/\s+/);
+        const terms = normalise(trimmed).split(/\s+/);
 
-      const onlyMidWord = (item: T) => {
-        const values = keys
-          .flatMap(({ getFn }) => [getFn(item) ?? []].flat())
-          .map(normalise);
+        const onlyMidWord = (item: T) => {
+          const values = keys
+            .flatMap(({ getFn }) => [getFn(item) ?? []].flat())
+            .map(normalise);
 
-        const words = values.flatMap((value) => value.split(/[^\p{L}\p{N}]+/u));
+          const words = values.flatMap((value) =>
+            value.split(/[^\p{L}\p{N}]+/u),
+          );
 
-        return terms.some(
+          return terms.some(
+            (term) =>
+              values.some((value) => value.includes(term)) &&
+              !words.some((word) => word.startsWith(term)),
+          );
+        };
+
+        const penalty = overrides.midWordPenalty ?? 25;
+
+        const weights = new Map<string, number>(
+          keys.map(({ name, weight }) => [name, weight]),
+        );
+
+        const topWeight = Math.max(...weights.values());
+
+        // Fuse scores an exact match in any field as perfect, so a term is
+        // scaled by the weight of the heaviest field it matched: matching only
+        // an area ranks below matching the name.
+        const keyFactor = (matched: ReadonlyArray<string | undefined>) =>
+          Math.max(
+            0,
+            ...matched.map((key) =>
+              key === undefined ? 0 : (weights.get(key) ?? 0) / topWeight,
+            ),
+          );
+
+        // Each term is searched separately, as the frontend's quick bar does,
+        // so terms spread across fields (a name and an area) still score well.
+        // An item must match every term; its score is the mean term score.
+        const perTerm = terms.map(
           (term) =>
-            values.some((value) => value.includes(term)) &&
-            !words.some((word) => word.startsWith(term)),
-        );
-      };
+            new Map(
+              fuse.search(term).map(({ refIndex, score, matches }) => {
+                const matched = (matches ?? []).map(({ key }) => key);
 
-      const penalty = overrides.midWordPenalty ?? 25;
-
-      const weights = new Map<string, number>(
-        keys.map(({ name, weight }) => [name, weight]),
-      );
-
-      const topWeight = Math.max(...weights.values());
-
-      // Fuse scores an exact match in any field as perfect, so a term is
-      // scaled by the weight of the heaviest field it matched: matching only
-      // an area ranks below matching the name.
-      const keyFactor = (matched: ReadonlyArray<string | undefined>) =>
-        Math.max(
-          0,
-          ...matched.map((key) =>
-            key === undefined ? 0 : (weights.get(key) ?? 0) / topWeight,
-          ),
+                return [
+                  refIndex,
+                  {
+                    score: (1 - (score ?? 1)) * keyFactor(matched),
+                    keys: matched,
+                  },
+                ];
+              }),
+            ),
         );
 
-      // Each term is searched separately, as the frontend's quick bar does,
-      // so terms spread across fields (a name and an area) still score well.
-      // An item must match every term; its score is the mean term score.
-      const perTerm = terms.map(
-        (term) =>
-          new Map(
-            fuse.search(term).map(({ refIndex, score, matches }) => {
-              const matched = (matches ?? []).map(({ key }) => key);
+        const [first = new Map(), ...rest] = perTerm;
 
-              return [
-                refIndex,
-                {
-                  score: (1 - (score ?? 1)) * keyFactor(matched),
-                  keys: matched,
-                },
-              ];
-            }),
-          ),
-      );
+        const scored = Array.from(first.keys()).flatMap(
+          (index): Array<SearchResult<T, Name>> => {
+            const matches = perTerm.map((term) => term.get(index));
 
-      const [first = new Map(), ...rest] = perTerm;
+            if (rest.some((term) => !term.has(index))) {
+              return [];
+            }
 
-      const scored = Array.from(first.keys()).flatMap(
-        (index): Array<SearchResult<T, Name>> => {
-          const matches = perTerm.map((term) => term.get(index));
+            const item = items[index];
 
-          if (rest.some((term) => !term.has(index))) {
-            return [];
-          }
+            if (item === undefined) {
+              return [];
+            }
 
-          const item = items[index];
+            const mean =
+              matches.reduce((sum, match) => sum + (match?.score ?? 0), 0) /
+              terms.length;
 
-          if (item === undefined) {
-            return [];
-          }
+            return [
+              {
+                item,
+                score: Math.max(
+                  1,
+                  Math.round(mean * 100) - (onlyMidWord(item) ? penalty : 0),
+                ),
+                matched: [
+                  ...new Set(matches.flatMap((match) => match?.keys ?? [])),
+                ].filter(
+                  (key): key is Name => key !== undefined && names.has(key),
+                ),
+              },
+            ];
+          },
+        );
 
-          const mean =
-            matches.reduce((sum, match) => sum + (match?.score ?? 0), 0) /
-            terms.length;
-
-          return [
-            {
-              item,
-              score: Math.max(
-                1,
-                Math.round(mean * 100) - (onlyMidWord(item) ? penalty : 0),
-              ),
-              matched: [
-                ...new Set(matches.flatMap((match) => match?.keys ?? [])),
-              ].filter(
-                (key): key is Name => key !== undefined && names.has(key),
-              ),
-            },
-          ];
-        },
-      );
-
-      return selectResults(scored, primary, overrides);
-    }),
+        return selectResults(scored, primary, overrides);
+      }).pipe(Effect.withSpan("Search.fuzzy")),
   });
 }
