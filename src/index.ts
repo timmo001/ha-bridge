@@ -1535,7 +1535,10 @@ const parseOptional = <A, E>(
   value: Option.Option<string>,
   parse: (value: string) => Effect.Effect<A, E>,
 ): Effect.Effect<A | undefined, E> =>
-  Option.isSome(value) ? parse(value.value) : Effect.succeed(undefined);
+  Effect.map(
+    Effect.transposeOption(Option.map(value, parse)),
+    Option.getOrUndefined,
+  );
 
 const parseVariables = (value: Option.Option<string>) =>
   parseOptional(value, (json) =>
