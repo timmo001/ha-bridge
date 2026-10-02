@@ -7,11 +7,11 @@ description: Find Home Assistant entities, devices and areas, and ha-bridge comm
 
 ```bash
 ha-bridge search kitchen light --limit 2
-# entity	script.lights_kitchen	Lights - Kitchen	Kitchen, Downstairs
-# device	d88d33d052088faa8338c9a94a31b9ca	2M Wire Rope Light	Kitchen, Downstairs
+# entity  script.lights_kitchen  Lights - Kitchen  Kitchen, Downstairs
+# device  d88d33d052088faa8338c9a94a31b9ca  2M Wire Rope Light  Kitchen, Downstairs
 
 ha-bridge search light on --kind command
-# command	ha-bridge light turn-on	Turn on	ha-bridge l on
+# command  ha-bridge light turn-on  Turn on  ha-bridge l on
 ```
 
 Each line is the kind, the ID, the name and its context, separated by tabs. Entities and devices show their area and floor, and commands show their description and short alias. When there are more matches than shown, a summary on stderr says how many.
