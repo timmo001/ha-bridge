@@ -6,7 +6,6 @@ import {
   Match,
   Option,
   PubSub,
-  Queue,
   Ref,
   Schema,
   Stream,
@@ -27,6 +26,7 @@ import {
   HomeAssistantError,
   isEntityIdIn,
   LabelRegistry,
+  StateChangedEvent,
   type Action,
   type CameraSnapshot,
   type HomeAssistantConfig,
@@ -120,6 +120,8 @@ const {
 } = Data.taggedEnum<CacheEvent>();
 
 const decodeStates = Schema.decodeUnknownEffect(Schema.Array(EntityState));
+
+const decodeStateChanged = Schema.decodeUnknownEffect(StateChangedEvent);
 
 const decodeDisplay = Schema.decodeUnknownEffect(EntityRegistryDisplay);
 
@@ -277,40 +279,43 @@ export class HomeAssistant extends Context.Service<
         yield* PubSub.publish(changes, registriesChanged());
       });
 
-      const runSession = Effect.gen(function* () {
-        const registryChanges = yield* Queue.sliding<void>(1);
+      // Applies one `state_changed` event to the cache.
+      const applyStateChange = (event: Schema.Json) =>
+        decodeStateChanged(event).pipe(
+          Effect.flatMap(({ data }) =>
+            data.new_state === null
+              ? remove(data.entity_id)
+              : store(data.new_state),
+          ),
+          Effect.catch((error) =>
+            Effect.logDebug("Ignoring a state change", error.message),
+          ),
+        );
 
-        const current = yield* connect({
-          ...config,
-          onState: store,
-          onRemove: remove,
-          // Only mark the change; the reader must keep up with Home Assistant.
-          onEvent: (eventType) =>
-            registryEvents.includes(eventType)
-              ? Effect.asVoid(Queue.offer(registryChanges, undefined))
-              : Effect.void,
-        });
+      const runSession = Effect.gen(function* () {
+        const current = yield* connect(config);
 
         // Subscribe before the snapshot so no change falls between them.
-        yield* current.request({
+        yield* (yield* current.subscribe({
           type: "subscribe_events",
           event_type: "state_changed",
-        });
-        yield* Effect.forEach(
+        })).pipe(Stream.runForEach(applyStateChange), Effect.forkScoped);
+
+        const registryChanges = yield* Effect.forEach(
           registryEvents,
           (event_type) =>
             current
-              .request({ type: "subscribe_events", event_type })
+              .subscribe({ type: "subscribe_events", event_type })
               .pipe(
                 Effect.catch((error) =>
                   Effect.logWarning(
                     `Could not subscribe to ${event_type}`,
                     error.message,
-                  ),
+                  ).pipe(Effect.as(Stream.empty)),
                 ),
               ),
-          { discard: true },
         );
+
         // Runs before the snapshot so the first states already use registry
         // names.
         yield* refreshRegistries(current);
@@ -335,7 +340,9 @@ export class HomeAssistant extends Context.Service<
         // Set before the reset so watchers can expand their targets.
         yield* Ref.set(session, Option.some(current));
         yield* PubSub.publish(changes, cacheReset());
-        yield* Stream.fromQueue(registryChanges).pipe(
+        yield* Stream.mergeAll(registryChanges, {
+          concurrency: "unbounded",
+        }).pipe(
           Stream.debounce(registryRefreshDelay),
           Stream.runForEach(() => refreshNames(current)),
           Effect.forkScoped,

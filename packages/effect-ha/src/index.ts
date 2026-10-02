@@ -8,6 +8,8 @@ export * from "./Connection.js";
 
 export * from "./Entity.js";
 
+export * from "./Event.js";
+
 export * from "./HomeAssistantConfig.js";
 
 export * from "./HomeAssistantError.js";

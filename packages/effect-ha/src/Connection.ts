@@ -1,7 +1,16 @@
-import { Deferred, Effect, Fiber, Redacted, Ref, Schema } from "effect";
+import {
+  Deferred,
+  Effect,
+  Fiber,
+  Queue,
+  Redacted,
+  Ref,
+  Schema,
+  type Scope,
+  Stream,
+} from "effect";
 import { Socket } from "effect/socket";
 import type { Action } from "./Action.js";
-import { EntityState } from "./Entity.js";
 import { HomeAssistantConfig } from "./HomeAssistantConfig.js";
 import { HomeAssistantError } from "./HomeAssistantError.js";
 import {
@@ -23,15 +32,11 @@ const ResultMessage = Schema.Struct({
   error: Schema.optionalKey(Schema.Struct({ message: Schema.String })),
 });
 
+// `id` is the id of the subscribing request.
 const EventMessage = Schema.Struct({
+  id: Schema.Finite,
   type: Schema.Literal("event"),
-  event: Schema.Struct({
-    event_type: Schema.String,
-    data: Schema.Struct({
-      entity_id: Schema.optionalKey(Schema.String),
-      new_state: Schema.optionalKey(Schema.NullOr(EntityState)),
-    }),
-  }),
+  event: Schema.Json,
 });
 
 const decodeMessage = Schema.decodeUnknownEffect(
@@ -52,7 +57,7 @@ export type HomeAssistantCommand =
         | "config/floor_registry/list"
         | "config/label_registry/list";
     }
-  | { readonly type: "subscribe_events"; readonly event_type: string }
+  | { readonly type: "unsubscribe_events"; readonly subscription: number }
   | {
       readonly type: "extract_from_target";
       readonly target: Target;
@@ -69,8 +74,17 @@ export type HomeAssistantCommand =
       readonly return_response?: boolean | undefined;
     };
 
+// Requests that stream events until they are unsubscribed.
+export type HomeAssistantSubscription = {
+  readonly type: "subscribe_events";
+  // Every event when left out; needs an admin token for most types.
+  readonly event_type?: string | undefined;
+};
+
 type OutgoingMessage =
-  | (HomeAssistantCommand & { readonly id: number })
+  | ((HomeAssistantCommand | HomeAssistantSubscription) & {
+      readonly id: number;
+    })
   | { readonly type: "auth"; readonly access_token: string };
 
 export interface HomeAssistantSession {
@@ -88,6 +102,15 @@ export interface HomeAssistantSession {
     target: Target,
     options?: ExtractTargetOptions,
   ) => Effect.Effect<ExtractedTarget, HomeAssistantError>;
+  // Succeeds once Home Assistant accepts the subscription, with its events,
+  // which fail once the connection is lost. Closing the scope unsubscribes.
+  readonly subscribe: (
+    subscription: HomeAssistantSubscription,
+  ) => Effect.Effect<
+    Stream.Stream<Schema.Json, HomeAssistantError>,
+    HomeAssistantError,
+    Scope.Scope
+  >;
   // Fails once the connection is lost; never succeeds.
   readonly closed: Effect.Effect<never, HomeAssistantError>;
 }
@@ -118,11 +141,6 @@ const fail = (context: string) => (cause: unknown) =>
 export const connect = Effect.fn("HomeAssistant.connect")(function* (options: {
   readonly url: string;
   readonly token: Redacted.Redacted;
-  readonly onState: (state: EntityState) => Effect.Effect<void>;
-  // Receives the ID of every entity removed from the state machine.
-  readonly onRemove?: (entityId: string) => Effect.Effect<void>;
-  // Receives the type of every other subscribed event.
-  readonly onEvent?: (eventType: string) => Effect.Effect<void>;
 }) {
   const url = websocketUrl(options.url);
   yield* Effect.logInfo("Connecting to Home Assistant", url);
@@ -134,7 +152,7 @@ export const connect = Effect.fn("HomeAssistant.connect")(function* (options: {
 
   const writer = yield* socket.writer;
 
-  const send = (message: OutgoingMessage) =>
+  const write = (message: OutgoingMessage) =>
     writer
       .write(JSON.stringify(message))
       .pipe(Effect.mapError(fail("send request")));
@@ -177,7 +195,7 @@ export const connect = Effect.fn("HomeAssistant.connect")(function* (options: {
     });
   }
 
-  yield* send({ type: "auth", access_token: Redacted.value(options.token) });
+  yield* write({ type: "auth", access_token: Redacted.value(options.token) });
   const auth = yield* nextMessage;
 
   if (auth.type !== "auth_ok") {
@@ -194,6 +212,10 @@ export const connect = Effect.fn("HomeAssistant.connect")(function* (options: {
     number,
     Deferred.Deferred<unknown, HomeAssistantError>
   >();
+
+  // Events wait here until their stream reads them, so the reader keeps up
+  // with Home Assistant.
+  const subscriptions = new Map<number, Queue.Queue<Schema.Json>>();
 
   const nextId = yield* Ref.make(1);
 
@@ -222,24 +244,12 @@ export const connect = Effect.fn("HomeAssistant.connect")(function* (options: {
       return;
     }
 
-    if (message.type !== "event") {
-      return;
-    }
+    if (message.type === "event") {
+      const queue = subscriptions.get(message.id);
 
-    const { event_type, data } = message.event;
-
-    if (event_type === "state_changed") {
-      if (data.new_state) {
-        yield* options.onState(data.new_state);
-      } else if (
-        data.new_state === null &&
-        data.entity_id !== undefined &&
-        options.onRemove !== undefined
-      ) {
-        yield* options.onRemove(data.entity_id);
+      if (queue !== undefined) {
+        yield* Queue.offer(queue, message.event);
       }
-    } else if (options.onEvent !== undefined) {
-      yield* options.onEvent(event_type);
     }
   });
 
@@ -249,17 +259,47 @@ export const connect = Effect.fn("HomeAssistant.connect")(function* (options: {
 
   const closed = Fiber.join(reader);
 
-  const request = (command: HomeAssistantCommand) =>
+  const send = (
+    id: number,
+    command: HomeAssistantCommand | HomeAssistantSubscription,
+  ) =>
     Effect.gen(function* () {
-      const id = yield* Ref.getAndUpdate(nextId, (value) => value + 1);
       const deferred = yield* Deferred.make<unknown, HomeAssistantError>();
       pending.set(id, deferred);
 
-      return yield* send({ ...command, id }).pipe(
+      return yield* write({ ...command, id }).pipe(
         Effect.andThen(Effect.raceFirst(Deferred.await(deferred), closed)),
         Effect.ensuring(Effect.sync(() => pending.delete(id))),
       );
     });
+
+  const takeId = Ref.getAndUpdate(nextId, (value) => value + 1);
+
+  const request = (command: HomeAssistantCommand) =>
+    Effect.flatMap(takeId, (id) => send(id, command));
+
+  const subscribe = Effect.fn("HomeAssistant.subscribe")(function* (
+    subscription: HomeAssistantSubscription,
+  ) {
+    const id = yield* takeId;
+    const queue = yield* Queue.unbounded<Schema.Json>();
+
+    // Registered first, so no event arrives before its queue.
+    yield* Effect.acquireRelease(
+      Effect.sync(() => subscriptions.set(id, queue)),
+      () => Effect.sync(() => subscriptions.delete(id)),
+    );
+
+    yield* send(id, subscription);
+
+    yield* Effect.addFinalizer(() =>
+      request({ type: "unsubscribe_events", subscription: id }).pipe(
+        Effect.ignore,
+      ),
+    );
+
+    return Stream.fromQueue(queue).pipe(Stream.interruptWhen(closed));
+  });
 
   const callAction = Effect.fn("HomeAssistant.callAction")(function* (
     action: Action,
@@ -311,6 +351,7 @@ export const connect = Effect.fn("HomeAssistant.connect")(function* (options: {
     callAction,
     getConfig,
     extractTarget,
+    subscribe,
     closed,
   } satisfies HomeAssistantSession;
 });
