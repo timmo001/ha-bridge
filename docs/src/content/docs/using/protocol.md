@@ -17,6 +17,8 @@ The socket is at the [socket path](/configuration#socket-path), in a directory o
 | `GetConfig` | `null` | Home Assistant's config, such as `time_zone`, `location_name` and `version` |
 | `CameraSnapshot` | `{ "target": Target }` | `{ "contentType": string, "data": string }`, with the image bytes base64-encoded in `data` |
 | `Search` | `{ "query"?: string, "target"?: Target, "kinds"?: ("entity" \| "device" \| "area")[], "domain"?: string, "deviceClass"?: string, "limit"?: number, "offset"?: number }` | `{ "results": SearchMatch[], "total": number, "unavailable": string[] }` |
+| `RenderTemplate` | `{ "template": string, "variables"?: object, "strict"?: boolean, "timeout"?: number }` | `{ "result": Json, "warnings": string[] }`, the first render |
+| `WatchTemplate` | `{ "template": string, "variables"?: object, "strict"?: boolean, "timeout"?: number }` | A stream of renders, each `{ "result": Json }` or `{ "error": string, "level": string }`, rendering again after reconnects |
 
 A target is `{ "entity_id"?, "device_id"?, "area_id"?, "floor_id"?, "label_id"? }`, each a string or a list of strings, as in Home Assistant. Each value is an ID or a name, which the bridge resolves to an ID: an exact ID first, then an entity ID without the domain when there is a `domain` (or the action's domain), then a unique case-insensitive name. Home Assistant then expands the target, so an area includes entities on devices in it. `domain` keeps only entities in that domain.
 

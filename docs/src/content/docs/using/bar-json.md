@@ -112,6 +112,10 @@ With the light on at brightness 128:
 {"class":"lit","name":"Office","text":"128","tooltip":"Office"}
 ```
 
+## Home Assistant templates
+
+For anything the flags can't express, `template watch --bar-json` renders a Home Assistant template instead, and can set the text, tooltip and class from one object result. See [Templates](/using/templates).
+
 ## Waybar
 
 ```jsonc

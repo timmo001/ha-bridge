@@ -81,6 +81,7 @@ export default defineConfig({
         items: [
           "/using/reading",
           "/using/search",
+          "/using/templates",
           "/using/bar-json",
           "/using/completions",
           "/using/protocol",

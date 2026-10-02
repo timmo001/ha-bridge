@@ -46,6 +46,8 @@ Calls fail straight away when the bridge isn't running, rather than waiting for 
 | `CallAction(action)` | The action's response when `return_response` is set, otherwise `null`. Names in the target are resolved first. Fails with `HomeAssistantError` or `TargetError` |
 | `GetConfig()` | Home Assistant's config, such as its name, version and units |
 | `CameraSnapshot({ target })` | The image from the one camera the target matches, as `contentType` and `data` bytes |
+| `RenderTemplate({ template, variables?, strict?, timeout? })` | The template's first render, as `result` and any `warnings`. Fails with `HomeAssistantError` on a render error |
+| `WatchTemplate({ template, variables?, strict?, timeout? })` | A `Stream` of renders, each `{ result }` or `{ error, level }`, as what the template reads changes. It renders again after reconnects |
 
 A target has the same fields as an action's target in Home Assistant: `entity_id`, `device_id`, `area_id`, `floor_id` and `label_id`. Each takes an ID or a name, and the bridge resolves names to IDs. `domain` keeps only entities in that domain. [The protocol](/using/protocol#rpcs) has the full rules.
 

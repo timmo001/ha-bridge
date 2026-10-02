@@ -80,6 +80,7 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`ffmpeg`](/commands/ffmpeg) | None |
 | [`google_assistant`](/commands/google-assistant) | None |
 | [`lovelace`](/commands/lovelace) | None |
+| [`template`](/commands/template) | None |
 | [`bayesian`](/commands/bayesian) | None |
 | [`command_line`](/commands/command-line) | None |
 | [`derivative`](/commands/derivative) | None |
@@ -91,7 +92,6 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`person`](/commands/person) | None |
 | [`rest`](/commands/rest) | None |
 | [`statistics`](/commands/statistics) | None |
-| [`template`](/commands/template) | None |
 | [`trend`](/commands/trend) | None |
 | [`universal`](/commands/universal) | None |
 | [`zone`](/commands/zone) | None |
@@ -188,6 +188,7 @@ SUBCOMMANDS
   ffmpeg              FFmpeg sensor actions
   google_assistant    Google Assistant actions
   lovelace            Dashboard actions
+  template            Render templates and reload template entities
   bayesian            Bayesian sensor actions
   command_line        Command line actions
   derivative          Derivative sensor actions
@@ -199,7 +200,6 @@ SUBCOMMANDS
   person              Person actions
   rest                RESTful actions
   statistics          Statistics sensor actions
-  template            Template actions
   trend               Trend sensor actions
   universal           Universal media player actions
   zone                Zone actions
