@@ -50,7 +50,7 @@ The session has:
 - `request(command)`: sends a raw WebSocket command, such as `get_states` or `subscribe_events`.
 - `closed`: fails once the connection is lost.
 
-`onState` receives each new entity state from `state_changed` events after you subscribe to them with `request`. The optional `onEvent` receives the type of every other subscribed event, such as `entity_registry_updated`.
+`onState` receives each new entity state from `state_changed` events after you subscribe to them with `request`. The optional `onRemove` receives the ID of an entity removed from Home Assistant, and `onEvent` receives the type of every other subscribed event, such as `entity_registry_updated`.
 
 ## Actions
 
@@ -126,7 +126,7 @@ const snapshot = yield* cameraSnapshot(
 
 ## Entities
 
-`EntityState` is the schema for a state object. `friendlyName` and `stateWithUnit` format one for display, and `entityNamerFrom` builds names the way the Home Assistant frontend does, from the entity and device registries.
+`EntityState` is the schema for a state object. `friendlyName` and `stateWithUnit` format one for display. `entityNamerFrom` builds names the way Home Assistant dashboards do (parent device, device and entity name) from the entity and device registries, and `entityNameParts` returns those parts separately. `AreaRegistry` and `FloorRegistry` decode `config/area_registry/list` and `config/floor_registry/list`.
 
 Failures use `HomeAssistantError`.
 

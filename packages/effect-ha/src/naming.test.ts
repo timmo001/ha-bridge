@@ -13,11 +13,14 @@ const namer = entityNamerFrom(
       { ei: "switch.fan", di: "fan", en: "Fan" },
       { ei: "sensor.brand", di: "office", en: "Office Philips level" },
       { ei: "sensor.loose", en: "Loose sensor" },
+      { ei: "switch.outlet", di: "outlet", en: "Power" },
     ],
   },
   [
     { id: "office", name: "Office" },
     { id: "fan", name: "Fan", name_by_user: "Desk fan" },
+    { id: "strip", name: "Power strip" },
+    { id: "outlet", name: "Outlet 1", parent_device_id: "strip" },
   ],
 );
 
@@ -49,5 +52,11 @@ describe("displayName", () => {
 
   test("uses the entity name without a device", () => {
     expect(displayName(namer, "sensor.loose", "x")).toBe("Loose sensor");
+  });
+
+  test("puts a child device's parent first", () => {
+    expect(displayName(namer, "switch.outlet", "x")).toBe(
+      "Power strip Outlet 1 Power",
+    );
   });
 });

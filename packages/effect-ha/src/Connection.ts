@@ -23,6 +23,7 @@ const EventMessage = Schema.Struct({
   event: Schema.Struct({
     event_type: Schema.String,
     data: Schema.Struct({
+      entity_id: Schema.optionalKey(Schema.String),
       new_state: Schema.optionalKey(Schema.NullOr(EntityState)),
     }),
   }),
@@ -41,7 +42,9 @@ export type HomeAssistantCommand =
         | "get_states"
         | "get_config"
         | "config/entity_registry/list_for_display"
-        | "config/device_registry/list";
+        | "config/device_registry/list"
+        | "config/area_registry/list"
+        | "config/floor_registry/list";
     }
   | { readonly type: "subscribe_events"; readonly event_type: string }
   | {
@@ -96,6 +99,8 @@ export const connect = Effect.fn("HomeAssistant.connect")(function* (options: {
   readonly url: string;
   readonly token: Redacted.Redacted;
   readonly onState: (state: EntityState) => Effect.Effect<void>;
+  // Receives the ID of every entity removed from the state machine.
+  readonly onRemove?: (entityId: string) => Effect.Effect<void>;
   // Receives the type of every other subscribed event.
   readonly onEvent?: (eventType: string) => Effect.Effect<void>;
 }) {
@@ -206,6 +211,12 @@ export const connect = Effect.fn("HomeAssistant.connect")(function* (options: {
     if (event_type === "state_changed") {
       if (data.new_state) {
         yield* options.onState(data.new_state);
+      } else if (
+        data.new_state === null &&
+        data.entity_id !== undefined &&
+        options.onRemove !== undefined
+      ) {
+        yield* options.onRemove(data.entity_id);
       }
     } else if (options.onEvent !== undefined) {
       yield* options.onEvent(event_type);
