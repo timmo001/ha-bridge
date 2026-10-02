@@ -60,7 +60,9 @@ ha-bridge watch input_boolean.guest_mode \
 
 See [Bar JSON](/using/bar-json) for the output and every flag.
 
-Plain output, one `--field` and `--bar-json` describe a single entity. With those, `get` fails when the target matches more than one entity, and `watch` fails as soon as a second entity appears. Use `--json` or several `--field` flags for more.
+Plain output and one `--field` print one line per entity. When the target is a single entity ID, the line is just the value; otherwise it starts with the entity ID and a tab, such as `light.bar`, a tab, then `off`.
+
+`--bar-json` describes a single entity. With it, `get` fails when the target matches more than one entity, and `watch` fails as soon as a second entity appears.
 
 `watch` skips a line identical to the entity's previous line, so `--field state` only prints when the state changes.
 

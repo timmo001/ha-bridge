@@ -175,6 +175,16 @@ export const isEmptyTarget = (target: Target) =>
     return value === undefined || valuesOf(value).length === 0;
   });
 
+// Whether the target names one entity and nothing else, so it can only ever
+// match that entity.
+export const isSingleEntityTarget = (target: Target) =>
+  targetFields.every((field) => {
+    const count =
+      target[field] === undefined ? 0 : valuesOf(target[field]).length;
+
+    return count === (field === "entity_id" ? 1 : 0);
+  });
+
 // For commands that act on one entity: fails unless exactly one matches.
 export const exactlyOne = <A>(
   items: ReadonlyArray<A>,

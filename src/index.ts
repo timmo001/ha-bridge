@@ -165,7 +165,11 @@ import {
   parseInputNumberValue,
 } from "./homeassistant/inputNumber.js";
 import { lightData } from "./homeassistant/light.js";
-import { exactlyOne, isEmptyTarget } from "./homeassistant/target.js";
+import {
+  exactlyOne,
+  isEmptyTarget,
+  isSingleEntityTarget,
+} from "./homeassistant/target.js";
 import {
   commandItems,
   commandKeys,
@@ -4613,6 +4617,14 @@ const keyedByEntity = (
     ),
   );
 
+// Plain lines name their entity unless the target is one entity ID.
+const plainLine =
+  (target: Target, line: (update: EntityUpdate) => string) =>
+  (update: EntityUpdate) =>
+    isSingleEntityTarget(target)
+      ? line(update)
+      : `${update.state.entity_id}\t${line(update)}`;
+
 // Drops lines that repeat the entity's previous line.
 const changedPerEntity = <E, R>(
   lines: Stream.Stream<readonly [entityId: string, line: string], E, R>,
@@ -4658,10 +4670,9 @@ const watch = Command.make(
         );
       }
 
-      const updates = watchUpdates(
-        toTarget(undefined, target),
-        Option.getOrUndefined(domain),
-      );
+      const entityTarget = toTarget(undefined, target);
+
+      const updates = watchUpdates(entityTarget, Option.getOrUndefined(domain));
 
       yield* (
         format.keyed
@@ -4674,11 +4685,13 @@ const watch = Command.make(
                   ] as const,
               ),
             )
-          : updates.pipe(
-              singleEntity,
+          : (output.barJson ? singleEntity(updates) : updates).pipe(
               Stream.map(
                 (update) =>
-                  [update.state.entity_id, format.line(update)] as const,
+                  [
+                    update.state.entity_id,
+                    plainLine(entityTarget, format.line)(update),
+                  ] as const,
               ),
             )
       ).pipe(
@@ -4700,13 +4713,23 @@ const get = Command.make(
     Effect.gen(function* () {
       const format = yield* entityFormatter(output);
 
+      const entityTarget = toTarget(undefined, target);
+
       const updates = yield* getEntities(
-        toTarget(undefined, target),
+        entityTarget,
         Option.getOrUndefined(domain),
       );
 
       if (format.keyed) {
         yield* Console.log(keyedByEntity(updates, format.value));
+
+        return;
+      }
+
+      if (!output.barJson) {
+        yield* Effect.forEach(updates, (update) =>
+          Console.log(plainLine(entityTarget, format.line)(update)),
+        );
 
         return;
       }
@@ -4718,7 +4741,7 @@ const get = Command.make(
         Effect.mapError(
           (error) =>
             new CommandError({
-              message: `${error.message}; use --json or several --field flags for more than one`,
+              message: `${error.message}; --bar-json shows one entity`,
             }),
         ),
       );
