@@ -76,6 +76,10 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`shell_command`](/commands/shell-command) | None |
 | [`rest_command`](/commands/rest-command) | None |
 | [`python_script`](/commands/python-script) | None |
+| [`cloud`](/commands/cloud) | None |
+| [`ffmpeg`](/commands/ffmpeg) | None |
+| [`google_assistant`](/commands/google-assistant) | None |
+| [`lovelace`](/commands/lovelace) | None |
 | [`bayesian`](/commands/bayesian) | None |
 | [`command_line`](/commands/command-line) | None |
 | [`derivative`](/commands/derivative) | None |
@@ -180,6 +184,10 @@ SUBCOMMANDS
   shell_command       Shell command actions
   rest_command        REST command actions
   python_script       Python script actions
+  cloud               Home Assistant Cloud actions
+  ffmpeg              FFmpeg sensor actions
+  google_assistant    Google Assistant actions
+  lovelace            Dashboard actions
   bayesian            Bayesian sensor actions
   command_line        Command line actions
   derivative          Derivative sensor actions

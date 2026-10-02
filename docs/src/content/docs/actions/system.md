@@ -1,6 +1,6 @@
 ---
 title: System
-description: Write logs, set log levels, manage the recorder, set themes, back up and wake devices.
+description: Write logs, set log levels, manage the recorder, set themes, back up, wake devices and manage cloud, FFmpeg and Google Assistant.
 ---
 
 These commands act on Home Assistant itself rather than on entities. Most need an admin token.
@@ -73,6 +73,8 @@ ha-bridge frontend set-theme --name none --mode dark
 ha-bridge frontend reload-themes
 ```
 
+`lovelace reload-resources` reloads dashboard resources set in YAML.
+
 ## Backups
 
 `backup create` backs up Home Assistant to the default location, and `backup create-automatic` backs up with the automatic backup settings. On an installation with the Supervisor, `backup create` isn't available; use [`hassio backup-full`](/actions/supervisor) instead.
@@ -90,6 +92,19 @@ ha-bridge wol wake aa:bb:cc:dd:ee:ff
 ha-bridge wol wake aa:bb:cc:dd:ee:ff --broadcast-address 192.168.1.255
 ```
 
+## Cloud, FFmpeg and Google Assistant
+
+`cloud remote-connect` and `cloud remote-disconnect` turn remote access through Home Assistant Cloud on and off.
+
+`ffmpeg start`, `stop` and `restart` control FFmpeg sensors, such as noise and motion sensors. Without a target, they act on every one:
+
+```bash
+ha-bridge ffmpeg restart binary_sensor.driveway_motion
+ha-bridge ffmpeg stop
+```
+
+`google_assistant request-sync` asks Google to sync its devices, for the token's user unless you set `--agent-user-id`.
+
 | Command | Home Assistant action |
 | --- | --- |
 | `logbook log` | `logbook.log` |
@@ -99,5 +114,9 @@ ha-bridge wol wake aa:bb:cc:dd:ee:ff --broadcast-address 192.168.1.255
 | `recorder enable`, `disable` | `recorder.enable`, `disable` |
 | `recorder statistics` | `recorder.get_statistics` |
 | `frontend set-theme`, `reload-themes` | `frontend.set_theme`, `reload_themes` |
+| `lovelace reload-resources` | `lovelace.reload_resources` |
 | `backup create`, `create-automatic` | `backup.create`, `create_automatic` |
 | `wake_on_lan send-magic-packet` | `wake_on_lan.send_magic_packet` |
+| `cloud remote-connect`, `remote-disconnect` | `cloud.remote_connect`, `remote_disconnect` |
+| `ffmpeg start`, `stop`, `restart` | `ffmpeg.start`, `stop`, `restart` |
+| `google_assistant request-sync` | `google_assistant.request_sync` |

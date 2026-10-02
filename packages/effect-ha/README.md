@@ -110,6 +110,16 @@ const events = yield* Calendar.eventsFrom(response);
 // events["calendar.work"]
 ```
 
+Other actions with responses pair the same way: `Hassio.backupFull` with `Hassio.backupFrom` for the new backup's slug, and `ShellCommand.run` and `RestCommand.run` with `returnResponse: true` and their `responseFrom`:
+
+```ts
+const response = yield* session.callAction(
+  ShellCommand.run("disk_usage", undefined, { returnResponse: true }),
+);
+
+const { stdout, returncode } = yield* ShellCommand.responseFrom(response);
+```
+
 ## Assist satellite questions
 
 `AssistSatellite.askQuestion` builds an `assist_satellite.ask_question` action and `AssistSatellite.answerFrom` reads the reply from its response:
