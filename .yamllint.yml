@@ -4,6 +4,7 @@ extends: default
 ignore: |
   node_modules/
   dist/
+  .agents/skills/
 
 rules:
   document-start:
