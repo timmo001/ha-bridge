@@ -5,7 +5,7 @@ description: Read and add calendar events, and read weather forecasts.
 
 ## Calendars
 
-`calendar events` prints events from now to `--days` ahead (default: 7) as JSON:
+`calendar events` prints events from now to `--days` ahead (default: 7) as JSON. Each event has `start`, `end` and `summary`, and may include `description`, `location` and `status`. `status` is `confirmed` or `tentative` when the calendar reports one. An event without `status` did not report one; that is not the same as confirmed.
 
 ```bash
 ha-bridge calendar events family --days 14

@@ -116,7 +116,7 @@ Set `return_response: true` for actions that return data. `CallAction` then succ
 
 ### Calendar events
 
-`getCalendarEvents` returns the events that overlap a time range on every calendar the target matches, keyed by calendar entity ID. All-day events have ISO dates for `start` and `end`; others have date-times.
+`getCalendarEvents` returns the events that overlap a time range on every calendar the target matches, keyed by calendar entity ID. All-day events have ISO dates for `start` and `end`; others have date-times. An event may include `status`, `confirmed` or `tentative`, when the calendar reports one.
 
 ```ts
 const upcoming = getCalendarEvents(
