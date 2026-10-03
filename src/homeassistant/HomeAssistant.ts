@@ -76,6 +76,11 @@ import {
   unavailableRegistries,
   type Registries,
 } from "./registries.js";
+import {
+  acceptLogbookBatch,
+  beginLogbookSubscription,
+  initialLogbookCursor,
+} from "./logbook.js";
 import { exactlyOne, resolveTarget, valuesOf } from "./target.js";
 
 const searchKinds = ["entity", "device", "area"] as const;
@@ -779,44 +784,50 @@ export class HomeAssistant extends Context.Service<
         return entries.filter(logbookInDomain(request.domain));
       });
 
-      // Each subscription starts a minute before the last entry sent, or
-      // before the watch began, so Home Assistant never sees a start time
-      // after its own clock. Past entries up to that point are skipped, so
-      // entries logged while disconnected still arrive, once.
+      // Home Assistant sends historical entries, then live ones, then a
+      // catch-up batch for events the recorder had not committed. Live
+      // entries are held until that batch arrives, so a gap entry is not
+      // dropped because a newer live entry was seen first. Each subscription
+      // starts a minute before the last entry delivered, so a clock ahead of
+      // Home Assistant is still accepted, and entries from a disconnect
+      // arrive once.
       const watchLogbook = (request: WatchLogbookRequest) =>
         Stream.unwrap(
-          Effect.map(Ref.make(Date.now()), (lastSent) =>
-            followSessions((current) =>
-              Effect.all([
-                logbookScope(current, request),
-                Ref.get(lastSent),
-              ]).pipe(
-                Effect.map(([scope, last]): HomeAssistantSubscription => ({
+          Effect.gen(function* () {
+            const cursor = yield* Ref.make(
+              initialLogbookCursor<LogbookEntry>(Date.now()),
+            );
+
+            return followSessions((current) =>
+              Effect.gen(function* () {
+                yield* Ref.update(cursor, beginLogbookSubscription);
+
+                const [scope, currentCursor] = yield* Effect.all([
+                  logbookScope(current, request),
+                  Ref.get(cursor),
+                ]);
+
+                return {
                   type: "logbook/event_stream",
-                  start_time: new Date(last - 60_000).toISOString(),
+                  start_time: new Date(
+                    currentCursor.deliveredThrough - 60_000,
+                  ).toISOString(),
                   ...scope,
-                })),
-              ),
+                } satisfies HomeAssistantSubscription;
+              }),
             ).pipe(
               Stream.mapEffect(logbookEventFrom),
-              Stream.mapEffect(({ past, entries }) =>
-                Ref.modify(lastSent, (last) => {
-                  const fresh = past
-                    ? entries.filter((entry) => Date.parse(entry.when) > last)
-                    : entries;
+              Stream.mapEffect((batch) =>
+                Ref.modify(cursor, (current) => {
+                  const next = acceptLogbookBatch(current, batch);
 
-                  const newest = fresh.at(-1);
-
-                  return [
-                    fresh,
-                    newest === undefined ? last : Date.parse(newest.when),
-                  ];
+                  return [next.entries, next.cursor];
                 }),
               ),
               Stream.flattenIterable,
               Stream.filter(logbookInDomain(request.domain)),
-            ),
-          ),
+            );
+          }),
         );
 
       const watchTrigger = (request: TriggerRequest) =>

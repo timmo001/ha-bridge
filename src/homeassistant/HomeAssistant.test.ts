@@ -142,6 +142,46 @@ class FakeWebSocket implements Socket.WebSocketLike {
       return;
     }
 
+    // Historical chunk, then a newer live entry, then the recorder catch-up
+    // for an older entry that was not committed in time for the first chunk.
+    if (message.type === "logbook/event_stream") {
+      const event = (payload: Schema.Json) =>
+        this.emit("message", {
+          data: JSON.stringify({
+            id: message.id,
+            type: "event",
+            event: payload,
+          }),
+        });
+
+      this.emit("message", {
+        data: JSON.stringify(resultFrame(message, null)),
+      });
+      event({ events: [], start_time: 1, end_time: 2, partial: true });
+      event({
+        events: [
+          {
+            when: 1_893_456_002,
+            entity_id: "light.kitchen",
+            state: "on",
+          },
+        ],
+      });
+      event({
+        events: [
+          {
+            when: 1_893_456_001,
+            entity_id: "binary_sensor.door",
+            state: "on",
+          },
+        ],
+        start_time: 1,
+        end_time: 2,
+      });
+
+      return;
+    }
+
     const result = Match.value(message.type).pipe(
       Match.when("config/entity_registry/list_for_display", () => ({
         entities: [],
@@ -253,5 +293,44 @@ describe("HomeAssistant state cache", () => {
     );
 
     expect(states).toEqual(["off", "on"]);
+  }, 15_000);
+});
+
+describe("HomeAssistant logbook watch", () => {
+  test("keeps a recorder catch-up entry that arrives after a newer live one", async () => {
+    generation = 0;
+
+    const entities = await Effect.runPromise(
+      Effect.gen(function* () {
+        const homeAssistant = yield* HomeAssistant;
+        const seen = yield* Queue.unbounded<string>();
+
+        yield* homeAssistant.watchLogbook({}).pipe(
+          Stream.runForEach((entry) =>
+            Queue.offer(seen, entry.entity_id ?? ""),
+          ),
+          Effect.forkScoped,
+        );
+
+        const first = yield* Queue.take(seen).pipe(Effect.timeout("2 seconds"));
+
+        const second = yield* Queue.take(seen).pipe(
+          Effect.timeout("2 seconds"),
+        );
+
+        return [first, second];
+      }).pipe(
+        Effect.provide(
+          HomeAssistant.layer.pipe(
+            Layer.provide(configLayer),
+            Layer.provide(FetchHttpClient.layer),
+            Layer.provide(webSocketLayer),
+          ),
+        ),
+        Effect.scoped,
+      ),
+    );
+
+    expect(entities).toEqual(["binary_sensor.door", "light.kitchen"]);
   }, 15_000);
 });
