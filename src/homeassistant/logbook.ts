@@ -76,14 +76,12 @@ export const acceptLogbookBatch = <A extends { readonly when: string }>(
       };
     }
 
-    const entries = newerThan(batch.entries, cursor.deliveredThrough);
-
     return {
       cursor: {
         ...cursor,
-        deliveredThrough: advance(entries, cursor.deliveredThrough),
+        deliveredThrough: advance(batch.entries, cursor.deliveredThrough),
       },
-      entries,
+      entries: batch.entries,
     };
   }
 
@@ -97,16 +95,14 @@ export const acceptLogbookBatch = <A extends { readonly when: string }>(
     };
   }
 
-  // Live entries are strictly after the catch-up window, so anything not
-  // already delivered is still new once the catch-up has moved the cursor.
-  const live = newerThan(cursor.heldLive, deliveredThrough);
-
+  // Live entries are never filtered by time, so a Home Assistant clock behind
+  // this machine's does not drop them.
   return {
     cursor: {
-      deliveredThrough: advance(live, deliveredThrough),
+      deliveredThrough: advance(cursor.heldLive, deliveredThrough),
       awaitingHistory: false,
       heldLive: [],
     },
-    entries: [...fresh, ...live],
+    entries: [...fresh, ...cursor.heldLive],
   };
 };
