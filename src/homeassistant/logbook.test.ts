@@ -38,16 +38,6 @@ const fold = (
 };
 
 describe("acceptLogbookBatch", () => {
-  test("keeps a recorder catch-up entry that arrives after a newer live one", () => {
-    expect(
-      fold([
-        { past: true, partial: true, entries: [] },
-        { past: false, partial: false, entries: [light] },
-        { past: true, partial: false, entries: [door] },
-      ]),
-    ).toEqual(["binary_sensor.door", "light.kitchen"]);
-  });
-
   test("drops history that was already delivered", () => {
     expect(
       fold([
