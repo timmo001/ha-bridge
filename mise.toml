@@ -94,13 +94,34 @@ description = "Preview the built docs site"
 dir = "docs"
 run = "bun run preview"
 
+[tasks."serve:bridge"]
+description = "Start a local bridge in watch mode in the background through Pitchfork"
+depends = ["install"]
+run = "pitchfork start bridge"
+
+[tasks."serve:bridge:status"]
+description = "Show the background local bridge status"
+run = "pitchfork status bridge"
+
+[tasks."serve:bridge:logs"]
+description = "Follow the background local bridge logs"
+run = "pitchfork logs -t bridge"
+
+[tasks."serve:bridge:restart"]
+description = "Restart the background local bridge"
+run = "pitchfork restart bridge"
+
+[tasks."serve:bridge:stop"]
+description = "Stop the background local bridge"
+run = "pitchfork stop bridge"
+
 [tasks."serve:docs:dev"]
 description = "Start the docs dev server in the background through Pitchfork"
 run = "pitchfork start docs"
 
 [tasks."serve:docs:status"]
 description = "Show the background docs dev server status"
-run = "pitchfork status ha-bridge/docs"
+run = "pitchfork status docs"
 
 [tasks."serve:docs:logs"]
 description = "Follow the background docs dev server logs"

@@ -1,5 +1,10 @@
-# Keeps the docs dev server running in the background, outside the invoking
-# shell or agent. Manage it with the serve:docs:* mise tasks.
+# Keeps the docs dev server and a local bridge running in the background,
+# outside the invoking shell or agent. Manage them with the serve:* mise tasks.
+
+# Uses its own socket so it never replaces the installed service's socket
+[daemons.bridge]
+run = 'HA_BRIDGE_SOCK="$XDG_RUNTIME_DIR/ha-bridge/dev.sock" exec bun run --watch src/index.ts serve'
+retry = true
 
 [daemons.docs]
 run = "exec mise run docs:dev"

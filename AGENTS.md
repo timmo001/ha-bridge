@@ -22,6 +22,7 @@
 - Start the docs dev server with `mise run serve:docs:dev`, which runs it through Pitchfork in the background and restarts it if it exits or stops responding. Do not run `mise run docs:dev` or `blume dev` in the foreground from an agent.
 - Use `mise run serve:docs:status`, `mise run serve:docs:logs`, `mise run serve:docs:restart` and `mise run serve:docs:stop` to manage it.
 - The daemon is configured in `pitchfork.toml` and serves `http://localhost:4321/`.
+- Run a local bridge from source with `mise run serve:bridge`, managed the same way with `serve:bridge:status`, `serve:bridge:logs`, `serve:bridge:restart` and `serve:bridge:stop`. It runs `serve` in watch mode on `$XDG_RUNTIME_DIR/ha-bridge/dev.sock`, so the installed service keeps its socket. Point clients at it with `HA_BRIDGE_SOCK`.
 
 ## Validation
 
