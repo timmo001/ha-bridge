@@ -104,7 +104,6 @@ const decodeLogbookEvent = Schema.decodeUnknownEffect(
     events: Schema.Array(WireLogbookEntry),
     // Only batches of past entries have a range; live ones don't.
     start_time: Schema.optionalKey(Schema.Finite),
-    end_time: Schema.optionalKey(Schema.Finite),
     // Set on every historical chunk except the last. The last chunk can
     // arrive after live entries have already started.
     partial: Schema.optionalKey(Schema.Boolean),

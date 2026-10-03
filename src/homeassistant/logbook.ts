@@ -1,8 +1,5 @@
-// Home Assistant's logbook stream sends historical entries, may then send
-// live ones, and only afterwards sends the recorder's catch-up batch. The
-// catch-up entries are older than those live ones. A cursor that jumps to
-// the newest live entry drops the catch-up, including entries from a gap
-// the watch is supposed to keep.
+// The recorder's catch-up batch can arrive after newer live entries, so live
+// entries are held until history finishes.
 
 export interface LogbookCursor<A> {
   // Milliseconds. Entries at or before this time have been delivered.
@@ -47,19 +44,11 @@ const newerThan = <A extends { readonly when: string }>(
 const advance = (
   entries: ReadonlyArray<{ readonly when: string }>,
   deliveredThrough: number,
-) => {
-  let newest = deliveredThrough;
-
-  for (const entry of entries) {
-    const time = timeOf(entry);
-
-    if (time !== undefined && time > newest) {
-      newest = time;
-    }
-  }
-
-  return newest;
-};
+) =>
+  entries.reduce(
+    (newest, entry) => Math.max(newest, timeOf(entry) ?? newest),
+    deliveredThrough,
+  );
 
 export interface LogbookBatch<A> {
   readonly past: boolean;
