@@ -104,6 +104,10 @@ const decodeLogbookEvent = Schema.decodeUnknownEffect(
     events: Schema.Array(WireLogbookEntry),
     // Only batches of past entries have a range; live ones don't.
     start_time: Schema.optionalKey(Schema.Finite),
+    end_time: Schema.optionalKey(Schema.Finite),
+    // Set on every historical chunk except the last. The last chunk can
+    // arrive after live entries have already started.
+    partial: Schema.optionalKey(Schema.Boolean),
   }),
 );
 
@@ -121,8 +125,9 @@ export const logbookFrom = (result: Schema.Json | null) =>
 // past entries sent before the live ones.
 export const logbookEventFrom = (event: Schema.Json) =>
   decodeLogbookEvent(event).pipe(
-    Effect.map(({ events, start_time }) => ({
+    Effect.map(({ events, start_time, partial }) => ({
       past: start_time !== undefined,
+      partial: partial === true,
       entries: events.map(toLogbookEntry),
     })),
     Effect.mapError(logbookError),
