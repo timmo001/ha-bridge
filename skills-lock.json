@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "testing": {
+      "source": "timmo001/skills",
+      "sourceType": "github",
+      "skillPath": "testing/SKILL.md",
+      "computedHash": "09e32f83229e6ec2b438c16e40a3079d0c0a84be140c9c3a10049d824a0001bd"
+    }
+  }
+}
