@@ -861,10 +861,12 @@ export const HomeAssistantCore = {
   reloadCustomTemplates: () =>
     onDomain("homeassistant.reload_custom_templates"),
   reloadAll: () => onDomain("homeassistant.reload_all"),
-  // Reloads one config entry, by ID or through an entity, device or area.
+  // Reloads one config entry by ID.
   reloadConfigEntry: (entryId: string) =>
     onDomain("homeassistant.reload_config_entry", { entry_id: entryId }),
   // Reloads the config entries behind an entity, device or area.
+  // Home Assistant accepts a target and warns that this stops working in
+  // 2027.4. Pass the config entry ID to `reloadConfigEntry`.
   reloadConfigEntryOf: (target: Target) =>
     onTarget("homeassistant.reload_config_entry", target),
   savePersistentStates: () => onDomain("homeassistant.save_persistent_states"),

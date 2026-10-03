@@ -37,6 +37,8 @@ ha-bridge lawn_mower stop front
 ha-bridge lawn_mower dock front
 ```
 
+`stop` cancels the current task. A mower that has stopped, and is neither docked nor paused, reports `idle`.
+
 | Command | Home Assistant action |
 | --- | --- |
 | `vacuum start`, `pause`, `start-pause`, `stop` | `vacuum.start`, `pause`, `start_pause`, `stop` |

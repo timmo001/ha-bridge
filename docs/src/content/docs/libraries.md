@@ -58,7 +58,7 @@ A target has the same fields as an action's target in Home Assistant: `entity_id
 
 Entity results are `EntityUpdate`s: the raw `EntityState` plus `name`, the display name the bridge resolved the same way the Home Assistant frontend does.
 
-`getCalendarEvents(target, { start, end })` is a helper on top of `CallAction`. It calls `calendar.get_events` and returns the events keyed by calendar entity ID.
+`getCalendarEvents(target, { start, end })` is a helper on top of `CallAction`. It calls `calendar.get_events` and returns the events keyed by calendar entity ID. An event may include `status` (`confirmed` or `tentative`) when the calendar reports one.
 
 ### Example
 

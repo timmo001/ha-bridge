@@ -124,6 +124,8 @@ const events = yield* Calendar.eventsFrom(response);
 // events["calendar.work"]
 ```
 
+An event may include `status`, `confirmed` or `tentative`, when the calendar reports one. An event without `status` did not report one.
+
 Other actions with responses pair the same way: `Hassio.backupFull` with `Hassio.backupFrom` for the new backup's slug, and `ShellCommand.run` and `RestCommand.run` with `returnResponse: true` and their `responseFrom`:
 
 ```ts

@@ -3,6 +3,13 @@ import type { Action } from "./Action.js";
 import { HomeAssistantError } from "./HomeAssistantError.js";
 import type { Target } from "./Target.js";
 
+// A calendar reports `confirmed` or `tentative`. An event without `status` did
+// not report one; that is not the same as confirmed. Cancelled events are left
+// out of `calendar.get_events`.
+export const CalendarEventStatus = Schema.Literals(["confirmed", "tentative"]);
+
+export type CalendarEventStatus = typeof CalendarEventStatus.Type;
+
 // `start` and `end` are ISO dates for all-day events, date-times otherwise.
 export const CalendarEvent = Schema.Struct({
   start: Schema.String,
@@ -10,6 +17,7 @@ export const CalendarEvent = Schema.Struct({
   summary: Schema.String,
   description: Schema.optionalKey(Schema.String),
   location: Schema.optionalKey(Schema.String),
+  status: Schema.optionalKey(CalendarEventStatus),
 });
 
 export type CalendarEvent = typeof CalendarEvent.Type;
