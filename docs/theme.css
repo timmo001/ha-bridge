@@ -1,0 +1,23 @@
+@import "@timmo001/docs-kit/blume/theme.css";
+
+/* The logo has empty space above and below the bridge, so show it larger and
+   pull the space in. */
+.home-banner {
+  --home-banner-logo-size: 14rem;
+}
+
+.home-banner img.home-banner-logo {
+  margin-top: -34px;
+  margin-bottom: -32px;
+}
+
+@media (min-width: 40rem) {
+  .home-banner {
+    --home-banner-logo-size: 20rem;
+  }
+
+  .home-banner img.home-banner-logo {
+    margin-top: -51px;
+    margin-bottom: -49px;
+  }
+}
