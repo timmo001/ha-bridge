@@ -15,7 +15,7 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.ts\" \"packages/*/src/**/*.ts\" \"scripts/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"packages/*/src/**/*.ts\" \"scripts/**/*.ts\"",
-    "check": "bun run lint && bun run typecheck && bun run format:check",
+    "check": "bun run --parallel --no-exit-on-error lint typecheck format:check",
     "prepare": "effect-tsgo patch --typescript --force=false",
     "build:packages": "bun run --cwd packages/effect-ha build && bun run --cwd packages/client build"
   },

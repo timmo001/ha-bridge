@@ -48,7 +48,7 @@ jobs:
       bun-version: ${{ needs.tools.outputs.bun }}
       node-version: ${{ needs.tools.outputs.node }}
       package-path: packages/effect-ha
-      check-command: cd ../.. && bun run check && bun run test
+      check-command: cd ../.. && bun run --parallel --no-exit-on-error check test
 
   effect-ha-jsr:
     name: effect-ha JSR
@@ -60,7 +60,7 @@ jobs:
     with:
       bun-version: ${{ needs.tools.outputs.bun }}
       package-path: packages/effect-ha
-      check-command: (cd ../.. && bun run check && bun run test) && bun run build
+      check-command: (cd ../.. && bun run --parallel --no-exit-on-error check test) && bun run build
 
   # The client pins @timmo001/effect-ha to this release, so publish it once effect-ha is out.
   client-npm:
@@ -76,7 +76,7 @@ jobs:
       bun-version: ${{ needs.tools.outputs.bun }}
       node-version: ${{ needs.tools.outputs.node }}
       package-path: packages/client
-      check-command: cd ../.. && bun run check && bun run test
+      check-command: cd ../.. && bun run --parallel --no-exit-on-error check test
 
   client-jsr:
     name: effect-ha-bridge JSR
@@ -91,7 +91,7 @@ jobs:
       bun-version: ${{ needs.tools.outputs.bun }}
       package-path: packages/client
       # The JSR entry resolves @timmo001/effect-ha from the workspace, so build it too.
-      check-command: cd ../.. && bun run check && bun run test && bun run build:packages
+      check-command: cd ../.. && bun run --parallel --no-exit-on-error check test build:packages
 
   linux:
     name: Linux
