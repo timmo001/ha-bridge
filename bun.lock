@@ -8,7 +8,7 @@
         "@effect/platform-bun": "4.0.2",
         "@timmo001/effect-ha": "workspace:*",
         "@timmo001/effect-ha-bridge": "workspace:*",
-        "effect": "4.0.1",
+        "effect": "4.0.2",
         "fuse.js": "7.5.0",
       },
       "devDependencies": {
@@ -30,20 +30,20 @@
         "@timmo001/effect-ha": "1.1.0",
       },
       "devDependencies": {
-        "effect": "4.0.1",
+        "effect": "4.0.2",
       },
       "peerDependencies": {
-        "effect": "4.0.1",
+        "effect": "4.0.2",
       },
     },
     "packages/effect-ha": {
       "name": "@timmo001/effect-ha",
       "version": "1.1.0",
       "devDependencies": {
-        "effect": "4.0.1",
+        "effect": "4.0.2",
       },
       "peerDependencies": {
-        "effect": "4.0.1",
+        "effect": "4.0.2",
       },
     },
   },
@@ -174,7 +174,7 @@
 
     "bun-types": ["bun-types@1.4.2", "", { "dependencies": { "@types/node": "*" } }, "sha512-bxV1FgK7yBIzjRe5zBozIM4Bem11ZJcCXSrjWRG3YWLt8yFDePu4cLjpebO8OvPeIE9trbyPF4fuj3Cia4Fj3w=="],
 
-    "effect": ["effect@4.0.1", "", {}, "sha512-b1VlQG9g8fwxE5QnIZuPoOP/0MsqHJSRKxUijjoM80E5q95FXrX5yWtY5XI8G+GJsBQAVSDbLS458z9a++uVvw=="],
+    "effect": ["effect@4.0.2", "", {}, "sha512-YeYnLqSFrL4+tCOXRrfNP03w8FILoF/wDl+ukraJAGzXrjcS383W7LAAvGBbLatEyktmLxRq+9xJinx7QzXW5A=="],
 
     "fuse.js": ["fuse.js@7.5.0", "", {}, "sha512-sQtrEfA+ez/3G0cCZecF70oqpCRttCexYUG4mUrtWL49ULUzUyxokt5kyqwtKzj1270RaKih+hcP3qLcumccow=="],
 
