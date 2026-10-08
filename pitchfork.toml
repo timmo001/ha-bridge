@@ -7,7 +7,8 @@ run = 'HA_BRIDGE_SOCK="$XDG_RUNTIME_DIR/ha-bridge/dev.sock" exec bun run --watch
 retry = true
 
 [daemons.docs]
-run = "exec mise run docs:dev"
-ready_http = "http://localhost:4321/"
-health_http = "http://localhost:4321/"
+run = 'exec mise run docs:dev --host 127.0.0.1 --port "$PORT"'
+port = { expect = [7290], bump = 10 }
+ready_cmd = 'curl -fsS "http://127.0.0.1:$PORT/"'
+health_cmd = 'curl -fsS "http://127.0.0.1:$PORT/"'
 retry = true
