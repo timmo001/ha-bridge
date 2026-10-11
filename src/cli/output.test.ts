@@ -6,6 +6,7 @@ import {
   entityBar,
   entityField,
   entityFieldValues,
+  missingEntityFields,
   stateTextBar,
   templateBar,
 } from "./output.js";
@@ -139,6 +140,22 @@ describe("entity fields", () => {
       "attributes.hs_color.0": 30,
       "attributes.missing": null,
     });
+  });
+
+  test("tells a missing path from a null value", () => {
+    const cover: EntityState = {
+      entity_id: "cover.curtain",
+      state: "open",
+      attributes: { current_position: 100, device_class: null },
+    };
+
+    expect(
+      missingEntityFields(cover, "Curtain", [
+        "attributes.current_position",
+        "attributes.device_class",
+        "state.attributes.current_position",
+      ]),
+    ).toEqual(["state.attributes.current_position"]);
   });
 });
 

@@ -104,6 +104,27 @@ export const entityFieldValues = (
   );
 };
 
+// The paths with nothing at them, as opposed to a null value.
+export const missingEntityFields = (
+  state: EntityState,
+  name: string,
+  paths: ReadonlyArray<string>,
+) => {
+  const source = fieldSource(state, name);
+
+  return paths.filter((path) => fieldValue(source, path) === undefined);
+};
+
+// Why a path found nothing, with a hint for paths that start a level too
+// high, such as state.attributes.brightness.
+export const missingFieldMessage = (entityId: string, path: string) => {
+  const hint = path.startsWith("state.")
+    ? `; paths start from the state object, so try ${path.slice("state.".length)}`
+    : "";
+
+  return `${entityId} has nothing at ${path}, so it prints as empty or null${hint}`;
+};
+
 // A set flag wins even when its template renders empty.
 export const entityBar = (
   state: EntityState,

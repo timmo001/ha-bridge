@@ -46,6 +46,8 @@ ha-bridge get --area Office --domain light --field state --field attributes.brig
 # {"light.office":{"state":"on","attributes.brightness":128},"light.ceiling":{"state":"off","attributes.brightness":null}}
 ```
 
+Paths start from the state object, so a light's brightness is `attributes.brightness`, not `state.attributes.brightness`. A single field prints a missing path as an empty line, so bars keep their layout. When a path finds nothing, the command also prints a warning to stderr, once per path.
+
 `--bar-json` prints one JSON object per line for status bars and scripts:
 
 ```bash

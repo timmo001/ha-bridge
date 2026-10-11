@@ -161,6 +161,8 @@ import {
   entityBar,
   entityField,
   entityFieldValues,
+  missingEntityFields,
+  missingFieldMessage,
   searchLine,
   stateTextBar,
   templateBar,
@@ -5098,8 +5100,25 @@ const entityFormatter = ({
     const [onlyField] = fields;
     const keyed = json || fields.length > 1;
 
+    // Once per path, as a watched attribute can come and go.
+    const warned = new Set<string>();
+
     return {
       keyed,
+      warnMissing: (update: EntityUpdate) =>
+        Effect.forEach(
+          missingEntityFields(update.state, update.name, fields).filter(
+            (path) => !warned.has(path),
+          ),
+          (path) => {
+            warned.add(path);
+
+            return Effect.logWarning(
+              missingFieldMessage(update.state.entity_id, path),
+            );
+          },
+          { discard: true },
+        ),
       line: (update: EntityUpdate) => {
         if (barJson) {
           return entityBar(update.state, update.name, options);
@@ -5239,7 +5258,10 @@ const watch = Command.make(
         output.barJson
           ? watchUpdates({ entity_id: matched[0].state.entity_id })
           : watchUpdates(entityTarget, Option.getOrUndefined(domain))
-      ).pipe(Stream.filter(withDeviceClass(deviceClass)));
+      ).pipe(
+        Stream.filter(withDeviceClass(deviceClass)),
+        Stream.tap(format.warnMissing),
+      );
 
       yield* (
         format.keyed
@@ -5290,6 +5312,8 @@ const get = Command.make(
         deviceClass,
         output.barJson,
       );
+
+      yield* Effect.forEach(updates, format.warnMissing, { discard: true });
 
       if (format.keyed) {
         yield* Console.log(keyedByEntity(updates, format.value));
