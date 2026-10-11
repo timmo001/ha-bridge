@@ -67,6 +67,7 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`utility_meter`](/commands/utility-meter) | None |
 | [`logbook`](/commands/logbook) | None |
 | [`system_log`](/commands/system-log) | None |
+| [`logs`](/commands/logs) | `log` |
 | [`logger`](/commands/logger) | None |
 | [`recorder`](/commands/recorder) | None |
 | [`frontend`](/commands/frontend) | None |
@@ -179,6 +180,7 @@ SUBCOMMANDS
   utility_meter       Utility meter actions
   logbook             Logbook actions
   system_log          System log actions
+  logs, log           Read, watch and search Home Assistant's logs. Needs an admin token
   logger              Logger actions
   recorder            Recorder actions
   frontend            Frontend actions

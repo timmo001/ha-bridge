@@ -58,6 +58,7 @@
   "/commands/utility-meter",
   "/commands/logbook",
   "/commands/system-log",
+  "/commands/logs",
   "/commands/logger",
   "/commands/recorder",
   "/commands/frontend",
