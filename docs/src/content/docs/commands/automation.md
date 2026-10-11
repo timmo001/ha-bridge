@@ -126,3 +126,83 @@ USAGE
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
+
+## `ha-bridge automation config`
+
+```text
+DESCRIPTION
+  Read and write automation configs. Needs an admin token
+
+USAGE
+  ha-bridge automation config <subcommand> [flags]
+
+FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```
+
+## `ha-bridge automation config get`
+
+Alias: `ha-bridge automation config g`
+
+```text
+DESCRIPTION
+  Print the config an automation was loaded from, as YAML. --json adds its ID and whether it can be changed here
+
+USAGE
+  ha-bridge automation config get [flags] <automation>
+
+ARGUMENTS
+  automation string    The automation's entity ID, with or without automation.
+
+FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --json             Print as JSON
+```
+
+## `ha-bridge automation config create`
+
+```text
+DESCRIPTION
+  Add an automation to automations.yaml once Home Assistant validates it, and print its ID
+
+USAGE
+  ha-bridge automation config create [flags]
+
+FLAGS
+  --socket string      Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --id string          ID for the new automation (default: made up)
+  --file, -f string    YAML or JSON file holding the config, or - for stdin
+```
+
+## `ha-bridge automation config update`
+
+```text
+DESCRIPTION
+  Replace all of an automation's config in automations.yaml once Home Assistant validates it
+
+USAGE
+  ha-bridge automation config update [flags] <automation>
+
+ARGUMENTS
+  automation string    The automation's entity ID, with or without automation.
+
+FLAGS
+  --socket string      Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --file, -f string    YAML or JSON file holding the config, or - for stdin
+```
+
+## `ha-bridge automation config delete`
+
+```text
+DESCRIPTION
+  Remove an automation from automations.yaml, and its entity
+
+USAGE
+  ha-bridge automation config delete [flags] <automation>
+
+ARGUMENTS
+  automation string    The automation's entity ID, with or without automation.
+
+FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```
