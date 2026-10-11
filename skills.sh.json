@@ -3,8 +3,8 @@
   "groupings": [
     {
       "title": "Use",
-      "description": "Control and read Home Assistant from the shell, scripts and status bars through the bridge.",
-      "skills": ["ha-bridge-cli"]
+      "description": "Control and read Home Assistant from the shell, scripts and status bars through the bridge, and write for it the current way.",
+      "skills": ["ha-bridge-cli", "home-assistant"]
     },
     {
       "title": "Contribute",

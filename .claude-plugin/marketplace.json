@@ -5,7 +5,7 @@
   "plugins": [
     {
       "name": "ha-bridge",
-      "description": "Control and read Home Assistant from the shell, scripts and status bars through ha-bridge",
+      "description": "Control and read Home Assistant from the shell, scripts and status bars through ha-bridge, and look up how Home Assistant works",
       "license": "Apache-2.0",
       "source": "./skills",
       "skills": "./"
