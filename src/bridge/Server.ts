@@ -13,11 +13,13 @@ import { FetchHttpClient } from "effect/http";
 import { RpcSerialization, RpcServer } from "effect/rpc";
 import { Socket, SocketServer } from "effect/socket";
 import { HomeAssistant } from "../homeassistant/HomeAssistant.js";
+import { HomeAssistantLogs } from "../homeassistant/Logs.js";
 import { BridgeRpcs } from "@timmo001/effect-ha-bridge";
 
 const Handlers = BridgeRpcs.toLayer(
   Effect.gen(function* () {
     const homeAssistant = yield* HomeAssistant;
+    const logs = yield* HomeAssistantLogs;
 
     return BridgeRpcs.of({
       GetEntities: (request) => homeAssistant.getEntities(request),
@@ -36,6 +38,8 @@ const Handlers = BridgeRpcs.toLayer(
       WatchTrigger: (request) => homeAssistant.watchTrigger(request),
       TestCondition: (request) => homeAssistant.testCondition(request),
       WatchCondition: (request) => homeAssistant.watchCondition(request),
+      GetSystemLog: (request) => logs.getSystemLog(request),
+      WatchSystemLog: (request) => logs.watchSystemLog(request),
     });
   }),
 );
@@ -180,7 +184,10 @@ export const serve = (socketPath: string) =>
           Layer.provide(RpcSerialization.layerNdjson),
           Layer.provide(quietSocketServer(socketPath)),
           Layer.provide(
-            HomeAssistant.layer.pipe(Layer.provide(FetchHttpClient.layer)),
+            HomeAssistantLogs.layer.pipe(
+              Layer.provideMerge(HomeAssistant.layer),
+              Layer.provide(FetchHttpClient.layer),
+            ),
           ),
         ),
       ),

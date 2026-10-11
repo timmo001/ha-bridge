@@ -4,8 +4,10 @@ import {
   Layer,
   Match,
   Option,
+  Predicate,
   Queue,
   Redacted,
+  Schedule,
   Schema,
   Stream,
 } from "effect";
@@ -13,6 +15,7 @@ import { FetchHttpClient } from "effect/http";
 import { Socket } from "effect/socket";
 import { BridgeConfig } from "../config/Config.js";
 import { HomeAssistant } from "./HomeAssistant.js";
+import { HomeAssistantLogs } from "./Logs.js";
 
 // Past the sliding state pubsub's 4096 slots, so a full snapshot cannot be
 // delivered to a watcher that is already subscribed.
@@ -200,6 +203,13 @@ class FakeWebSocket implements Socket.WebSocketLike {
         missing_labels: [],
       })),
       Match.when("get_config", () => configResult),
+      Match.when("auth/current_user", () => ({
+        id: "user",
+        name: "Bridge",
+        is_owner: false,
+        is_admin: tokenIsAdmin,
+      })),
+      Match.when("system_log/list", () => []),
       Match.orElse(() => null),
     );
 
@@ -232,6 +242,8 @@ class FakeWebSocket implements Socket.WebSocketLike {
 let generation = 0;
 
 let current: FakeWebSocket | undefined;
+
+let tokenIsAdmin = true;
 
 const configLayer = Layer.succeed(
   BridgeConfig,
@@ -293,6 +305,50 @@ describe("HomeAssistant state cache", () => {
     );
 
     expect(states).toEqual(["off", "on"]);
+  }, 15_000);
+});
+
+describe("HomeAssistantLogs admin gate", () => {
+  // The bridge connects in the background, so retry until it has.
+  const readSystemLog = (isAdmin: boolean) => {
+    generation = 0;
+    tokenIsAdmin = isAdmin;
+
+    return Effect.runPromise(
+      Effect.gen(function* () {
+        const logs = yield* HomeAssistantLogs;
+
+        return yield* logs.getSystemLog({}).pipe(
+          Effect.retry({
+            while: (error) => Predicate.isTagged(error, "HomeAssistantError"),
+            schedule: Schedule.spaced("50 millis"),
+            times: 40,
+          }),
+          Effect.map((entries) => ({ entries })),
+          Effect.catchTag("LogUnavailable", (error) =>
+            Effect.succeed({ reason: error.reason }),
+          ),
+        );
+      }).pipe(
+        Effect.provide(
+          HomeAssistantLogs.layer.pipe(
+            Layer.provide(HomeAssistant.layer),
+            Layer.provide(configLayer),
+            Layer.provide(FetchHttpClient.layer),
+            Layer.provide(webSocketLayer),
+          ),
+        ),
+        Effect.scoped,
+      ),
+    );
+  };
+
+  test("refuses a token without admin rights before asking Home Assistant", async () => {
+    expect(await readSystemLog(false)).toEqual({ reason: "admin" });
+  }, 15_000);
+
+  test("reads the system log with an admin token", async () => {
+    expect(await readSystemLog(true)).toEqual({ entries: [] });
   }, 15_000);
 });
 

@@ -3,6 +3,7 @@ import {
   Cause,
   Console,
   Data,
+  DateTime,
   Duration,
   Effect,
   FileSystem,
@@ -111,6 +112,7 @@ import {
   StatisticType,
   StatisticsPeriod,
   SystemLog,
+  type SystemLogEntry,
   SystemLogLevel,
   UtilityMeter,
   WakeOnLan,
@@ -136,6 +138,7 @@ import {
 } from "@timmo001/effect-ha";
 import {
   BridgeClient,
+  type LogUnavailable,
   resolveSocketPath,
   type EntityUpdate,
   type SearchMatch,
@@ -3502,6 +3505,113 @@ const systemLog = domainCommand("system_log", undefined, "System log actions", [
   systemCommand("clear", SystemLog.clear, "Clear the system log"),
 ]);
 
+const searchFlag = optionalFlag(
+  Flag.String("search"),
+  "Only show what fuzzily matches this text, as ha-bridge search does",
+);
+
+const logJsonFlag = Flag.Boolean("json").pipe(
+  Flag.withDescription("Print as JSON"),
+  Flag.withDefault(false),
+);
+
+// A log that can't be read is reported plainly: a token without admin
+// rights, no Supervisor or a Core too old for it.
+const logFailures = (action: string) => ({
+  HomeAssistantError: (error: HomeAssistantError) =>
+    failWith(`could not ${action}: ${error.message}`),
+  LogUnavailable: (error: LogUnavailable) => failWith(error.message),
+});
+
+const logStreamFailures = (action: string) => {
+  const failures = logFailures(action);
+
+  return {
+    HomeAssistantError: (error: HomeAssistantError) =>
+      Stream.fromEffect(failures.HomeAssistantError(error)),
+    LogUnavailable: (error: LogUnavailable) =>
+      Stream.fromEffect(failures.LogUnavailable(error)),
+  };
+};
+
+const secondsIso = (seconds: number) =>
+  DateTime.formatIso(DateTime.makeUnsafe(seconds * 1000));
+
+// Time, level, logger and latest message, with the number of times it
+// happened when more than once.
+const systemLogLine = (entry: SystemLogEntry) =>
+  [
+    secondsIso(entry.timestamp),
+    entry.level,
+    entry.name,
+    [
+      entry.message.at(-1) ?? "",
+      entry.count > 1 ? `(${entry.count} times)` : "",
+    ]
+      .filter((part) => part !== "")
+      .join(" "),
+  ].join("\t");
+
+const coreErrors = domainCommand(
+  "errors",
+  undefined,
+  "Core's logged errors and warnings, as Settings > System > Logs lists them",
+  [
+    Command.make("get", { json: logJsonFlag, search: searchFlag }, (input) =>
+      Effect.gen(function* () {
+        const client = yield* BridgeClient;
+
+        const entries = yield* client
+          .GetSystemLog({ search: Option.getOrUndefined(input.search) })
+          .pipe(Effect.catchTags(logFailures("read the system log")));
+
+        yield* input.json
+          ? Console.log(JSON.stringify(entries))
+          : Effect.forEach(entries, (entry) =>
+              Console.log(systemLogLine(entry)),
+            );
+      }).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Print the errors and warnings Core keeps, newest first: time, level, logger and message",
+      ),
+    ),
+    Command.make("watch", { json: logJsonFlag, search: searchFlag }, (input) =>
+      Effect.gen(function* () {
+        const client = yield* BridgeClient;
+
+        yield* client
+          .WatchSystemLog({ search: Option.getOrUndefined(input.search) })
+          .pipe(
+            Stream.catchTags(logStreamFailures("watch the system log")),
+            Stream.runForEach((entry) =>
+              Console.log(
+                input.json ? JSON.stringify(entry) : systemLogLine(entry),
+              ),
+            ),
+          );
+      }).pipe(withBridge),
+    ).pipe(
+      Command.withAlias("w"),
+      Command.withDescription(
+        "Print each new error or warning, and each repeat of an earlier one",
+      ),
+    ),
+  ],
+);
+
+// Areas and aliases follow the Home Assistant CLI's `ha <area> logs`.
+const coreLogs = domainCommand("core", "ha", "Home Assistant Core's logs", [
+  coreErrors,
+]);
+
+const logs = domainCommand(
+  "logs",
+  "log",
+  "Read, watch and search Home Assistant's logs. Needs an admin token",
+  [coreLogs],
+);
+
 // Splits `key=value`, at the first `=`.
 const parsePair = (label: string) => (pair: string) => {
   const index = pair.indexOf("=");
@@ -4922,6 +5032,7 @@ const commands = [
   utilityMeter,
   logbook,
   systemLog,
+  logs,
   logger,
   recorder,
   frontend,

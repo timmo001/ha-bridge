@@ -20,6 +20,7 @@ import {
   TriggerRequest,
   WatchConditionRequest,
   WatchEventsRequest,
+  SystemLogEntry,
 } from "@timmo001/effect-ha";
 import { EntityUpdate } from "./Entity.js";
 import {
@@ -27,10 +28,13 @@ import {
   LogbookRequest,
   WatchLogbookRequest,
 } from "./History.js";
+import { LogUnavailable, SystemLogRequest } from "./Log.js";
 import { SearchEmpty, SearchRequest, SearchResults } from "./Search.js";
 import { TargetError, TargetRequest } from "./Target.js";
 
 const TargetFailure = Schema.Union([HomeAssistantError, TargetError]);
+
+const LogFailure = Schema.Union([HomeAssistantError, LogUnavailable]);
 
 export class BridgeRpcs extends RpcGroup.make(
   // Every entity the target refers to, as Home Assistant expands it.
@@ -127,6 +131,20 @@ export class BridgeRpcs extends RpcGroup.make(
     payload: WatchConditionRequest,
     success: ConditionUpdate,
     error: HomeAssistantError,
+    stream: true,
+  }),
+  // Core's logged errors and warnings, newest first. Needs an admin token.
+  Rpc.make("GetSystemLog", {
+    payload: SystemLogRequest,
+    success: Schema.Array(SystemLogEntry),
+    error: LogFailure,
+  }),
+  // Each new error or warning, and each repeat of an earlier one, following
+  // reconnects. Needs an admin token.
+  Rpc.make("WatchSystemLog", {
+    payload: SystemLogRequest,
+    success: SystemLogEntry,
+    error: LogFailure,
     stream: true,
   }),
   // Fuzzy search over cached entities, devices and areas, or a list of

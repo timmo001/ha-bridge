@@ -17,6 +17,7 @@ import {
   AreaRegistry,
   cameraSnapshot,
   connect,
+  CurrentUser,
   DeviceRegistry,
   displayName,
   EntityRegistryDisplay,
@@ -154,6 +155,12 @@ export interface HomeAssistantService {
     SearchResults,
     SearchEmpty | HomeAssistantError | TargetError
   >;
+  // The current connection. Fails while the bridge isn't connected.
+  readonly session: Effect.Effect<HomeAssistantSession, HomeAssistantError>;
+  // Each connection as it comes up, and none while disconnected.
+  readonly sessions: Stream.Stream<Option.Option<HomeAssistantSession>>;
+  // The user the token belongs to, read once per connection.
+  readonly currentUser: Effect.Effect<CurrentUser, HomeAssistantError>;
 }
 
 const reconnectDelay = "5 seconds";
@@ -240,6 +247,11 @@ const templateSubscription = (
   report_errors: true,
 });
 
+const decodeCurrentUser = decodeWith(
+  Schema.decodeUnknownEffect(CurrentUser),
+  "current user",
+);
+
 const decodeDisplay = Schema.decodeUnknownEffect(EntityRegistryDisplay);
 
 const decodeDevices = Schema.decodeUnknownEffect(DeviceRegistry);
@@ -282,6 +294,10 @@ export class HomeAssistant extends Context.Service<
       );
 
       const changes = yield* PubSub.sliding<CacheEvent>(4096);
+
+      // Cleared on disconnect, as the user's admin rights may have changed
+      // by the next connection.
+      const user = yield* Ref.make(Option.none<CurrentUser>());
 
       const nameWith = (current: Registries, state: EntityState) =>
         displayName(current.namer, state.entity_id, friendlyName(state));
@@ -476,7 +492,12 @@ export class HomeAssistant extends Context.Service<
 
         return yield* current.closed;
       }).pipe(
-        Effect.ensuring(SubscriptionRef.set(session, Option.none())),
+        Effect.ensuring(
+          Effect.andThen(
+            SubscriptionRef.set(session, Option.none()),
+            Ref.set(user, Option.none()),
+          ),
+        ),
         Effect.scoped,
       );
 
@@ -498,6 +519,24 @@ export class HomeAssistant extends Context.Service<
             }),
         ),
       );
+
+      const currentUser = Effect.gen(function* () {
+        const known = yield* Ref.get(user);
+
+        if (Option.isSome(known)) {
+          return known.value;
+        }
+
+        const current = yield* connected;
+
+        const fetched = yield* current
+          .request({ type: "auth/current_user" })
+          .pipe(Effect.flatMap(decodeCurrentUser));
+
+        yield* Ref.set(user, Option.some(fetched));
+
+        return fetched;
+      });
 
       const resolve = (target: Target, domain: string | undefined) =>
         Effect.flatMap(Ref.get(registries), (current) =>
@@ -1002,6 +1041,9 @@ export class HomeAssistant extends Context.Service<
         testCondition,
         watchCondition,
         search: runSearch,
+        session: connected,
+        sessions: SubscriptionRef.changes(session),
+        currentUser,
       });
     }),
   ).pipe(Layer.provide(Search.layer));

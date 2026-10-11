@@ -18,6 +18,8 @@ export * from "./HomeAssistantError.js";
 
 export * from "./History.js";
 
+export * from "./Log.js";
+
 export * from "./naming.js";
 
 export * from "./Registry.js";

@@ -58,7 +58,10 @@ export type HomeAssistantCommand =
         | "config/device_registry/list"
         | "config/area_registry/list"
         | "config/floor_registry/list"
-        | "config/label_registry/list";
+        | "config/label_registry/list"
+        | "auth/current_user"
+        // Needs an admin token.
+        | "system_log/list";
     }
   | { readonly type: "unsubscribe_events"; readonly subscription: number }
   | {

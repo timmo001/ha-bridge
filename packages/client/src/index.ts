@@ -6,6 +6,8 @@ export * from "./Entity.js";
 
 export * from "./History.js";
 
+export * from "./Log.js";
+
 export * from "./Rpcs.js";
 
 export * from "./Search.js";
