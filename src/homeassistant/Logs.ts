@@ -354,6 +354,14 @@ export class HomeAssistantLogs extends Context.Service<
           return yield* noIntegration();
         }
 
+        // Core's proxy only lets the latest start through for Core's log.
+        if (request.source !== "core" && request.latest === true) {
+          return yield* new LogUnavailable({
+            reason: "unsupported",
+            message: "only Core's log can be read since it last started",
+          });
+        }
+
         const records =
           request.source === "core"
             ? yield* coreLog(request)

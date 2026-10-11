@@ -3619,7 +3619,7 @@ const bootFlag = optionalFlag(
 );
 
 const latestFlag = Flag.Boolean("latest").pipe(
-  Flag.withDescription("Only what was logged since it last started"),
+  Flag.withDescription("Only what was logged since Core last started"),
   Flag.withDefault(false),
 );
 
@@ -3681,7 +3681,6 @@ const getLogFlags = {
   search: searchFlag,
   lines: linesFlag,
   boot: bootFlag,
-  latest: latestFlag,
   verbose: verboseFlag,
 };
 
@@ -3701,7 +3700,6 @@ const getLogRequest = (source: LogSource, input: GetLogInput) =>
     source,
     lines,
     boot: Option.getOrUndefined(input.boot),
-    latest: input.latest,
     verbose: input.verbose,
     search: Option.getOrUndefined(input.search),
   }));
@@ -3741,11 +3739,15 @@ const supervisorLogCommands = (source: LogArea, name: string) =>
 const coreLogs = domainCommand("core", "ha", "Home Assistant Core's logs", [
   Command.make(
     "get",
-    { ...getLogFlags, integration: integrationFlag },
+    { ...getLogFlags, latest: latestFlag, integration: integrationFlag },
     (input) =>
       Effect.flatMap(getLogRequest("core", input), (request) =>
         readLog(
-          { ...request, integration: Option.getOrUndefined(input.integration) },
+          {
+            ...request,
+            latest: input.latest,
+            integration: Option.getOrUndefined(input.integration),
+          },
           input.json,
         ),
       ).pipe(withBridge),

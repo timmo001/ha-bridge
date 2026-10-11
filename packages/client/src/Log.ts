@@ -46,7 +46,7 @@ export const LogRequest = Schema.Struct({
   ...watchLogFields,
   // A boot by offset: 0 for this one, -1 for the one before, and so on.
   boot: Schema.optional(Schema.Int),
-  // Only what was logged since the area last started.
+  // Only what was logged since Core last started. Core's log only.
   latest: Schema.optional(Schema.Boolean),
 });
 

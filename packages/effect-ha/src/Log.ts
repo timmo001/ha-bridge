@@ -135,7 +135,8 @@ const journalParams = (request: {
 
 // A log's latest entries, oldest first, from the Supervisor through Core's
 // proxy. Needs an admin token. `boot` is an offset: 0 for this boot, -1 for
-// the one before, and so on. `latest` reads only since the area last started.
+// the one before, and so on. `latest` reads only since the area last started;
+// Core's proxy allows it for Core alone.
 export const supervisorLog = Effect.fn("HomeAssistant.supervisorLog")(
   function* (
     options: RestOptions,
