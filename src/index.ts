@@ -114,7 +114,7 @@ import {
   SystemLog,
   type SystemLogEntry,
   SystemLogLevel,
-  type LogArea,
+  LogArea,
   type LogSource,
   logSourceName,
   UtilityMeter,
@@ -142,6 +142,7 @@ import {
 import {
   BridgeClient,
   type LogRequest,
+  type LogSearchSource,
   type LogUnavailable,
   type WatchLogRequest,
   resolveSocketPath,
@@ -3846,6 +3847,92 @@ const appLogs = domainCommand("apps", "addons", "Apps' logs", [
   ),
 ]);
 
+const isLogArea = Schema.is(LogArea);
+
+// errors, an area such as supervisor, or anything else as an app's slug.
+const logSearchSource = (source: string): LogSearchSource =>
+  source === "errors" || isLogArea(source) ? source : { app: source };
+
+const logSearch = Command.make(
+  "search",
+  {
+    query: Argument.String("query").pipe(
+      Argument.withDescription("Words to search for, such as mqtt timeout"),
+      Argument.atLeast(1),
+    ),
+    sources: Flag.String("source").pipe(
+      Flag.withDescription(
+        "Where to look: errors, core, supervisor, host, audio, cli, dns, multicast, observer or an app's slug; repeat for more (default: errors and core)",
+      ),
+      Flag.atLeast(0),
+    ),
+    lines: optionalFlag(
+      Flag.Int("lines").pipe(Flag.withAlias("n")),
+      "How many of each log's latest records to search (default: 1000)",
+    ),
+    limit: Flag.Int("limit").pipe(
+      Flag.withDescription("Most results to show"),
+      Flag.withDefault(20),
+    ),
+    page: optionalFlag(
+      Flag.Int("page"),
+      "Show this page of --limit results, starting at 1",
+    ),
+    json: Flag.Boolean("json").pipe(
+      Flag.withDescription("Print the results as JSON"),
+      Flag.withDefault(false),
+    ),
+  },
+  (input) =>
+    Effect.gen(function* () {
+      if (input.limit < 1) {
+        return yield* failWith("--limit must be at least 1");
+      }
+
+      const page = Option.getOrUndefined(input.page);
+
+      if (page !== undefined && page < 1) {
+        return yield* failWith("--page must be at least 1");
+      }
+
+      const offset = page === undefined ? 0 : (page - 1) * input.limit;
+      const client = yield* BridgeClient;
+
+      const found = yield* client
+        .SearchLogs({
+          query: input.query.join(" "),
+          sources:
+            input.sources.length === 0
+              ? undefined
+              : input.sources.map(logSearchSource),
+          lines: yield* logLines(input.lines),
+          limit: input.limit,
+          offset,
+        })
+        .pipe(Effect.catchTags(logFailures("search the logs")));
+
+      if (input.json) {
+        return yield* Console.log(JSON.stringify(found));
+      }
+
+      yield* Effect.forEach(found.results, (result) =>
+        Console.log(`${result.source}\t${result.record}`),
+      );
+
+      if (found.results.length === 0) {
+        yield* Console.error("No matches");
+      } else if (page !== undefined || found.results.length < found.total) {
+        yield* Console.error(
+          `Showing ${offset + 1}-${offset + found.results.length} of ${found.total}; use --limit or --page for more`,
+        );
+      }
+    }).pipe(withBridge),
+).pipe(
+  Command.withDescription(
+    "Fuzzy search Core's errors and logs, best match first: source, then the record",
+  ),
+);
+
 // Areas and aliases follow the Home Assistant CLI's `ha <area> logs`.
 const logs = domainCommand(
   "logs",
@@ -3891,6 +3978,7 @@ const logs = domainCommand(
       "The observer plugin's log",
       supervisorLogCommands("observer", "the observer plugin"),
     ),
+    logSearch,
   ],
 );
 

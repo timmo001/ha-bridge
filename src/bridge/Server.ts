@@ -44,6 +44,7 @@ const Handlers = BridgeRpcs.toLayer(
       WatchLog: (request) => logs.watchLog(request),
       GetLogBoots: () => logs.getLogBoots,
       GetLogApps: () => logs.getLogApps,
+      SearchLogs: (request) => logs.searchLogs(request),
     });
   }),
 );

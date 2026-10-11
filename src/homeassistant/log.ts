@@ -9,6 +9,13 @@ export const systemLogKeys: ReadonlyArray<SearchKey<SystemLogEntry>> = [
   { name: "exception", weight: 1, getFn: (entry) => entry.exception },
 ];
 
+// An error or warning as one record for searching across logs: its logger,
+// messages and traceback.
+export const systemLogRecord = (entry: SystemLogEntry) =>
+  [entry.name, ...entry.message, entry.exception]
+    .filter((part) => part !== "")
+    .join("\n");
+
 // A log record is searched as a whole, so a traceback matches by any line.
 export const recordKeys: ReadonlyArray<SearchKey<string>> = [
   { name: "record", weight: 1, getFn: (record) => record },
@@ -36,6 +43,17 @@ export const coreRecords = (lines: ReadonlyArray<string>) =>
 
     return records;
   }, []);
+
+// Core's records from the latest lines of its log, leaving out the end of a
+// record the window started partway through.
+export const latestCoreRecords = (lines: ReadonlyArray<string>) => {
+  const records = coreRecords(lines);
+  const first = records[0];
+
+  return first !== undefined && !coreRecordStart.test(first)
+    ? records.slice(1)
+    : records;
+};
 
 // Core's live log starts every subscription with the end of its log file.
 // After a reconnect, that leaves out what was already sent, up to the last

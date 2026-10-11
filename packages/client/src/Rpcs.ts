@@ -32,6 +32,8 @@ import {
   LogApp,
   LogBoots,
   LogRequest,
+  LogSearchRequest,
+  LogSearchResults,
   LogUnavailable,
   SystemLogRequest,
   WatchLogRequest,
@@ -178,6 +180,12 @@ export class BridgeRpcs extends RpcGroup.make(
   // The installed apps, whose slugs read their logs.
   Rpc.make("GetLogApps", {
     success: Schema.Array(LogApp),
+    error: LogFailure,
+  }),
+  // Fuzzy search across Core's errors and logs, best match first.
+  Rpc.make("SearchLogs", {
+    payload: LogSearchRequest,
+    success: LogSearchResults,
     error: LogFailure,
   }),
   // Fuzzy search over cached entities, devices and areas, or a list of

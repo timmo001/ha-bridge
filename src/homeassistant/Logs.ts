@@ -25,6 +25,9 @@ import {
   LogApp,
   type LogBoots,
   type LogRequest,
+  type LogSearchRequest,
+  type LogSearchResults,
+  type LogSearchSource,
   LogUnavailable,
   type SystemLogRequest,
   type WatchLogRequest,
@@ -34,11 +37,13 @@ import { Search, type SearchKey } from "../search/Search.js";
 import { HomeAssistant } from "./HomeAssistant.js";
 import {
   coreRecords,
+  latestCoreRecords,
   newSystemLogEntries,
   recordKeys,
   resumeBacklog,
   type SystemLogSeen,
   systemLogKeys,
+  systemLogRecord,
   withoutColours,
 } from "./log.js";
 
@@ -65,6 +70,10 @@ export interface HomeAssistantLogsService {
   ) => Stream.Stream<string, LogFailure>;
   readonly getLogBoots: Effect.Effect<LogBoots, LogFailure>;
   readonly getLogApps: Effect.Effect<ReadonlyArray<LogApp>, LogFailure>;
+  // A fuzzy search across Core's errors and logs, best match first.
+  readonly searchLogs: (
+    request: LogSearchRequest,
+  ) => Effect.Effect<LogSearchResults, LogFailure>;
 }
 
 const systemLogInterval = "5 seconds";
@@ -73,6 +82,11 @@ const reconnectDelay = "5 seconds";
 
 // Extra journal lines read for Core's latest records, for their tracebacks.
 const tracebackHeadroom = 200;
+
+// What a log search reads without being told.
+const defaultSearchSources: ReadonlyArray<LogSearchSource> = ["errors", "core"];
+
+const searchLines = 1000;
 
 const decodeSystemLog = Schema.decodeUnknownEffect(
   Schema.Array(SystemLogEntry),
@@ -308,7 +322,8 @@ export class HomeAssistantLogs extends Context.Service<
                 : request.lines + tracebackHeadroom,
           }).pipe(withHttp);
 
-          const records = coreRecords(lines);
+          // The journal always reads a window of the latest lines.
+          const records = latestCoreRecords(lines);
 
           return request.lines === undefined
             ? records
@@ -489,6 +504,52 @@ export class HomeAssistantLogs extends Context.Service<
         return addons;
       }).pipe(Effect.withSpan("HomeAssistantLogs.getLogApps"));
 
+      // Each source's records, read together and ranked as one list.
+      const searchLogs = Effect.fn("HomeAssistantLogs.searchLogs")(function* (
+        request: LogSearchRequest,
+      ) {
+        const lines = request.lines ?? searchLines;
+
+        const found = yield* Effect.forEach(
+          request.sources ?? defaultSearchSources,
+          (source) =>
+            source === "errors"
+              ? Effect.map(listSystemLog, (entries) =>
+                  entries.map((entry) => ({
+                    source,
+                    record: systemLogRecord(entry),
+                  })),
+                )
+              : Effect.map(getLog({ source, lines }), (records) =>
+                  records.map((record) => ({
+                    source: logSourceName(source),
+                    record,
+                  })),
+                ),
+          { concurrency: "unbounded" },
+        );
+
+        const ranked = yield* search.fuzzy({
+          items: found.flat(),
+          query: request.query,
+          keys: [{ name: "record", weight: 1, getFn: ({ record }) => record }],
+          primary: ({ record }) => record,
+          overrides: {
+            limit: request.limit,
+            offset: request.offset,
+            ignoreFieldNorm: true,
+          },
+        });
+
+        return {
+          results: ranked.results.map(({ item, score }) => ({
+            ...item,
+            score,
+          })),
+          total: ranked.total,
+        };
+      });
+
       return HomeAssistantLogs.of({
         getSystemLog,
         watchSystemLog,
@@ -496,6 +557,7 @@ export class HomeAssistantLogs extends Context.Service<
         watchLog,
         getLogBoots,
         getLogApps,
+        searchLogs,
       });
     }),
   ).pipe(Layer.provide(Search.layer));

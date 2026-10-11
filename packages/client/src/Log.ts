@@ -72,3 +72,42 @@ export const LogApp = Schema.Struct({
 });
 
 export type LogApp = typeof LogApp.Type;
+
+// Where a log search looks: Core's logged errors, or a log.
+export const LogSearchSource = Schema.Union([
+  Schema.Literal("errors"),
+  LogSource,
+]);
+
+export type LogSearchSource = typeof LogSearchSource.Type;
+
+// A fuzzy search across logs, as the bridge's entity search ranks matches.
+export const LogSearchRequest = Schema.Struct({
+  query: Schema.String,
+  // Core's errors and Core's log when left out.
+  sources: Schema.optional(Schema.Array(LogSearchSource)),
+  // How many of each log's latest records to search; 1000 when left out.
+  lines: Schema.optional(Lines),
+  limit: Schema.optional(Schema.Int.check(Schema.isGreaterThan(0))),
+  offset: Schema.optional(Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))),
+});
+
+export type LogSearchRequest = typeof LogSearchRequest.Type;
+
+export const LogSearchMatch = Schema.Struct({
+  // errors, an area such as core, or an app's slug.
+  source: Schema.String,
+  record: Schema.String,
+  // From 1 to 100; higher is closer.
+  score: Schema.Finite,
+});
+
+export type LogSearchMatch = typeof LogSearchMatch.Type;
+
+export const LogSearchResults = Schema.Struct({
+  results: Schema.Array(LogSearchMatch),
+  // Every close match, before the offset and limit.
+  total: Schema.Int,
+});
+
+export type LogSearchResults = typeof LogSearchResults.Type;

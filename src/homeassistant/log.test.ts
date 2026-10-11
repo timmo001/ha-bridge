@@ -1,6 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import type { SystemLogEntry } from "@timmo001/effect-ha";
-import { coreRecords, newSystemLogEntries, resumeBacklog } from "./log.js";
+import {
+  coreRecords,
+  latestCoreRecords,
+  newSystemLogEntries,
+  resumeBacklog,
+} from "./log.js";
 
 describe("coreRecords", () => {
   test("keeps a traceback with its record, and a leading fragment apart", () => {
@@ -15,6 +20,19 @@ describe("coreRecords", () => {
     ).toEqual([
       '  File "x.py", line 1',
       "2026-10-11 15:04:41.556 ERROR (MainThread) [homeassistant.components.mqtt] Failed\nTraceback (most recent call last):\nValueError: bad",
+      "2026-10-11 15:04:42.000 WARNING (MainThread) [homeassistant] Slow",
+    ]);
+  });
+});
+
+describe("latestCoreRecords", () => {
+  test("leaves out the end of a record the window started partway through", () => {
+    expect(
+      latestCoreRecords([
+        "ValueError: bad",
+        "2026-10-11 15:04:42.000 WARNING (MainThread) [homeassistant] Slow",
+      ]),
+    ).toEqual([
       "2026-10-11 15:04:42.000 WARNING (MainThread) [homeassistant] Slow",
     ]);
   });
