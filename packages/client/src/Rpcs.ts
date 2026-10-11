@@ -28,7 +28,14 @@ import {
   LogbookRequest,
   WatchLogbookRequest,
 } from "./History.js";
-import { LogUnavailable, SystemLogRequest } from "./Log.js";
+import {
+  LogApp,
+  LogBoots,
+  LogRequest,
+  LogUnavailable,
+  SystemLogRequest,
+  WatchLogRequest,
+} from "./Log.js";
 import { SearchEmpty, SearchRequest, SearchResults } from "./Search.js";
 import { TargetError, TargetRequest } from "./Target.js";
 
@@ -146,6 +153,32 @@ export class BridgeRpcs extends RpcGroup.make(
     success: SystemLogEntry,
     error: LogFailure,
     stream: true,
+  }),
+  // A log's latest records, oldest first: Core's, the Supervisor's, the
+  // host's, a plugin's or an app's. Needs an admin token, and a Supervisor
+  // for every log but Core's.
+  Rpc.make("GetLog", {
+    payload: LogRequest,
+    success: Schema.Array(Schema.String),
+    error: LogFailure,
+  }),
+  // A log's latest records, then each new one, following reconnects. Core's
+  // needs Core 2026.11 or newer.
+  Rpc.make("WatchLog", {
+    payload: WatchLogRequest,
+    success: Schema.String,
+    error: LogFailure,
+    stream: true,
+  }),
+  // The host's boots, for reading an earlier boot's logs.
+  Rpc.make("GetLogBoots", {
+    success: LogBoots,
+    error: LogFailure,
+  }),
+  // The installed apps, whose slugs read their logs.
+  Rpc.make("GetLogApps", {
+    success: Schema.Array(LogApp),
+    error: LogFailure,
   }),
   // Fuzzy search over cached entities, devices and areas, or a list of
   // them without a query. Only a target needs Home Assistant.

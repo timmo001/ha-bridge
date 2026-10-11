@@ -1,6 +1,38 @@
 import { describe, expect, test } from "bun:test";
 import type { SystemLogEntry } from "@timmo001/effect-ha";
-import { newSystemLogEntries } from "./log.js";
+import { coreRecords, newSystemLogEntries, resumeBacklog } from "./log.js";
+
+describe("coreRecords", () => {
+  test("keeps a traceback with its record, and a leading fragment apart", () => {
+    expect(
+      coreRecords([
+        '  File "x.py", line 1',
+        "2026-10-11 15:04:41.556 ERROR (MainThread) [homeassistant.components.mqtt] Failed",
+        "Traceback (most recent call last):",
+        "ValueError: bad",
+        "2026-10-11 15:04:42.000 WARNING (MainThread) [homeassistant] Slow",
+      ]),
+    ).toEqual([
+      '  File "x.py", line 1',
+      "2026-10-11 15:04:41.556 ERROR (MainThread) [homeassistant.components.mqtt] Failed\nTraceback (most recent call last):\nValueError: bad",
+      "2026-10-11 15:04:42.000 WARNING (MainThread) [homeassistant] Slow",
+    ]);
+  });
+});
+
+describe("resumeBacklog", () => {
+  test("keeps the latest lines on the first subscription", () => {
+    expect(resumeBacklog(["a", "b", "c"], undefined, 2)).toEqual(["b", "c"]);
+  });
+
+  test("leaves out what was already sent after a reconnect", () => {
+    expect(resumeBacklog(["a", "b", "c", "d"], "b", 1)).toEqual(["c", "d"]);
+  });
+
+  test("sends the whole backlog when the last record sent has scrolled out", () => {
+    expect(resumeBacklog(["c", "d"], "a", undefined)).toEqual(["c", "d"]);
+  });
+});
 
 const entry = (name: string, timestamp: number, count = 1): SystemLogEntry => ({
   name,

@@ -1,4 +1,262 @@
-import { Schema } from "effect";
+import { Effect, Redacted, Schema, Stream } from "effect";
+import { HttpClient, HttpClientRequest } from "effect/http";
+import { HomeAssistantError } from "./HomeAssistantError.js";
+
+// Parts of Home Assistant whose logs the Supervisor serves from the host
+// journal: Core, the Supervisor, the host's own services and the
+// Supervisor's plugins.
+export const LogArea = Schema.Literals([
+  "core",
+  "supervisor",
+  "host",
+  "audio",
+  "cli",
+  "dns",
+  "multicast",
+  "observer",
+]);
+
+export type LogArea = typeof LogArea.Type;
+
+// A log: an area's, or an app's by its slug, such as core_mosquitto.
+export const LogSource = Schema.Union([
+  LogArea,
+  Schema.Struct({ app: Schema.String }),
+]);
+
+export type LogSource = typeof LogSource.Type;
+
+const isLogArea = Schema.is(LogArea);
+
+export const logSourceName = (source: LogSource) =>
+  isLogArea(source) ? source : source.app;
+
+// The journal cursor that `followSupervisorLog` resumes from, and how many
+// entries after it were read.
+export interface LogPosition {
+  readonly cursor: string;
+  readonly read: number;
+}
+
+// The Supervisor's limit, which `follow` asks for so it never stops.
+const journalLinesMax = "18446744073709551615";
+
+const supervisorLogPath = (
+  source: LogSource,
+  options: {
+    readonly boot?: number | undefined;
+    readonly latest?: boolean | undefined;
+    readonly follow?: boolean | undefined;
+  },
+) =>
+  [
+    isLogArea(source) ? source : `addons/${encodeURIComponent(source.app)}`,
+    "logs",
+    ...(options.latest === true ? ["latest"] : []),
+    ...(options.boot === undefined ? [] : ["boots", String(options.boot)]),
+    ...(options.follow === true ? ["follow"] : []),
+  ].join("/");
+
+interface RestOptions {
+  readonly url: string;
+  readonly token: Redacted.Redacted;
+}
+
+const restUrl = (options: RestOptions, path: string) =>
+  `${options.url.replace(/\/$/, "")}/api/${path}`;
+
+// A request through Home Assistant's REST API, failing with what Home
+// Assistant or the Supervisor said when it isn't OK.
+const restGet = Effect.fnUntraced(function* (
+  options: RestOptions,
+  path: string,
+  request: HttpClientRequest.Options.NoUrl,
+) {
+  const http = (yield* HttpClient.HttpClient).pipe(
+    HttpClient.mapRequest(HttpClientRequest.bearerToken(options.token)),
+  );
+
+  const response = yield* http
+    .get(restUrl(options, path), request)
+    .pipe(
+      Effect.mapError(
+        (error) =>
+          new HomeAssistantError({ message: `${path}: ${error.message}` }),
+      ),
+    );
+
+  if (response.status >= 400) {
+    const body = yield* response.text.pipe(Effect.orElseSucceed(() => ""));
+
+    return yield* new HomeAssistantError({
+      message: `${path} answered ${response.status}${body.trim() === "" ? "" : `: ${body.trim()}`}`,
+    });
+  }
+
+  return response;
+});
+
+const linesOf = (response: {
+  readonly stream: Stream.Stream<Uint8Array, unknown>;
+}) =>
+  response.stream.pipe(
+    Stream.decodeText(),
+    Stream.splitLines,
+    Stream.mapError(
+      (error) =>
+        new HomeAssistantError({ message: `read log: ${String(error)}` }),
+    ),
+  );
+
+// The Supervisor's journal options; flags count by being present.
+type JournalParams = {
+  no_colors: string;
+  verbose?: string;
+  lines?: string;
+};
+
+// Colours are always left out, as the bridge's clients read the text.
+const journalParams = (request: {
+  readonly verbose?: boolean | undefined;
+  readonly lines?: number | undefined;
+}) => {
+  const params: JournalParams = { no_colors: "" };
+
+  if (request.verbose === true) {
+    params.verbose = "";
+  }
+
+  if (request.lines !== undefined) {
+    params.lines = String(request.lines);
+  }
+
+  return params;
+};
+
+// A log's latest entries, oldest first, from the Supervisor through Core's
+// proxy. Needs an admin token. `boot` is an offset: 0 for this boot, -1 for
+// the one before, and so on. `latest` reads only since the area last started.
+export const supervisorLog = Effect.fn("HomeAssistant.supervisorLog")(
+  function* (
+    options: RestOptions,
+    source: LogSource,
+    request: {
+      readonly lines?: number | undefined;
+      readonly boot?: number | undefined;
+      readonly latest?: boolean | undefined;
+      readonly verbose?: boolean | undefined;
+    },
+  ) {
+    const response = yield* restGet(
+      options,
+      `hassio/${supervisorLogPath(source, request)}`,
+      { urlParams: journalParams(request) },
+    );
+
+    return yield* Stream.runCollect(linesOf(response));
+  },
+);
+
+// A log's latest `lines` entries, then every new one, until the connection
+// drops. With `from`, it carries on after the entries already read instead.
+// Each entry comes with where to carry on from after it.
+export const followSupervisorLog = (
+  options: RestOptions,
+  source: LogSource,
+  request: {
+    readonly lines?: number | undefined;
+    readonly verbose?: boolean | undefined;
+    readonly from?: LogPosition | undefined;
+  },
+) =>
+  Stream.unwrap(
+    Effect.gen(function* () {
+      const from = request.from;
+
+      const response = yield* restGet(
+        options,
+        `hassio/${supervisorLogPath(source, { follow: true })}`,
+        from === undefined
+          ? {
+              urlParams: journalParams({
+                verbose: request.verbose,
+                lines: request.lines ?? 10,
+              }),
+            }
+          : {
+              urlParams: journalParams({ verbose: request.verbose }),
+              headers: {
+                Range: `entries=${from.cursor}:${from.read}:${journalLinesMax}`,
+              },
+            },
+      );
+
+      // The Supervisor names the first entry it sends, so positions count
+      // from there, or carry on counting from `from` when it doesn't.
+      const first = response.headers["x-first-cursor"];
+      const cursor = first ?? from?.cursor;
+      const start = first === undefined ? (from?.read ?? 0) : 0;
+
+      return linesOf(response).pipe(
+        Stream.mapAccum(
+          () => start,
+          (read, line) => [
+            read + 1,
+            [
+              {
+                line,
+                position:
+                  cursor === undefined ? undefined : { cursor, read: read + 1 },
+              },
+            ],
+          ],
+        ),
+      );
+    }),
+  );
+
+const decodeBoots = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(
+    Schema.Struct({
+      data: Schema.Struct({
+        boots: Schema.Record(Schema.String, Schema.String),
+      }),
+    }),
+  ),
+);
+
+// The host's boots by offset, the current one at 0, with their boot IDs.
+// Needs an admin token.
+export const supervisorLogBoots = Effect.fn("HomeAssistant.supervisorLogBoots")(
+  function* (options: RestOptions) {
+    const response = yield* restGet(options, "hassio/host/logs/boots", {});
+
+    const text = yield* response.text.pipe(
+      Effect.mapError(
+        (error) => new HomeAssistantError({ message: error.message }),
+      ),
+    );
+
+    const { data } = yield* decodeBoots(text).pipe(
+      Effect.mapError(
+        (error) =>
+          new HomeAssistantError({ message: `decode boots: ${error.message}` }),
+      ),
+    );
+
+    return data.boots;
+  },
+);
+
+// Core's log file, oldest first. Without a Supervisor this is the only way
+// to read Core's log over the REST API. Needs an admin token.
+export const errorLog = Effect.fn("HomeAssistant.errorLog")(function* (
+  options: RestOptions,
+) {
+  const response = yield* restGet(options, "error_log", {});
+
+  return yield* Stream.runCollect(linesOf(response));
+});
 
 // The user an access token belongs to, from `auth/current_user`. Reading
 // logs needs `is_admin`.

@@ -40,6 +40,10 @@ const Handlers = BridgeRpcs.toLayer(
       WatchCondition: (request) => homeAssistant.watchCondition(request),
       GetSystemLog: (request) => logs.getSystemLog(request),
       WatchSystemLog: (request) => logs.watchSystemLog(request),
+      GetLog: (request) => logs.getLog(request),
+      WatchLog: (request) => logs.watchLog(request),
+      GetLogBoots: () => logs.getLogBoots,
+      GetLogApps: () => logs.getLogApps,
     });
   }),
 );

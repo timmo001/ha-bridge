@@ -65,6 +65,13 @@ export type HomeAssistantCommand =
     }
   | { readonly type: "unsubscribe_events"; readonly subscription: number }
   | {
+      // A Supervisor API call answering JSON, such as /addons. Needs an
+      // admin token for almost every endpoint.
+      readonly type: "supervisor/api";
+      readonly endpoint: string;
+      readonly method: "get";
+    }
+  | {
       readonly type: "fire_event";
       readonly event_type: string;
       readonly event_data?: FireEventRequest["event_data"] | undefined;
@@ -126,6 +133,13 @@ export type HomeAssistantSubscription =
       // Checked every second; an event is sent only when the result changes.
       readonly type: "subscribe_condition";
       readonly condition: ConditionRequest["condition"];
+    }
+  | {
+      // Core's log as it's written, starting with the end of the log file:
+      // its last 100 lines, or an integration's last 5000. Each event is a
+      // list of records. Needs an admin token and Core 2026.11 or newer.
+      readonly type: "system_log/subscribe_raw";
+      readonly integration?: string | undefined;
     };
 
 // Logbook entries between ISO times, for some entities and devices, or all

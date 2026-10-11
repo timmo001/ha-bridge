@@ -114,6 +114,9 @@ import {
   SystemLog,
   type SystemLogEntry,
   SystemLogLevel,
+  type LogArea,
+  type LogSource,
+  logSourceName,
   UtilityMeter,
   WakeOnLan,
   WakeOnLanData,
@@ -138,7 +141,9 @@ import {
 } from "@timmo001/effect-ha";
 import {
   BridgeClient,
+  type LogRequest,
   type LogUnavailable,
+  type WatchLogRequest,
   resolveSocketPath,
   type EntityUpdate,
   type SearchMatch,
@@ -3600,16 +3605,293 @@ const coreErrors = domainCommand(
   ],
 );
 
-// Areas and aliases follow the Home Assistant CLI's `ha <area> logs`.
+// Flags follow the Home Assistant CLI's `ha <area> logs`. Its -v for
+// verbose is left out, as -v is ha-bridge's version flag.
+const linesFlag = optionalFlag(
+  Flag.Int("lines").pipe(Flag.withAlias("n")),
+  "How many of the latest records to show",
+);
+
+const bootFlag = optionalFlag(
+  Flag.Int("boot").pipe(Flag.withAlias("b")),
+  "A boot by offset: 0 for this one, -1 for the one before (see logs host boots)",
+);
+
+const latestFlag = Flag.Boolean("latest").pipe(
+  Flag.withDescription("Only what was logged since it last started"),
+  Flag.withDefault(false),
+);
+
+const verboseFlag = Flag.Boolean("verbose").pipe(
+  Flag.withDescription("Add the time, host and process to each line"),
+  Flag.withDefault(false),
+);
+
+const integrationFlag = optionalFlag(
+  Flag.String("integration"),
+  "Only this integration's records, such as mqtt, including its libraries'",
+);
+
+const logLines = (lines: Option.Option<number>) =>
+  Option.exists(lines, (value) => value <= 0)
+    ? failWith("--lines must be a whole number above 0")
+    : Effect.succeed(Option.getOrUndefined(lines));
+
+const printRecords = (json: boolean) => (records: ReadonlyArray<string>) =>
+  json
+    ? Console.log(JSON.stringify(records))
+    : Effect.forEach(records, (record) => Console.log(record));
+
+const readLog = Effect.fn("readLog")(function* (
+  request: LogRequest,
+  json: boolean,
+) {
+  const client = yield* BridgeClient;
+
+  const records = yield* client
+    .GetLog(request)
+    .pipe(
+      Effect.catchTags(
+        logFailures(`read the ${logSourceName(request.source)} log`),
+      ),
+    );
+
+  yield* printRecords(json)(records);
+});
+
+const followLog = Effect.fn("followLog")(function* (
+  request: WatchLogRequest,
+  json: boolean,
+) {
+  const client = yield* BridgeClient;
+
+  yield* client.WatchLog(request).pipe(
+    Stream.catchTags(
+      logStreamFailures(`watch the ${logSourceName(request.source)} log`),
+    ),
+    Stream.runForEach((record) =>
+      Console.log(json ? JSON.stringify(record) : record),
+    ),
+  );
+});
+
+const getLogFlags = {
+  json: logJsonFlag,
+  search: searchFlag,
+  lines: linesFlag,
+  boot: bootFlag,
+  latest: latestFlag,
+  verbose: verboseFlag,
+};
+
+const watchLogFlags = {
+  json: logJsonFlag,
+  search: searchFlag,
+  lines: linesFlag,
+  verbose: verboseFlag,
+};
+
+type GetLogInput = Command.Command.Config.Infer<typeof getLogFlags>;
+
+type WatchLogInput = Command.Command.Config.Infer<typeof watchLogFlags>;
+
+const getLogRequest = (source: LogSource, input: GetLogInput) =>
+  Effect.map(logLines(input.lines), (lines) => ({
+    source,
+    lines,
+    boot: Option.getOrUndefined(input.boot),
+    latest: input.latest,
+    verbose: input.verbose,
+    search: Option.getOrUndefined(input.search),
+  }));
+
+const watchLogRequest = (source: LogSource, input: WatchLogInput) =>
+  Effect.map(logLines(input.lines), (lines) => ({
+    source,
+    lines,
+    verbose: input.verbose,
+    search: Option.getOrUndefined(input.search),
+  }));
+
+const getLogDescription = (name: string) =>
+  `Print ${name}'s latest log records, oldest first`;
+
+const watchLogDescription = (name: string) =>
+  `Print ${name}'s latest log records, then each new one`;
+
+// `get` and `watch` for a log the Supervisor serves.
+const supervisorLogCommands = (source: LogArea, name: string) =>
+  [
+    Command.make("get", getLogFlags, (input) =>
+      Effect.flatMap(getLogRequest(source, input), (request) =>
+        readLog(request, input.json),
+      ).pipe(withBridge),
+    ).pipe(Command.withDescription(getLogDescription(name))),
+    Command.make("watch", watchLogFlags, (input) =>
+      Effect.flatMap(watchLogRequest(source, input), (request) =>
+        followLog(request, input.json),
+      ).pipe(withBridge),
+    ).pipe(
+      Command.withAlias("w"),
+      Command.withDescription(watchLogDescription(name)),
+    ),
+  ] as const;
+
 const coreLogs = domainCommand("core", "ha", "Home Assistant Core's logs", [
+  Command.make(
+    "get",
+    { ...getLogFlags, integration: integrationFlag },
+    (input) =>
+      Effect.flatMap(getLogRequest("core", input), (request) =>
+        readLog(
+          { ...request, integration: Option.getOrUndefined(input.integration) },
+          input.json,
+        ),
+      ).pipe(withBridge),
+  ).pipe(
+    Command.withDescription(
+      "Print Core's latest log records, oldest first, from the Supervisor's journal, or Core's log file without one",
+    ),
+  ),
+  Command.make(
+    "watch",
+    {
+      json: logJsonFlag,
+      search: searchFlag,
+      lines: linesFlag,
+      integration: integrationFlag,
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const lines = yield* logLines(input.lines);
+
+        yield* followLog(
+          {
+            source: "core",
+            lines,
+            integration: Option.getOrUndefined(input.integration),
+            search: Option.getOrUndefined(input.search),
+          },
+          input.json,
+        );
+      }).pipe(withBridge),
+  ).pipe(
+    Command.withAlias("w"),
+    Command.withDescription(
+      "Print the end of Core's log, then each record as it's logged. Needs Home Assistant 2026.11 or newer",
+    ),
+  ),
   coreErrors,
 ]);
 
+const hostLogs = domainCommand("host", "ho", "The host's journal", [
+  ...supervisorLogCommands("host", "the host"),
+  Command.make("boots", { json: logJsonFlag }, (input) =>
+    Effect.gen(function* () {
+      const client = yield* BridgeClient;
+
+      const boots = yield* client
+        .GetLogBoots()
+        .pipe(Effect.catchTags(logFailures("list the host's boots")));
+
+      yield* input.json
+        ? Console.log(JSON.stringify(boots))
+        : Effect.forEach(
+            Object.entries(boots).toSorted(([a], [b]) => Number(a) - Number(b)),
+            ([offset, id]) => Console.log(`${offset}\t${id}`),
+          );
+    }).pipe(withBridge),
+  ).pipe(
+    Command.withDescription(
+      "List the host's boots: the offset --boot takes, then the boot ID",
+    ),
+  ),
+]);
+
+const appSlugArgument = Argument.String("slug").pipe(
+  Argument.withDescription("The app's slug, such as core_mosquitto"),
+);
+
+const appLogs = domainCommand("apps", "addons", "Apps' logs", [
+  Command.make("list", { json: logJsonFlag }, (input) =>
+    Effect.gen(function* () {
+      const client = yield* BridgeClient;
+
+      const apps = yield* client
+        .GetLogApps()
+        .pipe(Effect.catchTags(logFailures("list apps")));
+
+      yield* input.json
+        ? Console.log(JSON.stringify(apps))
+        : Effect.forEach(apps, (app) =>
+            Console.log([app.slug, app.name, app.state].join("\t")),
+          );
+    }).pipe(withBridge),
+  ).pipe(
+    Command.withAlias("ls"),
+    Command.withDescription("List the installed apps: slug, name and state"),
+  ),
+  Command.make("get", { slug: appSlugArgument, ...getLogFlags }, (input) =>
+    Effect.flatMap(getLogRequest({ app: input.slug }, input), (request) =>
+      readLog(request, input.json),
+    ).pipe(withBridge),
+  ).pipe(Command.withDescription(getLogDescription("an app"))),
+  Command.make("watch", { slug: appSlugArgument, ...watchLogFlags }, (input) =>
+    Effect.flatMap(watchLogRequest({ app: input.slug }, input), (request) =>
+      followLog(request, input.json),
+    ).pipe(withBridge),
+  ).pipe(
+    Command.withAlias("w"),
+    Command.withDescription(watchLogDescription("an app")),
+  ),
+]);
+
+// Areas and aliases follow the Home Assistant CLI's `ha <area> logs`.
 const logs = domainCommand(
   "logs",
   "log",
   "Read, watch and search Home Assistant's logs. Needs an admin token",
-  [coreLogs],
+  [
+    coreLogs,
+    domainCommand(
+      "supervisor",
+      "su",
+      "The Supervisor's log",
+      supervisorLogCommands("supervisor", "the Supervisor"),
+    ),
+    hostLogs,
+    appLogs,
+    domainCommand(
+      "audio",
+      "snd",
+      "The audio plugin's log",
+      supervisorLogCommands("audio", "the audio plugin"),
+    ),
+    domainCommand(
+      "cli",
+      undefined,
+      "The CLI plugin's log",
+      supervisorLogCommands("cli", "the CLI plugin"),
+    ),
+    domainCommand(
+      "dns",
+      undefined,
+      "The DNS plugin's log",
+      supervisorLogCommands("dns", "the DNS plugin"),
+    ),
+    domainCommand(
+      "multicast",
+      "mc",
+      "The multicast plugin's log",
+      supervisorLogCommands("multicast", "the multicast plugin"),
+    ),
+    domainCommand(
+      "observer",
+      undefined,
+      "The observer plugin's log",
+      supervisorLogCommands("observer", "the observer plugin"),
+    ),
+  ],
 );
 
 // Splits `key=value`, at the first `=`.
