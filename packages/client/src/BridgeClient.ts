@@ -12,7 +12,16 @@ export class BridgeClient extends Context.Service<
   // watchers exit and their supervisor restarts them, as with Go Automate.
   static readonly layer = (socketPath: string) =>
     Layer.effect(BridgeClient, RpcClient.make(BridgeRpcs)).pipe(
-      Layer.provide(RpcClient.layerProtocolSocket()),
+      Layer.provide(
+        // The first ping goes out when the timeout is first checked, so with
+        // the default timeout of one interval, a watch that hears nothing
+        // for 5 seconds, such as a trigger that hasn't fired, can time out
+        // before the pong arrives.
+        RpcClient.layerProtocolSocket({
+          pingInterval: "5 seconds",
+          pingTimeout: "15 seconds",
+        }),
+      ),
       Layer.provide(RpcSerialization.layerNdjson),
       Layer.provide(NodeSocket.layerNet({ path: socketPath })),
     );
