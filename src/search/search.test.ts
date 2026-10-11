@@ -165,6 +165,29 @@ describe("Search", () => {
       "switch.outlet",
     ]);
   });
+
+  // Fuse leaves out which key matched for a list of strings.
+  test("matches a list of strings, such as log records", async () => {
+    const records = [
+      "Unexpected error fetching qbittorrent data",
+      "Update of sensor.steps is taking over 10 seconds",
+    ];
+
+    const { results } = await Effect.runPromise(
+      Effect.gen(function* () {
+        const search = yield* Search;
+
+        return yield* search.fuzzy({
+          items: records,
+          query: "qbittorent",
+          keys: [{ name: "record", weight: 1, getFn: (record) => record }],
+          primary: (record) => record,
+        });
+      }).pipe(Effect.provide(Search.layer)),
+    );
+
+    expect(results.map(({ item }) => item)).toEqual([records[0]]);
+  });
 });
 
 test("selectResults pages through results and keeps the total", () => {

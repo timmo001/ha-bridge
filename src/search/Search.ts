@@ -39,6 +39,12 @@ export interface SearchOverrides extends SelectOptions {
   readonly midWordPenalty?: number;
   /** Shortest matched run of characters that counts; default 2. */
   readonly minMatchCharLength?: number;
+  /**
+   * Scores a match the same however long the field is. Fuse otherwise ranks
+   * matches in long fields, such as log records, too low to keep. Default
+   * false.
+   */
+  readonly ignoreFieldNorm?: boolean;
 }
 
 /** Items, query and fields for one {@link SearchService.fuzzy} call. */
@@ -138,19 +144,26 @@ export class Search extends Context.Service<Search, SearchService>()(
 
         if (trimmed === "") return { results: [], total: 0 };
 
-        const fuse = new Fuse(items, {
-          keys: keys.map(({ name, weight, getFn }) => ({
-            name,
-            weight,
-            getFn: (item: T) => getFn(item) ?? undefined,
-          })),
-          threshold: overrides.threshold ?? 0.3,
-          minMatchCharLength: overrides.minMatchCharLength ?? 2,
-          ignoreDiacritics: true,
-          ignoreLocation: true,
-          includeScore: true,
-          includeMatches: true,
-        });
+        // Fuse searches a list of strings without its keys, and then doesn't
+        // say which key matched, so every item is wrapped.
+        const fuse = new Fuse(
+          items.map((item) => ({ item })),
+          {
+            keys: keys.map(({ name, weight, getFn }) => ({
+              name,
+              weight,
+              getFn: ({ item }: { readonly item: T }) =>
+                getFn(item) ?? undefined,
+            })),
+            threshold: overrides.threshold ?? 0.3,
+            minMatchCharLength: overrides.minMatchCharLength ?? 2,
+            ignoreFieldNorm: overrides.ignoreFieldNorm ?? false,
+            ignoreDiacritics: true,
+            ignoreLocation: true,
+            includeScore: true,
+            includeMatches: true,
+          },
+        );
 
         const names = new Set<string>(keys.map(({ name }) => name));
 
