@@ -132,7 +132,9 @@ import {
   LightTurnOnData,
   Switch,
   isEntityIdIn,
+  ConfigItem,
   type Action,
+  type ConfigDomain,
   type CoverMoveOptions,
   type CalendarEventWhen,
   type LockOptions,
@@ -141,6 +143,7 @@ import {
 } from "@timmo001/effect-ha";
 import {
   BridgeClient,
+  type ConfigUnavailable,
   type LogRequest,
   type LogSearchSource,
   type LogUnavailable,
@@ -1584,6 +1587,166 @@ const parseVariables = (value: Option.Option<string>) =>
     decodeData("variables", decodeScriptVariables(json)),
   );
 
+// A config that can't be read or written is reported plainly: a token
+// without admin rights, or one defined outside the editor's YAML.
+const configFailures = (action: string) => ({
+  HomeAssistantError: (error: HomeAssistantError) =>
+    failWith(`could not ${action}: ${error.message}`),
+  ConfigUnavailable: (error: ConfigUnavailable) => failWith(error.message),
+});
+
+const decodeConfigItem = Schema.decodeUnknownEffect(ConfigItem);
+
+// A config from a YAML or JSON file, or stdin for -.
+const readConfigItem = Effect.fn("readConfigItem")(function* (file: string) {
+  const text =
+    file === "-"
+      ? yield* Effect.tryPromise({
+          try: () => Bun.stdin.text(),
+          catch: () => new CommandError({ message: "could not read stdin" }),
+        })
+      : yield* (yield* FileSystem.FileSystem)
+          .readFileString(file)
+          .pipe(
+            Effect.mapError(
+              (error) => new CommandError({ message: error.message }),
+            ),
+          );
+
+  const invalid = new CommandError({
+    message: `${file === "-" ? "stdin" : file} must hold one config object, as YAML or JSON`,
+  });
+
+  return yield* Effect.try({
+    try: () => Bun.YAML.parse(text),
+    catch: () => invalid,
+  }).pipe(
+    Effect.flatMap(decodeConfigItem),
+    Effect.mapError(() => invalid),
+  );
+});
+
+const configFileFlag = Flag.String("file").pipe(
+  Flag.withAlias("f"),
+  Flag.withDescription("YAML or JSON file holding the config, or - for stdin"),
+);
+
+const configJsonFlag = Flag.Boolean("json").pipe(
+  Flag.withDescription("Print as JSON"),
+  Flag.withDefault(false),
+);
+
+// Reads and writes automations and scripts as Home Assistant's editor does.
+const entityConfigCommand = (domain: ConfigDomain) => {
+  const noun = domain === "automation" ? "an automation" : "a script";
+
+  const entityArgument = Argument.String(domain).pipe(
+    Argument.withDescription(
+      `The ${domain}'s entity ID, with or without ${domain}.`,
+    ),
+  );
+
+  // light.office stays as given, so the bridge says it isn't one.
+  const entityId = (value: string) =>
+    value.includes(".") ? value : `${domain}.${value}`;
+
+  return domainCommand(
+    "config",
+    undefined,
+    `Read and write ${domain} configs. Needs an admin token`,
+    [
+      Command.make(
+        "get",
+        { entity: entityArgument, json: configJsonFlag },
+        (input) =>
+          Effect.gen(function* () {
+            const client = yield* BridgeClient;
+
+            const result = yield* client
+              .GetEntityConfig({ domain, entity_id: entityId(input.entity) })
+              .pipe(Effect.catchTags(configFailures(`read the ${domain}`)));
+
+            yield* Console.log(
+              input.json
+                ? JSON.stringify(result)
+                : Bun.YAML.stringify(result.config, null, 2).trimEnd(),
+            );
+          }).pipe(withBridge),
+      ).pipe(
+        Command.withAlias("g"),
+        Command.withDescription(
+          `Print the config ${noun} was loaded from, as YAML. --json adds its ID and whether it can be changed here`,
+        ),
+      ),
+      Command.make(
+        "create",
+        {
+          id: optionalFlag(
+            Flag.String("id"),
+            domain === "automation"
+              ? "ID for the new automation (default: made up)"
+              : "Key for the new script, such as morning_lights (default: from its alias)",
+          ),
+          file: configFileFlag,
+        },
+        (input) =>
+          Effect.gen(function* () {
+            const config = yield* readConfigItem(input.file);
+            const client = yield* BridgeClient;
+
+            const saved = yield* client
+              .CreateEntityConfig({
+                domain,
+                id: Option.getOrUndefined(input.id),
+                config,
+              })
+              .pipe(Effect.catchTags(configFailures(`create ${noun}`)));
+
+            yield* Console.log(saved.id);
+          }).pipe(withBridge),
+      ).pipe(
+        Command.withDescription(
+          `Add ${noun} to ${domain}s.yaml once Home Assistant validates it, and print its ID`,
+        ),
+      ),
+      Command.make(
+        "update",
+        { entity: entityArgument, file: configFileFlag },
+        (input) =>
+          Effect.gen(function* () {
+            const config = yield* readConfigItem(input.file);
+            const client = yield* BridgeClient;
+
+            yield* client
+              .UpdateEntityConfig({
+                domain,
+                entity_id: entityId(input.entity),
+                config,
+              })
+              .pipe(Effect.catchTags(configFailures(`update the ${domain}`)));
+          }).pipe(withBridge),
+      ).pipe(
+        Command.withDescription(
+          `Replace all of ${noun}'s config in ${domain}s.yaml once Home Assistant validates it`,
+        ),
+      ),
+      Command.make("delete", { entity: entityArgument }, (input) =>
+        Effect.gen(function* () {
+          const client = yield* BridgeClient;
+
+          yield* client
+            .DeleteEntityConfig({ domain, entity_id: entityId(input.entity) })
+            .pipe(Effect.catchTags(configFailures(`delete the ${domain}`)));
+        }).pipe(withBridge),
+      ).pipe(
+        Command.withDescription(
+          `Remove ${noun} from ${domain}s.yaml, and its entity`,
+        ),
+      ),
+    ],
+  );
+};
+
 const script = domainCommand("script", undefined, "Script actions", [
   Command.make(
     "turn-on",
@@ -1634,6 +1797,7 @@ const script = domainCommand("script", undefined, "Script actions", [
     ),
   ),
   reloadCommand("script", Script.reload),
+  entityConfigCommand("script"),
 ]);
 
 const automation = domainCommand(
@@ -1686,6 +1850,7 @@ const automation = domainCommand(
         ).pipe(withBridge),
     ).pipe(Command.withDescription("Run the automation's actions")),
     reloadCommand("automation", Automation.reload),
+    entityConfigCommand("automation"),
   ],
 );
 

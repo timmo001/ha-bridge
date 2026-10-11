@@ -4,6 +4,8 @@ export * from "./Calendar.js";
 
 export * from "./Entity.js";
 
+export * from "./EntityConfig.js";
+
 export * from "./History.js";
 
 export * from "./Log.js";

@@ -24,6 +24,14 @@ import {
 } from "@timmo001/effect-ha";
 import { EntityUpdate } from "./Entity.js";
 import {
+  ConfigUnavailable,
+  CreateEntityConfigRequest,
+  EntityConfig,
+  EntityConfigRequest,
+  SavedEntityConfig,
+  UpdateEntityConfigRequest,
+} from "./EntityConfig.js";
+import {
   HistoryRequest,
   LogbookRequest,
   WatchLogbookRequest,
@@ -44,6 +52,8 @@ import { TargetError, TargetRequest } from "./Target.js";
 const TargetFailure = Schema.Union([HomeAssistantError, TargetError]);
 
 const LogFailure = Schema.Union([HomeAssistantError, LogUnavailable]);
+
+const ConfigFailure = Schema.Union([HomeAssistantError, ConfigUnavailable]);
 
 export class BridgeRpcs extends RpcGroup.make(
   // Every entity the target refers to, as Home Assistant expands it.
@@ -187,6 +197,34 @@ export class BridgeRpcs extends RpcGroup.make(
     payload: LogSearchRequest,
     success: LogSearchResults,
     error: LogFailure,
+  }),
+  // An automation's or script's config, wherever it's defined. Needs an
+  // admin token.
+  Rpc.make("GetEntityConfig", {
+    payload: EntityConfigRequest,
+    success: EntityConfig,
+    error: ConfigFailure,
+  }),
+  // Adds an automation or script to automations.yaml or scripts.yaml, once
+  // Home Assistant has validated it. Needs an admin token.
+  Rpc.make("CreateEntityConfig", {
+    payload: CreateEntityConfigRequest,
+    success: SavedEntityConfig,
+    error: ConfigFailure,
+  }),
+  // Replaces an editable automation's or script's config, once Home
+  // Assistant has validated it. Needs an admin token.
+  Rpc.make("UpdateEntityConfig", {
+    payload: UpdateEntityConfigRequest,
+    success: SavedEntityConfig,
+    error: ConfigFailure,
+  }),
+  // Removes an editable automation or script, and its entity. Needs an
+  // admin token.
+  Rpc.make("DeleteEntityConfig", {
+    payload: EntityConfigRequest,
+    success: SavedEntityConfig,
+    error: ConfigFailure,
   }),
   // Fuzzy search over cached entities, devices and areas, or a list of
   // them without a query. Only a target needs Home Assistant.

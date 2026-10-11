@@ -65,6 +65,17 @@ export type HomeAssistantCommand =
     }
   | { readonly type: "unsubscribe_events"; readonly subscription: number }
   | {
+      // The config an automation or script was loaded from, wherever it's
+      // defined, as `{config}`. Needs an admin token.
+      readonly type: "automation/config" | "script/config";
+      readonly entity_id: string;
+    }
+  | {
+      // One entity's registry entry, including its unique ID.
+      readonly type: "config/entity_registry/get";
+      readonly entity_id: string;
+    }
+  | {
       // A Supervisor API call answering JSON, such as /addons. Needs an
       // admin token for almost every endpoint.
       readonly type: "supervisor/api";

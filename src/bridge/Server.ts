@@ -13,6 +13,7 @@ import { FetchHttpClient } from "effect/http";
 import { RpcSerialization, RpcServer } from "effect/rpc";
 import { Socket, SocketServer } from "effect/socket";
 import { HomeAssistant } from "../homeassistant/HomeAssistant.js";
+import { EntityConfigs } from "../homeassistant/EntityConfigs.js";
 import { HomeAssistantLogs } from "../homeassistant/Logs.js";
 import { BridgeRpcs } from "@timmo001/effect-ha-bridge";
 
@@ -20,6 +21,7 @@ const Handlers = BridgeRpcs.toLayer(
   Effect.gen(function* () {
     const homeAssistant = yield* HomeAssistant;
     const logs = yield* HomeAssistantLogs;
+    const entityConfigs = yield* EntityConfigs;
 
     return BridgeRpcs.of({
       GetEntities: (request) => homeAssistant.getEntities(request),
@@ -45,6 +47,10 @@ const Handlers = BridgeRpcs.toLayer(
       GetLogBoots: () => logs.getLogBoots,
       GetLogApps: () => logs.getLogApps,
       SearchLogs: (request) => logs.searchLogs(request),
+      GetEntityConfig: (request) => entityConfigs.get(request),
+      CreateEntityConfig: (request) => entityConfigs.create(request),
+      UpdateEntityConfig: (request) => entityConfigs.update(request),
+      DeleteEntityConfig: (request) => entityConfigs.remove(request),
     });
   }),
 );
@@ -189,7 +195,7 @@ export const serve = (socketPath: string) =>
           Layer.provide(RpcSerialization.layerNdjson),
           Layer.provide(quietSocketServer(socketPath)),
           Layer.provide(
-            HomeAssistantLogs.layer.pipe(
+            Layer.merge(HomeAssistantLogs.layer, EntityConfigs.layer).pipe(
               Layer.provideMerge(HomeAssistant.layer),
               Layer.provide(FetchHttpClient.layer),
             ),

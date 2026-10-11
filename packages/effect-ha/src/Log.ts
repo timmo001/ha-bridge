@@ -1,6 +1,7 @@
-import { Effect, Redacted, Schema, Stream } from "effect";
-import { HttpClient, HttpClientRequest } from "effect/http";
+import { Effect, Schema, Stream } from "effect";
+import type { HttpClientRequest } from "effect/http";
 import { HomeAssistantError } from "./HomeAssistantError.js";
+import { restRequest, type RestOptions } from "./Rest.js";
 
 // Parts of Home Assistant whose logs the Supervisor serves from the host
 // journal: Core, the Supervisor, the host's own services and the
@@ -57,44 +58,11 @@ const supervisorLogPath = (
     ...(options.follow === true ? ["follow"] : []),
   ].join("/");
 
-interface RestOptions {
-  readonly url: string;
-  readonly token: Redacted.Redacted;
-}
-
-const restUrl = (options: RestOptions, path: string) =>
-  `${options.url.replace(/\/$/, "")}/api/${path}`;
-
-// A request through Home Assistant's REST API, failing with what Home
-// Assistant or the Supervisor said when it isn't OK.
-const restGet = Effect.fnUntraced(function* (
+const restGet = (
   options: RestOptions,
   path: string,
   request: HttpClientRequest.Options.NoUrl,
-) {
-  const http = (yield* HttpClient.HttpClient).pipe(
-    HttpClient.mapRequest(HttpClientRequest.bearerToken(options.token)),
-  );
-
-  const response = yield* http
-    .get(restUrl(options, path), request)
-    .pipe(
-      Effect.mapError(
-        (error) =>
-          new HomeAssistantError({ message: `${path}: ${error.message}` }),
-      ),
-    );
-
-  if (response.status >= 400) {
-    const body = yield* response.text.pipe(Effect.orElseSucceed(() => ""));
-
-    return yield* new HomeAssistantError({
-      message: `${path} answered ${response.status}${body.trim() === "" ? "" : `: ${body.trim()}`}`,
-    });
-  }
-
-  return response;
-});
+) => restRequest(options, "GET", path, request);
 
 const linesOf = (response: {
   readonly stream: Stream.Stream<Uint8Array, unknown>;
