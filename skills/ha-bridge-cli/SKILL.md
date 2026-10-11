@@ -1,6 +1,6 @@
 ---
 name: ha-bridge-cli
-description: Control and read Home Assistant from the shell, scripts and status bars with the ha-bridge CLI. Use when calling Home Assistant actions, reading or watching entity state, feeding a bar or script with --bar-json, rendering templates, watching events, searching entities, or connecting an app to a running bridge. For changing ha-bridge itself, use its repository's own skills.
+description: Control and read Home Assistant from the shell, scripts and status bars with the ha-bridge CLI. Use when calling Home Assistant actions, reading or watching entity state, feeding a bar or script with --bar-json, rendering templates, watching events, searching entities, reading, watching or searching Home Assistant's logs (Core's errors, Core, the Supervisor, the host, plugins and apps) to diagnose a problem or confirm a fix, or connecting an app to a running bridge. For changing ha-bridge itself, use its repository's own skills.
 license: Apache-2.0
 compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve, normally the ha-bridge.service user unit). The docs-ha-bridge MCP server is optional.
 ---
@@ -16,6 +16,7 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 - Look up commands and flags before using them; there are over 90 domains and flags change. Don't guess from memory or from Go Automate, which this replaced.
 - Never run `ha-bridge setup` for the user. It prompts for a token; ask them to run it.
 - Ask before actions with real-world effects the user didn't request, such as unlocking, opening covers or garage doors, disarming alarms, restarting Home Assistant or running scripts.
+- Ask before `system_log clear` or changing log levels with `logger`. Clearing throws away the evidence a diagnosis needs, and debug levels flood the log.
 
 ## Find the command
 
@@ -33,6 +34,7 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 | Templates                                            | `/using/templates`                             |
 | Events, triggers and conditions                      | `/using/events`                                |
 | History and logbook                                  | `/using/history`                               |
+| Logs, Core's errors and log search                   | `/using/logs`                                  |
 | Searching                                            | `/using/search`                                |
 | Connecting an app or another language                | `/libraries`, `/using/protocol`                |
 | Socket path, config and the user service             | `/configuration`, `/running`                   |
@@ -49,6 +51,23 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 - `--bar-json` prints one JSON object per line (`text`, `tooltip`, `class`, `name`) for one entity, and fails when the target matches more than one. It can't be combined with `--json` or `--field`.
 - Watchers exit with status 1 when the bridge restarts or can't be reached. Run them under something that restarts them, such as a bar's restart interval or a systemd unit with `Restart=on-failure`.
 - For output the flags can't express, use `template watch --bar-json`.
+
+## Logs for diagnosing and fixing
+
+`ha-bridge logs` reads Home Assistant's logs through the bridge. Areas and aliases follow the Home Assistant CLI: `core` (`ha`), `supervisor` (`su`), `host` (`ho`), `apps` (`addons`), `audio`, `cli`, `dns`, `multicast` and `observer`, each with `get` and `watch`. Check `ha-bridge logs <area> <command> --help` for the flags.
+
+To diagnose:
+
+1. Start with `logs core errors get --json`. It's Core's own deduplicated list, the one Settings > System > Logs shows: logger, `source` file and line, messages, traceback, `count`, `first_occurred` and `timestamp`. The logger names the integration, as `homeassistant.components.<domain>` or `custom_components.<domain>`.
+2. Widen with `logs search <words> --json`, which ranks matches across Core's errors and Core's log; add `--source` for the Supervisor, the host or an app's slug. Every word has to match, so search for one distinctive term first, then narrow.
+3. For context around an error, read the log itself: `logs core get -n 200 --json`, or `logs core get --integration <domain>` for one integration and its libraries (Home Assistant 2026.11 or newer). Core's records keep their tracebacks, and `-n` counts records, not lines.
+4. For a crash or restart, read the boot before: `logs host boots`, then `logs host get --boot -1` or `logs core get --boot -1`. `logs apps list` gives the slugs for app logs.
+
+To confirm a fix, note the error's `count` and `timestamp` before, then `logs core errors watch --json --search <term>`. It prints each new error and each repeat, so silence after the change is the evidence. `logs <area> watch` follows a log the same way.
+
+- Parse `--json`, never the plain text. `get` prints one JSON list of records; `watch` prints each record as a JSON string per line.
+- Logs need a token that belongs to an admin, and every log but Core's needs a Supervisor. When one can't be read, the command exits 1 with a message saying why: no admin rights, no Supervisor, or a Home Assistant too old for it, such as `logs core watch` before 2026.11. Treat that as "this log isn't available" and carry on with the others; retrying won't change it.
+- Logs hold IP and MAC addresses, hostnames, device and person names, and sometimes URLs with credentials. Redact them before anything leaves the machine: issues, pull requests, chats, or a model or service elsewhere.
 
 ## When it fails
 
