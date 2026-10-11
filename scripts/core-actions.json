@@ -12,6 +12,9 @@
     "instructions",
     "task_name"
   ],
+  "ai_task.clear_images": [
+    "days"
+  ],
   "alarm_control_panel.alarm_disarm": [
     "code"
   ],

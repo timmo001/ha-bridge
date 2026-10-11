@@ -26,11 +26,18 @@ ha-bridge ai_task generate-image poster "A cosy living room at dusk" openai_imag
 
 `generate-data` uses the preferred AI task entity unless you pass `--entity`.
 
+`ai_task clear-images` deletes generated images, or with `--days`, only those older than that many days. It needs a token that belongs to an admin, and Home Assistant 2026.11 or newer:
+
+```bash
+ha-bridge ai_task clear-images --days 30
+```
+
 | Command | Home Assistant action |
 | --- | --- |
 | `conversation process` | `conversation.process` |
 | `conversation reload` | `conversation.reload` |
 | `ai_task generate-data` | `ai_task.generate_data` |
 | `ai_task generate-image` | `ai_task.generate_image` |
+| `ai_task clear-images` | `ai_task.clear_images` |
 
 See [`ha-bridge conversation`](/commands/conversation) and [`ha-bridge ai_task`](/commands/ai-task) for every argument and flag.

@@ -68,3 +68,17 @@ FLAGS
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
 ```
+
+## `ha-bridge ai_task clear-images`
+
+```text
+DESCRIPTION
+  Delete generated images. Needs an admin token and Home Assistant 2026.11 or newer
+
+USAGE
+  ha-bridge ai_task clear-images [flags]
+
+FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --days integer     Only delete images older than this many days
+```

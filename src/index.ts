@@ -3294,6 +3294,23 @@ const aiTask = domainCommand("ai_task", undefined, "AI task actions", [
         );
       }).pipe(withBridge),
   ).pipe(Command.withDescription("Generate an image and print its details")),
+  Command.make(
+    "clear-images",
+    {
+      days: optionalFlag(
+        Flag.Int("days"),
+        "Only delete images older than this many days",
+      ),
+    },
+    (input) =>
+      callAction(
+        AiTask.clearImages({ days: Option.getOrUndefined(input.days) }),
+      ).pipe(withBridge),
+  ).pipe(
+    Command.withDescription(
+      "Delete generated images. Needs an admin token and Home Assistant 2026.11 or newer",
+    ),
+  ),
 ]);
 
 const image = domainCommand("image", undefined, "Image actions", [

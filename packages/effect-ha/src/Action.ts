@@ -1262,6 +1262,10 @@ export const AiTask = {
     }),
     return_response: true,
   }),
+  // Deletes generated images, or only those older than `days`. Needs an
+  // admin token and Home Assistant 2026.11 or newer.
+  clearImages: (options?: { readonly days?: number }) =>
+    onDomain("ai_task.clear_images", { days: options?.days }),
 };
 
 export const Image = {
