@@ -1,0 +1,14 @@
+{
+  "name": "ha-bridge",
+  "description": "Agent Skills for Home Assistant Bridge",
+  "owner": { "name": "Aidan Timson", "url": "https://github.com/timmo001" },
+  "plugins": [
+    {
+      "name": "ha-bridge",
+      "description": "Control and read Home Assistant from the shell, scripts and status bars through ha-bridge",
+      "license": "Apache-2.0",
+      "source": "./skills",
+      "skills": "./"
+    }
+  ]
+}

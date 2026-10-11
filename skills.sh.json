@@ -1,0 +1,21 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "groupings": [
+    {
+      "title": "Use",
+      "description": "Control and read Home Assistant from the shell, scripts and status bars through the bridge.",
+      "skills": ["ha-bridge-cli"]
+    },
+    {
+      "title": "Contribute",
+      "description": "Change, document, review and release ha-bridge itself.",
+      "skills": [
+        "ha-bridge-commands",
+        "ha-bridge-docs",
+        "ha-bridge-effect-ha",
+        "ha-bridge-release",
+        "ha-bridge-review"
+      ]
+    }
+  ]
+}
