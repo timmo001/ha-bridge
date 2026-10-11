@@ -1,6 +1,6 @@
 ---
 name: ha-bridge-cli
-description: Control and read Home Assistant from the shell, scripts and status bars with the ha-bridge CLI. Use when calling Home Assistant actions, reading or watching entity state, feeding a bar or script with --bar-json, rendering templates, watching events, searching entities, reading, watching or searching Home Assistant's logs (Core's errors, Core, the Supervisor, the host, plugins and apps) to diagnose a problem or confirm a fix, or connecting an app to a running bridge. For changing ha-bridge itself, use its repository's own skills.
+description: Control and read Home Assistant from the shell, scripts and status bars with the ha-bridge CLI. Use when calling Home Assistant actions, reading or watching entity state, feeding a bar or script with --bar-json, rendering templates, watching events, searching entities, reading or changing automation and script configs, reading, watching or searching Home Assistant's logs (Core's errors, Core, the Supervisor, the host, plugins and apps) to diagnose a problem or confirm a fix, or connecting an app to a running bridge. For changing ha-bridge itself, use its repository's own skills.
 license: Apache-2.0
 compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve, normally the ha-bridge.service user unit). The docs-ha-bridge MCP server is optional.
 ---
@@ -14,9 +14,12 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 - Go through the bridge. Don't open your own Home Assistant WebSocket or REST connection, or read the token from `~/.config/ha-bridge/config.yml`, to do something a command or the bridge protocol already does.
 - Use Home Assistant's current names: actions, not services. Commands are named after the domain (`light`, `media_player`, `alarm_control_panel`), each with action subcommands.
 - Look up commands and flags before using them; there are over 90 domains and flags change. Don't guess from memory or from Go Automate, which this replaced.
+- Subcommands drop the domain from Home Assistant's action names and use hyphens: `cover.close_cover` is `cover close`, `light.turn_on` is `light turn-on` and `media_player.volume_set` is `media_player volume-set`. Check `ha-bridge <domain> --help` for the list.
 - Never run `ha-bridge setup` for the user. It prompts for a token; ask them to run it.
 - Ask before actions with real-world effects the user didn't request, such as unlocking, opening covers or garage doors, disarming alarms, restarting Home Assistant or running scripts.
 - Ask before `system_log clear` or changing log levels with `logger`. Clearing throws away the evidence a diagnosis needs, and debug levels flood the log.
+- Ask before creating, updating or deleting an automation or script the user didn't ask you to change.
+- For how Home Assistant itself behaves, and for writing automations and scripts the current way, use the `home-assistant` skill alongside this one.
 
 ## Find the command
 
@@ -28,6 +31,7 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 | ---------------------------------------------------- | ---------------------------------------------- |
 | Targets, exit codes and the domain list for actions  | `/actions`                                     |
 | One domain's actions                                 | `/actions/<domain>`, such as `/actions/lights` |
+| Automation and script configs                        | `/actions/automations`, `/actions/scripts`     |
 | Every command, argument and flag                     | `/commands`, `/commands/<command>`             |
 | Read or watch state, targets, `--json` and `--field` | `/using/reading`                               |
 | Status bar or script output                          | `/using/bar-json`                              |
@@ -48,9 +52,19 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 ## Output for scripts and bars
 
 - Never parse the plain output of `get` or `watch`. Use `--json`, `--field <path>`, or `--bar-json`.
+- `--field` paths start from the state object: `attributes.current_position`, not `state.attributes.current_position`. A path that finds nothing prints an empty line, with a warning on stderr.
 - `--bar-json` prints one JSON object per line (`text`, `tooltip`, `class`, `name`) for one entity, and fails when the target matches more than one. It can't be combined with `--json` or `--field`.
 - Watchers exit with status 1 when the bridge restarts or can't be reached. Run them under something that restarts them, such as a bar's restart interval or a systemd unit with `Restart=on-failure`.
 - For output the flags can't express, use `template watch --bar-json`.
+
+## Automation and script configs
+
+`ha-bridge automation config` and `ha-bridge script config` read and write them as Home Assistant's editors do, and need an admin token.
+
+- To find out why an automation ran when it did, start with `automation config get <automation>`. It prints the exact triggers, offsets, conditions and actions as YAML, so you don't have to infer them from the logbook or history. `--json` adds its `id` and whether it's `editable`.
+- `create -f <file>` and `update <automation> -f <file>` take YAML or JSON, or `-f -` for stdin. Home Assistant validates the config and refuses mistakes, saying why. `update` replaces the whole config, so start from `config get` and keep its `id` and `alias`.
+- Try triggers and conditions before saving: `trigger watch '<trigger>'` and `condition test '<condition>'`.
+- Only automations in `automations.yaml` and scripts in `scripts.yaml` can be changed. Others exit 1 saying so; edit them where they're defined.
 
 ## Logs for diagnosing and fixing
 
