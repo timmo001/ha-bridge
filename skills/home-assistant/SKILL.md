@@ -83,3 +83,4 @@ conditions:
 - Ask before saving, changing or deleting an automation or script the user didn't ask for, and before running one with real-world effects.
 - `automation config update` and `script config update` replace the whole config. Start from `config get`, change what's needed, and keep the `id` and `alias`.
 - Only automations in `automations.yaml` and scripts in `scripts.yaml` can be changed this way. Ones in `configuration.yaml` or packages have to be edited in their files.
+- When an automation picks between two sets of actions, use `if`, `then` and `else` rather than `choose`, as it's easier to read. Keep `choose` for three or more.
