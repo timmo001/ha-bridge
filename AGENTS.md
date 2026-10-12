@@ -15,6 +15,7 @@
 - Every operation goes through the bridge socket. CLI commands are thin socket clients; they never open their own Home Assistant connection.
 - Pin dependencies to exact versions (`bun add -E`).
 - Run project tasks through mise. Scripts complex enough to need logic are written in Effect and exposed as mise tasks.
+- `tooling.yml` records the Home Assistant Core release the bridge was last reviewed against; the Tooling drift workflow opens a draft review pull request when it moves. After the review, move it with `mise run tooling:update <repo> <tag>`, never by hand; the `tooling-drift` skill has the steps.
 - Public names follow current Home Assistant terms (actions, not services). Never use `hass` in names; use `ha` or `HomeAssistant`.
 
 ## Background Dev Servers

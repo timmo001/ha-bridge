@@ -1,0 +1,13 @@
+---
+# Tool releases ha-bridge was last reviewed against. The tooling-drift tool
+# (mise run tooling:status / tooling:publish) compares each with the latest
+# release and opens a draft pull request for review when it moves; its README
+# documents this file.
+assignee: timmo001
+dispatch:
+  - ci.yml
+  - lint-general.yml
+tools:
+  - repo: home-assistant/core
+    reviewed: 2026.10.1
+    review: Run mise run drift:core against a Core checkout at the new tag and adapt effect-ha for new, removed or changed actions, then save the snapshot with --update. Check the WebSocket client and entity config editing in src/homeassistant against the release notes.
