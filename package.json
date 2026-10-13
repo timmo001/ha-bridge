@@ -20,10 +20,10 @@
     "build:packages": "bun run --cwd packages/effect-ha build && bun run --cwd packages/client build"
   },
   "dependencies": {
-    "@effect/platform-bun": "4.0.3",
+    "@effect/platform-bun": "4.0.4",
     "@timmo001/effect-ha": "workspace:*",
     "@timmo001/effect-ha-bridge": "workspace:*",
-    "effect": "4.0.3",
+    "effect": "4.0.4",
     "fuse.js": "7.5.0"
   },
   "devDependencies": {
