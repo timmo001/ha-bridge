@@ -2,13 +2,19 @@ import { Schema } from "effect";
 import { LogSource } from "@timmo001/effect-ha";
 
 // Why a log can't be read: the bridge's token doesn't belong to an admin,
-// Home Assistant has no Supervisor for the log, or its Core is too old for
-// it. The bridge checks before asking, so clients can skip the log rather
-// than treat it as a failure.
+// Home Assistant has no Supervisor for the log, the Supervisor refused a
+// Home Assistant app without the access the log needs, or Core is too old
+// for it. The bridge checks before asking where it can, so clients can skip
+// the log rather than treat it as a failure.
 export class LogUnavailable extends Schema.TaggedError<LogUnavailable>()(
   "LogUnavailable",
   {
-    reason: Schema.Literals(["admin", "supervisor", "unsupported"]),
+    reason: Schema.Literals([
+      "admin",
+      "supervisor",
+      "permission",
+      "unsupported",
+    ]),
     message: Schema.String,
   },
 ) {}

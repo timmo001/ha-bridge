@@ -42,6 +42,23 @@ The directory is only readable by you (`0700`) and the file by you (`0600`). The
 
 If `~/.config/ha-bridge/config.yml` doesn't exist, the bridge reads `~/.config/go-automate/config.yml` instead and copies it to the new location. See [Migrating from Go Automate](/from-go-automate).
 
+## Inside a Home Assistant app
+
+A Home Assistant app can run the bridge in its own container with no config file. When neither config file exists and `SUPERVISOR_TOKEN` is set, as it is in every app, `ha-bridge serve` connects to Home Assistant through the Supervisor at `http://supervisor/core` with that token. A config file still wins if there is one.
+
+The app starts `ha-bridge serve` itself, then runs commands against its socket. Set `HA_BRIDGE_SOCK` for both if you want a fixed socket path.
+
+The app's `config.yaml` needs:
+
+```yaml
+homeassistant_api: true
+# For logs from the Supervisor, the host, its plugins and apps:
+hassio_api: true
+hassio_role: manager
+```
+
+`homeassistant_api` covers states, actions, watches, automation and script configs and Core's log. Inside an app, the Supervisor won't serve its logs through Home Assistant, so the bridge asks the Supervisor API directly, which needs `hassio_api`. The `homeassistant` role is enough for Core's log; the rest need `manager`. Without them, `logs core get` falls back to Core's log file, and the other log commands say which setting is missing.
+
 ## Create a long-lived access token
 
 1. In Home Assistant, open your profile.

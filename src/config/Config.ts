@@ -11,6 +11,7 @@ import {
   Terminal,
 } from "effect";
 import { Prompt } from "effect/cli";
+import type { SupervisorOptions } from "@timmo001/effect-ha";
 
 export class ConfigError extends Schema.TaggedError<ConfigError>()(
   "ConfigError",
@@ -20,7 +21,18 @@ export class ConfigError extends Schema.TaggedError<ConfigError>()(
 export interface HomeAssistantConfig {
   readonly url: string;
   readonly token: Redacted.Redacted;
+  // Set inside a Home Assistant app, where Supervisor requests go straight
+  // to the Supervisor rather than through Core's proxy.
+  readonly supervisor?: SupervisorOptions | undefined;
 }
+
+// Inside a Home Assistant app, Core is reached through the Supervisor's
+// proxy with the app's token, and the Supervisor's API directly.
+const supervisorConfig = (token: Redacted.Redacted): HomeAssistantConfig => ({
+  url: "http://supervisor/core",
+  token,
+  supervisor: { url: "http://supervisor", token, direct: true },
+});
 
 const ConfigFile = Schema.Struct({
   homeassistant: Schema.Struct({
@@ -62,6 +74,15 @@ export class BridgeConfig extends Context.Service<
       const directory = path.join(configHome, "ha-bridge");
       const configPath = path.join(directory, "config.yml");
       const legacyPath = path.join(configHome, "go-automate", "config.yml");
+
+      // Home Assistant apps get this; desktops never do.
+      const supervisorToken = yield* Config.option(
+        Config.Redacted("SUPERVISOR_TOKEN"),
+      ).pipe(
+        Effect.map(
+          Option.filter((token) => Redacted.value(token).trim() !== ""),
+        ),
+      );
 
       const read = Effect.fn("BridgeConfig.read")(
         function* (file: string) {
@@ -135,6 +156,10 @@ export class BridgeConfig extends Context.Service<
           yield* Effect.logInfo("Imported Go Automate config", configPath);
 
           return legacy.value;
+        }
+
+        if (Option.isSome(supervisorToken)) {
+          return supervisorConfig(supervisorToken.value);
         }
 
         return yield* new ConfigError({

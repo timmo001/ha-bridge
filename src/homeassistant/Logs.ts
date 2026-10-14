@@ -17,8 +17,10 @@ import {
   type LogPosition,
   type LogSource,
   logSourceName,
+  supervisorApi,
   supervisorLog,
   supervisorLogBoots,
+  type SupervisorOptions,
   SystemLogEntry,
 } from "@timmo001/effect-ha";
 import {
@@ -126,6 +128,26 @@ export class HomeAssistantLogs extends Context.Service<
       const http = yield* HttpClient.HttpClient;
 
       const withHttp = Effect.provideService(HttpClient.HttpClient, http);
+
+      // Inside a Home Assistant app the Supervisor is asked directly, as it
+      // refuses apps through Core's proxy.
+      const supervisor: SupervisorOptions = config.supervisor ?? config;
+
+      // The Supervisor refuses an app without `hassio_api`, or whose role
+      // doesn't cover the log.
+      const refusedAs =
+        (what: string, role: "homeassistant" | "manager") =>
+        (error: HomeAssistantError): LogFailure =>
+          supervisor.direct === true &&
+          (error.status === 401 || error.status === 403)
+            ? new LogUnavailable({
+                reason: "permission",
+                message: `${what} from a Home Assistant app needs hassio_api: true and hassio_role: ${role === "manager" ? "manager" : "homeassistant or manager"} in the app's config.yaml`,
+              })
+            : error;
+
+      const roleFor = (source: LogSource): "homeassistant" | "manager" =>
+        source === "core" ? "homeassistant" : "manager";
 
       // Every log needs an admin, so check before asking rather than pass
       // on Home Assistant's refusal.
@@ -307,14 +329,37 @@ export class HomeAssistantLogs extends Context.Service<
           );
         }
 
-        if (yield* hasSupervisor) {
+        // Core's log file, without the journal's boots or verbose fields.
+        const fileLog = Effect.gen(function* () {
+          if (
+            request.boot !== undefined ||
+            request.latest === true ||
+            request.verbose === true
+          ) {
+            return yield* supervisorMissing("Reading Core's log by boot");
+          }
+
+          const records = coreRecords(yield* errorLog(config).pipe(withHttp));
+
+          return request.lines === undefined
+            ? records
+            : records.slice(-request.lines);
+        });
+
+        if (!(yield* hasSupervisor)) {
+          return yield* fileLog;
+        }
+
+        const journal = Effect.gen(function* () {
           if (request.verbose === true) {
-            return yield* supervisorLog(config, "core", request).pipe(withHttp);
+            return yield* supervisorLog(supervisor, "core", request).pipe(
+              withHttp,
+            );
           }
 
           // The journal counts a traceback's lines separately, so read more
           // and keep whole records.
-          const lines = yield* supervisorLog(config, "core", {
+          const lines = yield* supervisorLog(supervisor, "core", {
             ...request,
             lines:
               request.lines === undefined
@@ -328,21 +373,20 @@ export class HomeAssistantLogs extends Context.Service<
           return request.lines === undefined
             ? records
             : records.slice(-request.lines);
-        }
+        });
 
-        if (
-          request.boot !== undefined ||
-          request.latest === true ||
-          request.verbose === true
-        ) {
-          return yield* supervisorMissing("Reading Core's log by boot");
-        }
-
-        const records = coreRecords(yield* errorLog(config).pipe(withHttp));
-
-        return request.lines === undefined
-          ? records
-          : records.slice(-request.lines);
+        // An app the Supervisor won't serve can still read Core's log file
+        // through Core, unless it asked for what only the journal has.
+        return yield* journal.pipe(
+          Effect.mapError(refusedAs("Reading Core's log", "homeassistant")),
+          Effect.catchTag("LogUnavailable", (error) =>
+            request.boot === undefined &&
+            request.latest !== true &&
+            request.verbose !== true
+              ? fileLog
+              : Effect.fail(error),
+          ),
+        );
       });
 
       const getLog = Effect.fn("HomeAssistantLogs.getLog")(function* (
@@ -369,7 +413,15 @@ export class HomeAssistantLogs extends Context.Service<
                 requireSupervisor(
                   `Reading the ${logSourceName(request.source)} log`,
                 ),
-                supervisorLog(config, request.source, request).pipe(withHttp),
+                supervisorLog(supervisor, request.source, request).pipe(
+                  withHttp,
+                  Effect.mapError(
+                    refusedAs(
+                      `Reading the ${logSourceName(request.source)} log`,
+                      roleFor(request.source),
+                    ),
+                  ),
+                ),
               );
 
         return yield* searchKept(records, request.search, recordKeys);
@@ -446,11 +498,20 @@ export class HomeAssistantLogs extends Context.Service<
                   `Watching the ${logSourceName(source)} log`,
                 );
 
-                return followSupervisorLog(config, source, {
+                return followSupervisorLog(supervisor, source, {
                   lines: request.lines,
                   verbose: request.verbose,
                   from: Option.getOrUndefined(yield* Ref.get(position)),
-                }).pipe(Stream.provideService(HttpClient.HttpClient, http));
+                }).pipe(
+                  Stream.provideService(HttpClient.HttpClient, http),
+                  // A refusal isn't retried like a dropped connection.
+                  Stream.mapError(
+                    refusedAs(
+                      `Watching the ${logSourceName(source)} log`,
+                      roleFor(source),
+                    ),
+                  ),
+                );
               }),
             ).pipe(
               Stream.tap(({ position: reached }) =>
@@ -490,22 +551,33 @@ export class HomeAssistantLogs extends Context.Service<
         yield* requireAdmin;
         yield* requireSupervisor("Listing the host's boots");
 
-        return yield* supervisorLogBoots(config).pipe(withHttp);
+        return yield* supervisorLogBoots(supervisor).pipe(
+          withHttp,
+          Effect.mapError(refusedAs("Listing the host's boots", "manager")),
+        );
       }).pipe(Effect.withSpan("HomeAssistantLogs.getLogBoots"));
+
+      // Core's proxy refuses `supervisor/api` from an app, which asks the
+      // Supervisor itself.
+      const listApps =
+        supervisor.direct === true
+          ? supervisorApi(supervisor, "addons").pipe(
+              withHttp,
+              Effect.mapError(refusedAs("Listing apps", "manager")),
+            )
+          : Effect.flatMap(homeAssistant.session, (current) =>
+              current.request({
+                type: "supervisor/api",
+                endpoint: "/addons",
+                method: "get",
+              }),
+            );
 
       const getLogApps = Effect.gen(function* () {
         yield* requireAdmin;
         yield* requireSupervisor("Listing apps");
 
-        const current = yield* homeAssistant.session;
-
-        const result = yield* current.request({
-          type: "supervisor/api",
-          endpoint: "/addons",
-          method: "get",
-        });
-
-        const { addons } = yield* decodeApps(result).pipe(
+        const { addons } = yield* decodeApps(yield* listApps).pipe(
           Effect.mapError(decodeFailure("apps")),
         );
 
