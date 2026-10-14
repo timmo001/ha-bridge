@@ -1,6 +1,6 @@
 ---
 name: home-assistant
-description: Look up how Home Assistant behaves in its official docs and source, and write automations, scripts, triggers and conditions the current way. Use when explaining why an automation ran when it did, how an integration, trigger, condition, action or entity state works, or when writing or changing an automation or script, preferring Home Assistant's purpose-specific triggers and conditions such as light.turned_on and light.is_on. Pairs with the ha-bridge-cli skill, which reads, tests and saves them through the bridge.
+description: Look up how Home Assistant behaves in its official docs and source, and write automations, scripts, triggers and conditions the current way. Use when explaining why an automation ran when it did, how an integration, trigger, condition, action or entity state works, or when writing or changing an automation or script, preferring Home Assistant's purpose-specific triggers, conditions and actions such as light.turned_on and light.is_on over templates. Pairs with the ha-bridge-cli skill, which reads, tests and saves them through the bridge.
 license: Apache-2.0
 compatibility: Needs search or fetch tools for the docs. Reading and changing a live Home Assistant needs the ha-bridge-cli skill and a running bridge.
 ---
@@ -13,7 +13,7 @@ This skill is the reference half: how Home Assistant works and how to write for 
 
 - Check behaviour in the docs or Core's source, not memory. Home Assistant renames things and adds features every month: services became actions, `platform:` became `trigger:`, and triggers and conditions gained purpose-specific forms.
 - Use current names and syntax: actions, not services, and `triggers`, `conditions` and `actions` keys with `trigger:` and `action:` in each item.
-- Prefer purpose-specific triggers and conditions when writing an automation or script (see below).
+- Use what Home Assistant provides before a template. Prefer purpose-specific triggers, conditions and actions, then the general ones, and write a template only when none of them can express it (see below).
 - Say which source you used, and say when the docs and the installed version may differ.
 
 ## Where to look
@@ -68,6 +68,8 @@ conditions:
 ```
 
 - Find what exists for a domain in its `triggers.yaml` and `conditions.yaml`, such as `light`: `turned_on`, `turned_off`, `brightness_changed`, `brightness_crossed_threshold`, and the conditions `is_on`, `is_off` and `is_brightness`. Many are named for device classes rather than domains: `door`, `window`, `garage_door`, `motion`, `occupancy`, `temperature`, `humidity`, `illuminance`, `power` and `battery`.
+- They often handle edge cases a template would otherwise patch. Entity triggers such as `power.crossed_threshold` ignore changes from `unavailable` or `unknown`, so a device coming back online doesn't fire them; a `numeric_state` trigger needs a template condition on `trigger.from_state` for the same result. Check the trigger's code in `homeassistant/helpers/trigger/` when it matters.
+- Before reaching for a template trigger, condition, value or action, look for a built-in that does the job: a purpose-specific trigger or condition, `numeric_state` or `state` with `attribute`, `for`, `not_from` or `not_to`, a domain's own action rather than a generic one, or a helper entity (such as a threshold, derivative or group). Keep templates for what genuinely needs one, such as message text built from several states.
 - A trigger's `behavior` is `each` (fire for every target entity), `first` (when the first one changes) or `all` (when the last one does). A condition's is `any` or `all`.
 - Before saving, try them on the live home: `ha-bridge condition test '<condition>'` checks a condition now, and `ha-bridge trigger watch '<trigger>'` prints each time a trigger fires. Then save with `ha-bridge automation config create` or `update`, which Home Assistant validates first.
 

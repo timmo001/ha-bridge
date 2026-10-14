@@ -64,6 +64,7 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 - To find out why an automation ran when it did, start with `automation config get <automation>`. It prints the exact triggers, offsets, conditions and actions as YAML, so you don't have to infer them from the logbook or history. `--json` adds its `id` and whether it's `editable`.
 - `create -f <file>` and `update <automation> -f <file>` take YAML or JSON, or `-f -` for stdin. Home Assistant validates the config and refuses mistakes, saying why. `update` replaces the whole config, so start from `config get` and keep its `id` and `alias`.
 - Try triggers and conditions before saving: `trigger watch '<trigger>'` and `condition test '<condition>'`.
+- When writing or changing a config, use Home Assistant's built-in triggers, conditions and actions before templates. The `home-assistant` skill covers which ones exist.
 - Only automations in `automations.yaml` and scripts in `scripts.yaml` can be changed. Others exit 1 saying so; edit them where they're defined.
 
 ## Logs for diagnosing and fixing
