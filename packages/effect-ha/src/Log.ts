@@ -1,7 +1,14 @@
 import { Effect, Schema, Stream } from "effect";
 import type { HttpClientRequest } from "effect/http";
 import { HomeAssistantError } from "./HomeAssistantError.js";
-import { restRequest, type RestOptions } from "./Rest.js";
+import {
+  restRequest,
+  type RestOptions,
+  supervisorRequest,
+  type SupervisorOptions,
+} from "./Rest.js";
+
+export type { SupervisorOptions } from "./Rest.js";
 
 // Parts of Home Assistant whose logs the Supervisor serves from the host
 // journal: Core, the Supervisor, the host's own services and the
@@ -101,13 +108,14 @@ const journalParams = (request: {
   return params;
 };
 
-// A log's latest entries, oldest first, from the Supervisor through Core's
-// proxy. Needs an admin token. `boot` is an offset: 0 for this boot, -1 for
-// the one before, and so on. `latest` reads only since the area last started;
-// Core's proxy allows it for Core alone.
+// A log's latest entries, oldest first, from the Supervisor. Needs an admin
+// token through Core's proxy, or an app allowed the Supervisor API directly.
+// `boot` is an offset: 0 for this boot, -1 for the one before, and so on.
+// `latest` reads only since the area last started; Core's proxy allows it
+// for Core alone.
 export const supervisorLog = Effect.fn("HomeAssistant.supervisorLog")(
   function* (
-    options: RestOptions,
+    options: SupervisorOptions,
     source: LogSource,
     request: {
       readonly lines?: number | undefined;
@@ -116,9 +124,9 @@ export const supervisorLog = Effect.fn("HomeAssistant.supervisorLog")(
       readonly verbose?: boolean | undefined;
     },
   ) {
-    const response = yield* restGet(
+    const response = yield* supervisorRequest(
       options,
-      `hassio/${supervisorLogPath(source, request)}`,
+      supervisorLogPath(source, request),
       { urlParams: journalParams(request) },
     );
 
@@ -130,7 +138,7 @@ export const supervisorLog = Effect.fn("HomeAssistant.supervisorLog")(
 // drops. With `from`, it carries on after the entries already read instead.
 // Each entry comes with where to carry on from after it.
 export const followSupervisorLog = (
-  options: RestOptions,
+  options: SupervisorOptions,
   source: LogSource,
   request: {
     readonly lines?: number | undefined;
@@ -142,9 +150,9 @@ export const followSupervisorLog = (
     Effect.gen(function* () {
       const from = request.from;
 
-      const response = yield* restGet(
+      const response = yield* supervisorRequest(
         options,
-        `hassio/${supervisorLogPath(source, { follow: true })}`,
+        supervisorLogPath(source, { follow: true }),
         from === undefined
           ? {
               urlParams: journalParams({
@@ -194,19 +202,26 @@ const decodeBoots = Schema.decodeUnknownEffect(
   ),
 );
 
+const decodeData = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(Schema.Struct({ data: Schema.Json })),
+);
+
+const responseText = (response: {
+  readonly text: Effect.Effect<string, { readonly message: string }>;
+}) =>
+  response.text.pipe(
+    Effect.mapError(
+      (error) => new HomeAssistantError({ message: error.message }),
+    ),
+  );
+
 // The host's boots by offset, the current one at 0, with their boot IDs.
-// Needs an admin token.
+// Needs an admin token, or an app with the Supervisor's manager role.
 export const supervisorLogBoots = Effect.fn("HomeAssistant.supervisorLogBoots")(
-  function* (options: RestOptions) {
-    const response = yield* restGet(options, "hassio/host/logs/boots", {});
+  function* (options: SupervisorOptions) {
+    const response = yield* supervisorRequest(options, "host/logs/boots");
 
-    const text = yield* response.text.pipe(
-      Effect.mapError(
-        (error) => new HomeAssistantError({ message: error.message }),
-      ),
-    );
-
-    const { data } = yield* decodeBoots(text).pipe(
+    const { data } = yield* decodeBoots(yield* responseText(response)).pipe(
       Effect.mapError(
         (error) =>
           new HomeAssistantError({ message: `decode boots: ${error.message}` }),
@@ -214,6 +229,25 @@ export const supervisorLogBoots = Effect.fn("HomeAssistant.supervisorLogBoots")(
     );
 
     return data.boots;
+  },
+);
+
+// What a Supervisor API endpoint, such as `addons`, answers, unwrapped from
+// its `data`.
+export const supervisorApi = Effect.fn("HomeAssistant.supervisorApi")(
+  function* (options: SupervisorOptions, endpoint: string) {
+    const response = yield* supervisorRequest(options, endpoint);
+
+    const { data } = yield* decodeData(yield* responseText(response)).pipe(
+      Effect.mapError(
+        (error) =>
+          new HomeAssistantError({
+            message: `decode ${endpoint}: ${error.message}`,
+          }),
+      ),
+    );
+
+    return data;
   },
 );
 

@@ -11,26 +11,41 @@ export interface RestOptions {
   readonly token: Redacted.Redacted;
 }
 
+// Where Supervisor requests go: through Core's proxy at /api/hassio/ with a
+// Home Assistant token, or with `direct`, straight to the Supervisor API at
+// `url` (http://supervisor) with a Home Assistant app's token. Core's proxy
+// refuses apps, so they need the direct route.
+export interface SupervisorOptions extends RestOptions {
+  readonly direct?: boolean | undefined;
+}
+
 const decodeMessage = Schema.decodeUnknownEffect(
   Schema.fromJsonString(Schema.Struct({ message: Schema.String })),
 );
 
-const restUrl = (options: RestOptions, path: string) =>
-  `${options.url.replace(/\/$/, "")}/api/${path}`;
+const baseUrl = (options: RestOptions) => options.url.replace(/\/$/, "");
 
-// A request to Home Assistant's REST API at /api/<path>, whatever its status.
-export const restResponse = Effect.fnUntraced(function* (
-  options: RestOptions,
+const restUrl = (options: RestOptions, path: string) =>
+  `${baseUrl(options)}/api/${path}`;
+
+const supervisorUrl = (options: SupervisorOptions, path: string) =>
+  options.direct === true
+    ? `${baseUrl(options)}/${path}`
+    : restUrl(options, `hassio/${path}`);
+
+const send = Effect.fnUntraced(function* (
+  token: Redacted.Redacted,
   method: "GET" | "POST" | "DELETE",
+  url: string,
   path: string,
-  request: HttpClientRequest.Options.NoUrl = {},
+  request: HttpClientRequest.Options.NoUrl,
 ) {
   const http = (yield* HttpClient.HttpClient).pipe(
-    HttpClient.mapRequest(HttpClientRequest.bearerToken(options.token)),
+    HttpClient.mapRequest(HttpClientRequest.bearerToken(token)),
   );
 
   return yield* http
-    .execute(HttpClientRequest.make(method)(restUrl(options, path), request))
+    .execute(HttpClientRequest.make(method)(url, request))
     .pipe(
       Effect.mapError(
         (error) =>
@@ -38,6 +53,14 @@ export const restResponse = Effect.fnUntraced(function* (
       ),
     );
 });
+
+// A request to Home Assistant's REST API at /api/<path>, whatever its status.
+export const restResponse = (
+  options: RestOptions,
+  method: "GET" | "POST" | "DELETE",
+  path: string,
+  request: HttpClientRequest.Options.NoUrl = {},
+) => send(options.token, method, restUrl(options, path), path, request);
 
 // Fails with what Home Assistant or the Supervisor said when the response
 // isn't OK.
@@ -58,6 +81,7 @@ export const requireOk = Effect.fnUntraced(function* (
 
     return yield* new HomeAssistantError({
       message: `${path} answered ${response.status}${said === "" ? "" : `: ${said}`}`,
+      status: response.status,
     });
   }
 
@@ -73,4 +97,16 @@ export const restRequest = (
 ) =>
   Effect.flatMap(restResponse(options, method, path, request), (response) =>
     requireOk(path, response),
+  );
+
+// A GET from the Supervisor API, such as host/logs, that fails unless the
+// Supervisor answers OK.
+export const supervisorRequest = (
+  options: SupervisorOptions,
+  path: string,
+  request: HttpClientRequest.Options.NoUrl = {},
+) =>
+  Effect.flatMap(
+    send(options.token, "GET", supervisorUrl(options, path), path, request),
+    (response) => requireOk(path, response),
   );
