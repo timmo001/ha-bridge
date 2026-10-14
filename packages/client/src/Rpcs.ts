@@ -25,11 +25,13 @@ import {
 import { EntityUpdate } from "./Entity.js";
 import {
   ConfigUnavailable,
+  ConfigValidation,
   CreateEntityConfigRequest,
   EntityConfig,
   EntityConfigRequest,
   SavedEntityConfig,
   UpdateEntityConfigRequest,
+  ValidateEntityConfigRequest,
 } from "./EntityConfig.js";
 import {
   HistoryRequest,
@@ -225,6 +227,14 @@ export class BridgeRpcs extends RpcGroup.make(
     payload: EntityConfigRequest,
     success: SavedEntityConfig,
     error: ConfigFailure,
+  }),
+  // Checks an automation or script config without saving it: whether Home
+  // Assistant accepts its triggers, conditions and actions, and what it
+  // names that Home Assistant doesn't have.
+  Rpc.make("ValidateEntityConfig", {
+    payload: ValidateEntityConfigRequest,
+    success: ConfigValidation,
+    error: HomeAssistantError,
   }),
   // Fuzzy search over cached entities, devices and areas, or a list of
   // them without a query. Only a target needs Home Assistant.

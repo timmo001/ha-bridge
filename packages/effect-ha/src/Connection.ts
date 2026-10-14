@@ -60,6 +60,8 @@ export type HomeAssistantCommand =
         | "config/floor_registry/list"
         | "config/label_registry/list"
         | "auth/current_user"
+        // Every action, by domain, with its fields.
+        | "get_services"
         // Needs an admin token.
         | "system_log/list";
     }
@@ -101,6 +103,13 @@ export type HomeAssistantCommand =
       readonly type: "test_condition";
       readonly condition: ConditionRequest["condition"];
       readonly variables?: ConditionRequest["variables"] | undefined;
+    }
+  | {
+      // Checks each part as the automation editor does, without saving.
+      readonly type: "validate_config";
+      readonly triggers?: Schema.Json | undefined;
+      readonly conditions?: Schema.Json | undefined;
+      readonly actions?: Schema.Json | undefined;
     }
   | {
       readonly type: "extract_from_target";

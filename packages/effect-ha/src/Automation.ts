@@ -64,3 +64,19 @@ export const ConditionUpdate = Schema.Union([
 ]);
 
 export type ConditionUpdate = typeof ConditionUpdate.Type;
+
+// `validate_config`: each part sent, and whether Home Assistant accepts it.
+export const ConfigCheck = Schema.Record(
+  Schema.String,
+  Schema.Struct({ valid: Schema.Boolean, error: Schema.NullOr(Schema.String) }),
+);
+
+export type ConfigCheck = typeof ConfigCheck.Type;
+
+// `get_services`: every action's fields, by domain and then action name.
+export const ActionDescriptions = Schema.Record(
+  Schema.String,
+  Schema.Record(Schema.String, Schema.Json),
+);
+
+export type ActionDescriptions = typeof ActionDescriptions.Type;

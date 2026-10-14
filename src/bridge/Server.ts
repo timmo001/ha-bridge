@@ -39,6 +39,7 @@ const Handlers = BridgeRpcs.toLayer(
       WatchLogbook: (request) => homeAssistant.watchLogbook(request),
       WatchTrigger: (request) => homeAssistant.watchTrigger(request),
       TestCondition: (request) => homeAssistant.testCondition(request),
+      ValidateEntityConfig: (request) => homeAssistant.validateConfig(request),
       WatchCondition: (request) => homeAssistant.watchCondition(request),
       GetSystemLog: (request) => logs.getSystemLog(request),
       WatchSystemLog: (request) => logs.watchSystemLog(request),

@@ -63,3 +63,43 @@ export const SavedEntityConfig = Schema.Struct({
 });
 
 export type SavedEntityConfig = typeof SavedEntityConfig.Type;
+
+// An automation or script config to check without saving it.
+export const ValidateEntityConfigRequest = Schema.Struct({
+  domain: ConfigDomain,
+  config: ConfigItem,
+});
+
+export type ValidateEntityConfigRequest =
+  typeof ValidateEntityConfigRequest.Type;
+
+export const ConfigPart = Schema.Literals([
+  "triggers",
+  "conditions",
+  "actions",
+]);
+
+export const ReferenceKind = Schema.Literals([
+  "entity",
+  "action",
+  "device",
+  "area",
+  "floor",
+  "label",
+]);
+
+export const ConfigValidation = Schema.Struct({
+  // True when there are no errors and no unknown references.
+  valid: Schema.Boolean,
+  // Parts Home Assistant rejects, with its reason, or that are missing.
+  errors: Schema.Array(
+    Schema.Struct({ part: ConfigPart, message: Schema.String }),
+  ),
+  // What the config names that Home Assistant doesn't have. Templates
+  // aren't read.
+  unknown: Schema.Array(
+    Schema.Struct({ kind: ReferenceKind, id: Schema.String }),
+  ),
+});
+
+export type ConfigValidation = typeof ConfigValidation.Type;

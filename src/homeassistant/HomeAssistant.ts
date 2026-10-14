@@ -52,10 +52,14 @@ import {
   type TriggerRequest,
   type WatchConditionRequest,
   type HomeAssistantSubscription,
+  ActionDescriptions,
+  ConfigCheck,
 } from "@timmo001/effect-ha";
 import {
   TargetError,
+  type ConfigValidation,
   type EntityUpdate,
+  type ValidateEntityConfigRequest,
   SearchEmpty,
   type SearchRequest,
   type SearchResults,
@@ -83,6 +87,12 @@ import {
   initialLogbookCursor,
 } from "./logbook.js";
 import { exactlyOne, resolveTarget, valuesOf } from "./target.js";
+import {
+  configPartNames,
+  configParts,
+  configReferences,
+  unknownReferences,
+} from "./references.js";
 
 const searchKinds = ["entity", "device", "area"] as const;
 
@@ -147,6 +157,11 @@ export interface HomeAssistantService {
   readonly watchCondition: (
     request: WatchConditionRequest,
   ) => Stream.Stream<ConditionUpdate, HomeAssistantError>;
+  // Checks a config without saving it: Home Assistant's own checks, then
+  // the entities, actions and registry items it names that don't exist.
+  readonly validateConfig: (
+    request: ValidateEntityConfigRequest,
+  ) => Effect.Effect<ConfigValidation, HomeAssistantError>;
   // Searches the cached states and registries. Only a target asks Home
   // Assistant, to expand it.
   readonly search: (
@@ -237,6 +252,16 @@ const decodeConditionResult = decodeWith(
 const decodeConditionUpdate = decodeWith(
   Schema.decodeUnknownEffect(ConditionUpdate),
   "condition",
+);
+
+const decodeConfigCheck = decodeWith(
+  Schema.decodeUnknownEffect(ConfigCheck),
+  "config check",
+);
+
+const decodeActionDescriptions = decodeWith(
+  Schema.decodeUnknownEffect(ActionDescriptions),
+  "actions",
 );
 
 const templateSubscription = (
@@ -898,6 +923,98 @@ export class HomeAssistant extends Context.Service<
           }),
         ).pipe(Stream.mapEffect(decodeConditionUpdate));
 
+      // An entity with no state and missing from the display registry may
+      // still be registered and disabled.
+      const isRegistered = (current: HomeAssistantSession, entityId: string) =>
+        current
+          .request({ type: "config/entity_registry/get", entity_id: entityId })
+          .pipe(
+            Effect.as(true),
+            Effect.catchIf(
+              (error) => error.message === "Entity not found",
+              () => Effect.succeed(false),
+            ),
+          );
+
+      const validateConfig = Effect.fn("HomeAssistant.validateConfig")(
+        function* (request: ValidateEntityConfigRequest) {
+          const current = yield* connected;
+          const parts = configParts(request.domain, request.config);
+
+          const [checked, actions] = yield* Effect.all(
+            [
+              Object.keys(parts.present).length === 0
+                ? Effect.succeed<ConfigCheck>({})
+                : current
+                    .request({ type: "validate_config", ...parts.present })
+                    .pipe(Effect.flatMap(decodeConfigCheck)),
+              current
+                .request({ type: "get_services" })
+                .pipe(Effect.flatMap(decodeActionDescriptions)),
+            ],
+            { concurrency: "unbounded" },
+          );
+
+          const known = yield* Ref.get(registries);
+
+          const idsOf = <A>(
+            items: ReadonlyArray<A> | undefined,
+            id: (item: A) => string,
+          ) => (items === undefined ? undefined : new Set(items.map(id)));
+
+          const candidates = unknownReferences(
+            configReferences(request.config),
+            {
+              entity: new Set([
+                ...states.keys(),
+                ...(known.entities?.entities.map((entity) => entity.ei) ?? []),
+              ]),
+              action: new Set(
+                Object.entries(actions).flatMap(([domain, names]) =>
+                  Object.keys(names).map((name) => `${domain}.${name}`),
+                ),
+              ),
+              device: idsOf(known.devices, (device) => device.id),
+              area: idsOf(known.areas, (area) => area.area_id),
+              floor: idsOf(known.floors, (floor) => floor.floor_id),
+              label: idsOf(known.labels, (label) => label.label_id),
+            },
+          );
+
+          const unknown = yield* Effect.filter(candidates, (reference) =>
+            reference.kind === "entity"
+              ? Effect.map(
+                  isRegistered(current, reference.id),
+                  (found) => !found,
+                )
+              : Effect.succeed(true),
+          );
+
+          const errors = [
+            ...parts.missing.map((part) => ({
+              part,
+              message:
+                request.domain === "script"
+                  ? "a script needs a sequence"
+                  : `an automation needs ${part}`,
+            })),
+            ...configPartNames.flatMap((part) => {
+              const result = checked[part];
+
+              return result === undefined || result.valid
+                ? []
+                : [{ part, message: result.error ?? "invalid" }];
+            }),
+          ];
+
+          return {
+            valid: errors.length === 0 && unknown.length === 0,
+            errors,
+            unknown,
+          } satisfies ConfigValidation;
+        },
+      );
+
       const callAction = Effect.fn("HomeAssistant.callAction")(function* (
         action: Action,
       ) {
@@ -1040,6 +1157,7 @@ export class HomeAssistant extends Context.Service<
         watchTrigger,
         testCondition,
         watchCondition,
+        validateConfig,
         search: runSearch,
         session: connected,
         sessions: SubscriptionRef.changes(session),
