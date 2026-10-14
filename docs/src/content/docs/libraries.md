@@ -98,7 +98,7 @@ bun add @timmo001/effect-ha effect
 
 ### Connecting
 
-`connect({ url, token })` opens a WebSocket to Home Assistant's `/api/websocket`, using `wss` for `https` URLs, and logs in with a long-lived access token. It needs a `Scope`, which closes the connection, and a `Socket.WebSocketConstructor`, such as `BunSocket.layerWebSocketConstructor`.
+`connect({ url, token })` opens a WebSocket to Home Assistant's `/api/websocket` under the URL's path, using `wss` for `https` URLs, so `http://supervisor/core` reaches Home Assistant from inside an app, and logs in with a long-lived access token. It needs a `Scope`, which closes the connection, and a `Socket.WebSocketConstructor`, such as `BunSocket.layerWebSocketConstructor`.
 
 It returns a session with:
 

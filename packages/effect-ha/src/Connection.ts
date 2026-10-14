@@ -216,13 +216,15 @@ const decodeActionResult = Schema.decodeUnknownEffect(
 const failWith = (context: string) => (error: { readonly message: string }) =>
   new HomeAssistantError({ message: `${context}: ${error.message}` });
 
+// Keeps the URL's path, so http://supervisor/core, the Supervisor's proxy
+// for apps, connects to ws://supervisor/core/api/websocket.
 export const websocketUrl = (url: string) => {
   const parsed = new URL(url);
 
   const scheme =
     parsed.protocol === "https:" || parsed.protocol === "wss:" ? "wss" : "ws";
 
-  return `${scheme}://${parsed.host}/api/websocket`;
+  return `${scheme}://${parsed.host}${parsed.pathname.replace(/\/$/, "")}/api/websocket`;
 };
 
 const fail = (context: string) => (cause: unknown) =>
