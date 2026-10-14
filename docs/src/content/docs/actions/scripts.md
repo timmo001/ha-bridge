@@ -47,11 +47,12 @@ ha-bridge script run announce_weather --variables '{"room":"kitchen"}'
 
 ```bash
 ha-bridge script config get morning_routine
+ha-bridge script config validate -f morning.yaml
 ha-bridge script config update morning_routine -f morning.yaml
 ha-bridge script config create -f new-script.yaml
 ha-bridge script config delete morning_routine
 ```
 
-`config get` prints the script's config as YAML, or `{ "domain", "entity_id", "id", "editable", "config" }` with `--json`. `create`, `update` and `delete` change `scripts.yaml`, and only scripts in it can be changed. A new script's key comes from its `alias` unless you pass `--id`, such as `--id morning_routine`, and `create` prints it.
+`config get` prints the script's config as YAML, or `{ "domain", "entity_id", "id", "editable", "config" }` with `--json`. `create`, `update` and `delete` change `scripts.yaml`, and only scripts in it can be changed. A new script's key comes from its `alias` unless you pass `--id`, such as `--id morning_routine`, and `create` prints it. `validate` checks the script's `sequence` and what it names without saving, as for automations.
 
 See [`ha-bridge script`](/commands/script) for every argument and flag.

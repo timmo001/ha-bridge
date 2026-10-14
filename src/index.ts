@@ -1743,6 +1743,49 @@ const entityConfigCommand = (domain: ConfigDomain) => {
           `Remove ${noun} from ${domain}s.yaml, and its entity`,
         ),
       ),
+      Command.make(
+        "validate",
+        { file: configFileFlag, json: configJsonFlag },
+        (input) =>
+          Effect.gen(function* () {
+            const config = yield* readConfigItem(input.file);
+            const client = yield* BridgeClient;
+
+            const result = yield* client
+              .ValidateEntityConfig({ domain, config })
+              .pipe(
+                Effect.catchTag("HomeAssistantError", (error) =>
+                  failWith(
+                    `could not validate the ${domain}: ${error.message}`,
+                  ),
+                ),
+              );
+
+            if (input.json) {
+              yield* Console.log(JSON.stringify(result));
+            } else {
+              yield* Effect.forEach(result.errors, (error) =>
+                Console.log(`${error.part}: ${error.message}`),
+              );
+              yield* Effect.forEach(result.unknown, (reference) =>
+                Console.log(`unknown ${reference.kind}: ${reference.id}`),
+              );
+            }
+
+            if (!result.valid) {
+              return yield* failWith(`the ${domain} has problems`);
+            }
+
+            if (!input.json) {
+              yield* Console.log("valid");
+            }
+          }).pipe(withBridge),
+      ).pipe(
+        Command.withAlias("v"),
+        Command.withDescription(
+          `Check ${noun} config without saving it: Home Assistant's own checks, then any entity, action, device, area, floor or label it names that doesn't exist. Exits 1 when it finds a problem`,
+        ),
+      ),
     ],
   );
 };

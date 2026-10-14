@@ -77,4 +77,18 @@ ha-bridge automation config delete office_curtains_sunrise
 
 `create` prints the new automation's ID, and makes one up unless you pass `--id`. Home Assistant reloads the automation after saving, so its entity appears shortly after.
 
+`validate` checks a config without saving it. It runs Home Assistant's own checks on the triggers, conditions and actions, then lists any entity, action, device, area, floor or label the config names that Home Assistant doesn't have, much as Spook would after saving. It doesn't read templates. It prints each problem and exits 1, or prints `valid`. `--json` prints `{ "valid", "errors", "unknown" }`:
+
+```bash
+ha-bridge automation config validate -f new-automation.yaml
+ha-bridge automation config get office_curtains_sunrise | ha-bridge automation config validate -f -
+```
+
+```text
+actions: offset not-a-duration should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' at '[2].delay'
+unknown action: light.turn_onn
+unknown entity: light.office_lamp_old
+ha-bridge: the automation has problems
+```
+
 See [`ha-bridge automation`](/commands/automation) for every argument and flag.

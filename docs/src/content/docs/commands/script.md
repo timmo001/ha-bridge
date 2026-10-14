@@ -206,3 +206,20 @@ ARGUMENTS
 FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
+
+## `ha-bridge script config validate`
+
+Alias: `ha-bridge script config v`
+
+```text
+DESCRIPTION
+  Check a script config without saving it: Home Assistant's own checks, then any entity, action, device, area, floor or label it names that doesn't exist. Exits 1 when it finds a problem
+
+USAGE
+  ha-bridge script config validate [flags]
+
+FLAGS
+  --socket string      Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+  --file, -f string    YAML or JSON file holding the config, or - for stdin
+  --json               Print as JSON
+```
