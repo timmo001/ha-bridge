@@ -308,7 +308,14 @@ export class HomeAssistant extends Context.Service<
   static readonly layer = Layer.effect(
     HomeAssistant,
     Effect.gen(function* () {
-      const config = yield* (yield* BridgeConfig).load;
+      const bridgeConfig = yield* BridgeConfig;
+      const config = yield* bridgeConfig.load;
+
+      // Only the Supervisor token fallback sets supervisor.
+      yield* config.supervisor === undefined
+        ? Effect.logInfo("Using config file", bridgeConfig.path)
+        : Effect.logInfo("No config file, using SUPERVISOR_TOKEN");
+
       const search = yield* Search;
       // Hot cache of every entity, written on each state_changed event.
       const states = new Map<string, EntityState>();

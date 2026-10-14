@@ -44,7 +44,7 @@ If `~/.config/ha-bridge/config.yml` doesn't exist, the bridge reads `~/.config/g
 
 ## Inside a Home Assistant app
 
-A Home Assistant app can run the bridge in its own container with no config file. When neither config file exists and `SUPERVISOR_TOKEN` is set, as it is in every app, `ha-bridge serve` connects to Home Assistant through the Supervisor at `http://supervisor/core` with that token. A config file still wins if there is one.
+A Home Assistant app can run the bridge in its own container with no config file. When neither config file exists and `SUPERVISOR_TOKEN` is set, as it is in every app, `ha-bridge serve` connects to Home Assistant through the Supervisor at `http://supervisor/core` with that token. A config file still wins if there is one, and `serve` logs which one it uses when it starts: `Using config file` with its path, or `No config file, using SUPERVISOR_TOKEN`. Moving a config file away takes effect when the bridge restarts.
 
 The app starts `ha-bridge serve` itself, then runs commands against its socket. Set `HA_BRIDGE_SOCK` for both if you want a fixed socket path.
 
