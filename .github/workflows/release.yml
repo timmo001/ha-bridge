@@ -114,6 +114,9 @@ jobs:
         ./dist/release/root/ha-bridge --completions bash > .scripts/linux/completions/ha-bridge.bash
         ./dist/release/root/ha-bridge --completions fish > .scripts/linux/completions/ha-bridge.fish
         ./dist/release/root/ha-bridge --completions zsh > .scripts/linux/completions/_ha-bridge
+        cp -R skills dist/release/root/skills
+      # Ship the agent skills beside the binary, so a mise install keeps them matched to it.
+      archive-extra-paths: skills
       release-version: ${{ github.event.release.tag_name }}
       source-ref: ${{ github.event.release.tag_name }}
       existing-release: true

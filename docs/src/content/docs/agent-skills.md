@@ -17,11 +17,13 @@ Or in Claude Code, which installs both:
 /plugin install ha-bridge --marketplace timmo001/ha-bridge
 ```
 
+The release tarballs also carry both skills beside the binary, in `skills/ha-bridge-cli` and `skills/home-assistant`, so they always match the version you installed. With [mise](https://mise.jdx.dev), point your agent at the `skills` folder in `mise where github:timmo001/ha-bridge`.
+
 ## ha-bridge-cli
 
 `ha-bridge-cli` teaches an agent to use the CLI: finding the right command and flags, calling actions, reading and watching state, feeding bars and scripts, reading and changing [automation](/actions/automations#reading-and-changing-configs) and [script](/actions/scripts#reading-and-changing-configs) configs, and reading, watching and searching [logs](/using/logs) to diagnose a problem or confirm a fix. It also sets rules, such as asking before actions with real-world effects and redacting logs before they leave the machine.
 
-The skill needs the `ha-bridge` CLI and a [running bridge](/running). It points agents at these docs, through the docs MCP server when it's connected.
+The skill needs the `ha-bridge` CLI and a [running bridge](/running). It points agents at these docs, through the docs MCP server when it's connected. It also covers running [inside a Home Assistant app](/configuration#inside-a-home-assistant-app), where the app runs the bridge and there's no systemd.
 
 ## home-assistant
 

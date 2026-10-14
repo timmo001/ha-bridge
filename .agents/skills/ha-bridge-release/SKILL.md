@@ -28,6 +28,7 @@ Releasing is a public, irreversible publish. Commit, push and create the release
 - `.scripts/linux/PKGBUILD` builds `ha-bridge-git` from source; `publish-arch-git.yml` publishes it on pushes to `main` that touch the source or packaging. Its `pkgver` comes from `package.json`.
 - `.scripts/linux/PKGBUILD.bin` is a template; the release renders `pkgver` and checksums from the tag. Don't edit those values by hand.
 - `.scripts/linux/nfpm.yaml` builds the release's deb and rpm packages.
+- The release tarballs hold `ha-bridge` at the top level and the `skills/` folder beside it (`archive-extra-paths` in `release.yml`), so mise installs get skills matching the binary. Keep the binary at the top level: mise puts the install root on `PATH` because it holds an executable. The deb, rpm and Arch packages don't carry the skills.
 - A packaged file, such as a change to `ha-bridge.service` or a new installed file, must be updated in all three, and in the `extraFiles` of the `prepare-arch-bin` job when the `-bin` package needs it.
 - `ha-bridge.install` enables the user service globally and starts it for the installing user. Keep upgrades to `try-restart` so a service the user stopped stays stopped.
 - The Lint package configs workflow runs namcap on PKGBUILD changes, and the shellcheck job covers `.scripts/`.
