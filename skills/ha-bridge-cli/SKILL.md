@@ -63,6 +63,7 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 
 - To find out why an automation ran when it did, start with `automation config get <automation>`. It prints the exact triggers, offsets, conditions and actions as YAML, so you don't have to infer them from the logbook or history. `--json` adds its `id` and whether it's `editable`.
 - `create -f <file>` and `update <automation> -f <file>` take YAML or JSON, or `-f -` for stdin. Home Assistant validates the config and refuses mistakes, saying why. `update` replaces the whole config, so start from `config get` and keep its `id` and `alias`.
+- Before saving, run `validate -f <file>`. Saving only catches what Home Assistant's schema rejects; `validate` also lists the entities, actions, devices, areas, floors and labels the config names that don't exist, which Spook would otherwise flag after saving. It exits 1 on any problem, and doesn't need an admin token.
 - Try triggers and conditions before saving: `trigger watch '<trigger>'` and `condition test '<condition>'`.
 - When writing or changing a config, use Home Assistant's built-in triggers, conditions and actions before templates. The `home-assistant` skill covers which ones exist.
 - Only automations in `automations.yaml` and scripts in `scripts.yaml` can be changed. Others exit 1 saying so; edit them where they're defined.

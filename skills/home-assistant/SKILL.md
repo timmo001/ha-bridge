@@ -71,7 +71,7 @@ conditions:
 - They often handle edge cases a template would otherwise patch. Entity triggers such as `power.crossed_threshold` ignore changes from `unavailable` or `unknown`, so a device coming back online doesn't fire them; a `numeric_state` trigger needs a template condition on `trigger.from_state` for the same result. Check the trigger's code in `homeassistant/helpers/trigger/` when it matters.
 - Before reaching for a template trigger, condition, value or action, look for a built-in that does the job: a purpose-specific trigger or condition, `numeric_state` or `state` with `attribute`, `for`, `not_from` or `not_to`, a domain's own action rather than a generic one, or a helper entity (such as a threshold, derivative or group). Keep templates for what genuinely needs one, such as message text built from several states.
 - A trigger's `behavior` is `each` (fire for every target entity), `first` (when the first one changes) or `all` (when the last one does). A condition's is `any` or `all`.
-- Before saving, try them on the live home: `ha-bridge condition test '<condition>'` checks a condition now, and `ha-bridge trigger watch '<trigger>'` prints each time a trigger fires. Then save with `ha-bridge automation config create` or `update`, which Home Assistant validates first.
+- Before saving, try them on the live home: `ha-bridge condition test '<condition>'` checks a condition now, and `ha-bridge trigger watch '<trigger>'` prints each time a trigger fires. Then check the whole config with `ha-bridge automation config validate -f <file>` (or `script config validate`), which also catches entities and actions that don't exist, and save with `ha-bridge automation config create` or `update`.
 
 ## Explaining what happened
 
