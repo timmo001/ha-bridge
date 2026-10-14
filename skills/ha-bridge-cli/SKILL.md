@@ -2,7 +2,7 @@
 name: ha-bridge-cli
 description: Control and read Home Assistant from the shell, scripts and status bars with the ha-bridge CLI. Use when calling Home Assistant actions, reading or watching entity state, feeding a bar or script with --bar-json, rendering templates, watching events, searching entities, reading or changing automation and script configs, reading, watching or searching Home Assistant's logs (Core's errors, Core, the Supervisor, the host, plugins and apps) to diagnose a problem or confirm a fix, or connecting an app to a running bridge. For changing ha-bridge itself, use its repository's own skills.
 license: Apache-2.0
-compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve, normally the ha-bridge.service user unit). The docs-ha-bridge MCP server is optional.
+compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve, normally the ha-bridge.service user unit on a desktop, or started by the app inside a Home Assistant app). The docs-ha-bridge MCP server is optional.
 ---
 
 # ha-bridge CLI
@@ -85,8 +85,16 @@ To confirm a fix, note the error's `count` and `timestamp` before, then `logs co
 - Logs need a token that belongs to an admin, and every log but Core's needs a Supervisor. When one can't be read, the command exits 1 with a message saying why: no admin rights, no Supervisor, or a Home Assistant too old for it, such as `logs core watch` before 2026.11. Treat that as "this log isn't available" and carry on with the others; retrying won't change it.
 - Logs hold IP and MAC addresses, hostnames, device and person names, and sometimes URLs with credentials. Redact them before anything leaves the machine: issues, pull requests, chats, or a model or service elsewhere.
 
+## Inside a Home Assistant app
+
+You're inside a Home Assistant app when `SUPERVISOR_TOKEN` is set. The bridge then connects through the Supervisor with the app's token, so there's no config file and nothing to set up.
+
+- The app starts `ha-bridge serve` itself. Don't run `serve` or `setup`.
+- There's no systemd. When the bridge can't be reached or isn't connected, ask the user to check the app's log in Home Assistant (Settings > Apps > the app > Log).
+- What the bridge can read depends on the app's own permissions. A log command that says a setting such as `hassio_api` is missing means the app doesn't have it; only the app can change that, so carry on with the logs you can read.
+
 ## When it fails
 
-- "could not reach the bridge": the bridge isn't running. Check `systemctl --user status ha-bridge.service`; don't start a second `serve` alongside it.
-- "the bridge is not connected to Home Assistant": the bridge is reconnecting, every 5 seconds. Check `journalctl --user -u ha-bridge.service`.
+- "could not reach the bridge": the bridge isn't running. Check `systemctl --user status ha-bridge.service`, or the app's log inside an app; don't start a second `serve` alongside it.
+- "the bridge is not connected to Home Assistant": the bridge is reconnecting, every 5 seconds. Check `journalctl --user -u ha-bridge.service`, or the app's log inside an app.
 - Commands find the socket from `--socket`, then `$HA_BRIDGE_SOCK`, then `$XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock`. Set `HA_BRIDGE_SOCK` only to target a different bridge, such as a development one.
