@@ -1266,7 +1266,41 @@ export const AiTask = {
   // admin token and Home Assistant 2026.11 or newer.
   clearImages: (options?: { readonly days?: number }) =>
     onDomain("ai_task.clear_images", { days: options?.days }),
+  // Responds with an answer to each named question about `state`. Needs
+  // Home Assistant 2026.11 or newer.
+  evaluate: (
+    taskName: string,
+    questions: Readonly<Record<string, EvaluationQuestion>>,
+    options?: {
+      readonly entityId?: EntityId<"ai_task">;
+      readonly state?: Schema.Json;
+    },
+  ): Action => ({
+    ...onDomain("ai_task.evaluate", {
+      task_name: taskName,
+      questions,
+      entity_id: options?.entityId,
+      state: options?.state,
+    }),
+    return_response: true,
+  }),
 };
+
+// A question for `AiTask.evaluate`: yes or no (`noul`), one of the
+// `criteria` by key (`choice`), or a rating against the ordered `criteria`
+// (`score`).
+export type EvaluationQuestion =
+  | { readonly type: "noul"; readonly instructions: string }
+  | {
+      readonly type: "choice";
+      readonly instructions: string;
+      readonly criteria: Readonly<Record<string, string>>;
+    }
+  | {
+      readonly type: "score";
+      readonly instructions: string;
+      readonly criteria: ReadonlyArray<string>;
+    };
 
 export const Image = {
   // Saves the image to `filename` on the Home Assistant host. The path must

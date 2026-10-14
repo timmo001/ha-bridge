@@ -12,6 +12,13 @@
     "instructions",
     "task_name"
   ],
+  "ai_task.evaluate": [
+    "attachments",
+    "entity_id",
+    "questions",
+    "state",
+    "task_name"
+  ],
   "ai_task.clear_images": [
     "days"
   ],
