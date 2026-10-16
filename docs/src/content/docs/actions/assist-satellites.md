@@ -26,7 +26,7 @@ ha-bridge assist_satellite start-conversation "The garage is open. Shall I close
 
 `ask-question` (`as q`) asks a question on one satellite, waits for the reply and prints it as JSON. Its target has to match exactly one satellite.
 
-Each `--answer` is an ID and the sentences that match it, separated by commas. Sentences use [Assist's sentence syntax](https://developers.home-assistant.io/docs/voice/intent-recognition/template-sentence-syntax/) without punctuation:
+Each `--answer` is an ID and the sentences that match it, separated by commas. Sentences use [Assist's sentence syntax](https://contributors.home-assistant.io/translate/voice/template-syntax/) without punctuation:
 
 ```bash
 ha-bridge assist_satellite ask-question "What music would you like?" kitchen \
