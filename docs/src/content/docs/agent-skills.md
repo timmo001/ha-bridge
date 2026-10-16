@@ -27,7 +27,7 @@ The skill needs the `ha-bridge` CLI and a [running bridge](/running). It points 
 
 ## home-assistant
 
-`home-assistant` teaches an agent where to look up how Home Assistant behaves, in its docs at home-assistant.io and developers.home-assistant.io and in Core's source, and to write automations and scripts the current way, preferring purpose-specific triggers and conditions such as `light.turned_on` and `light.is_on`. It also covers explaining why an automation ran when it did, such as reading sun event times from the `sensor.sun_next_*` history rather than `sun.sun`.
+`home-assistant` teaches an agent where to look up how Home Assistant behaves, in its docs at home-assistant.io and contributors.home-assistant.io and in Core's source, and to write automations and scripts the current way, preferring purpose-specific triggers and conditions such as `light.turned_on` and `light.is_on`. It also covers explaining why an automation ran when it did, such as reading sun event times from the `sensor.sun_next_*` history rather than `sun.sun`.
 
 It's the reference half of the pair: `ha-bridge-cli` does the reading, testing and saving. It needs search or fetch tools for the docs.
 

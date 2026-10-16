@@ -27,7 +27,11 @@ Use the search and fetch tools you have against the sites below, for example a w
 | Scripts and their actions | `https://www.home-assistant.io/docs/scripts/` |
 | Templates | `https://www.home-assistant.io/docs/configuration/templating/` |
 | Release notes, for when something changed | `https://www.home-assistant.io/blog/categories/release-notes/` |
-| APIs and integration internals | `https://developers.home-assistant.io/` |
+| APIs, integration internals, architecture and frontend | `https://contributors.home-assistant.io/` (start at `llms.txt`; `/core/`, `/frontend/`, `/apps/`, `/architecture/`) |
+| Current and former names of a term (service to action, add-on to app) | `https://contributors.home-assistant.io/glossary/` |
+| Developer-facing changes to APIs and behaviour | `https://contributors.home-assistant.io/blog/` |
+
+contributors.home-assistant.io replaced developers.home-assistant.io, whose links redirect there. Add `index.md` to any of its page URLs for Markdown, or read its source in the `home-assistant/contributors.home-assistant.io` repository on GitHub (`src/content/docs/<area>/`, blog posts in `src/content/blog/`) when you have a GitHub tool. Its pages and blog help you find what changed and why, but rely on Core's source for what the code does.
 
 The docs' sources are in the `home-assistant/home-assistant.io` repository on GitHub (`source/_integrations/<domain>.markdown`, `source/_docs/...`), which are easier to read than the HTML when you have a GitHub tool.
 
