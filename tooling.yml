@@ -9,5 +9,5 @@ dispatch:
   - lint-general.yml
 tools:
   - repo: home-assistant/core
-    reviewed: 2026.10.1
+    reviewed: 2026.10.2
     review: Run mise run drift:core against a Core checkout at the new tag and adapt effect-ha for new, removed or changed actions, then save the snapshot with --update. Check the WebSocket client and entity config editing in src/homeassistant against the release notes.
