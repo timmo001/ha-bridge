@@ -172,7 +172,11 @@ const sameOrigin = <E, R>(
 
     const host = URL.canParse(origin) ? new URL(origin).host : "";
 
-    return host !== "" && host === request.headers.host
+    // A reverse proxy, such as Pitchfork's, forwards the page's own host here
+    const forwardedHost = request.headers["x-forwarded-host"];
+
+    return host !== "" &&
+      (host === request.headers.host || host === forwardedHost)
       ? httpEffect
       : Effect.logWarning(`Refused the panel socket to ${origin}`).pipe(
           Effect.as(HttpServerResponse.empty({ status: 403 })),
