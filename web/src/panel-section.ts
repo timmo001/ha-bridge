@@ -4,7 +4,7 @@ import { repeat } from "lit/directives/repeat.js";
 import type { Dashboard, Section } from "../../src/panel/Panel.js";
 import { registry } from "./AtomController.js";
 import { type EntityMap, saveDashboard } from "./client.js";
-import { moveSection, placeWidget, removeSection } from "./edit.js";
+import { placeSection, placeWidget, removeSection } from "./edit.js";
 import { icon } from "./icons.js";
 import "./panel-widget.js";
 import { open } from "./state.js";
@@ -45,6 +45,45 @@ export class PanelSection extends LitElement {
       :host {
         display: block;
         container: section / inline-size;
+      }
+
+      .before,
+      .after {
+        position: relative;
+      }
+
+      .before::before,
+      .after::after {
+        content: "";
+        position: absolute;
+        inset: auto 0;
+        height: 3px;
+        border-radius: 3px;
+        background: var(--pn-accent);
+      }
+
+      .before::before {
+        top: -1.25rem;
+      }
+
+      .after::after {
+        bottom: -1.25rem;
+      }
+
+      .editing header {
+        cursor: grab;
+      }
+
+      .grip {
+        display: grid;
+        place-items: center;
+        align-self: center;
+        color: var(--pn-text-faint);
+      }
+
+      .grip .icon {
+        width: 1rem;
+        height: 1rem;
       }
 
       header {
@@ -170,19 +209,27 @@ export class PanelSection extends LitElement {
 
   @property({ type: Boolean }) accessor editing = false;
 
-  @property({ type: Boolean }) accessor first = false;
-
-  @property({ type: Boolean }) accessor last = false;
+  // The section after this one, which a section dropped on this one's lower
+  // half goes before.
+  @property({ attribute: false }) accessor nextId: string | undefined;
 
   @state() accessor dragging: string | undefined;
 
   @state() accessor target: string | null | undefined;
+
+  // Where a section being dragged over this one would land.
+  @state() accessor sectionTarget: "before" | "after" | undefined;
 
   #save(next: Dashboard) {
     registry.set(saveDashboard, next);
   }
 
   #drop(event: DragEvent, beforeId: string | undefined) {
+    // A section being dragged drops on the section itself.
+    if (!event.dataTransfer?.types.includes("application/x-panel-widget")) {
+      return;
+    }
+
     event.preventDefault();
     event.stopPropagation();
 
@@ -214,24 +261,64 @@ export class PanelSection extends LitElement {
     this.target = target;
   }
 
+  #sectionOver(event: DragEvent) {
+    if (
+      !this.editing ||
+      !event.dataTransfer?.types.includes("application/x-panel-section")
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+
+    const { top, height } = this.getBoundingClientRect();
+
+    this.sectionTarget = event.clientY < top + height / 2 ? "before" : "after";
+  }
+
+  #sectionDrop(event: DragEvent) {
+    const sectionId = event.dataTransfer?.getData(
+      "application/x-panel-section",
+    );
+
+    const where = this.sectionTarget;
+
+    this.sectionTarget = undefined;
+
+    if (
+      sectionId === undefined ||
+      sectionId === "" ||
+      where === undefined ||
+      this.dashboard === undefined ||
+      this.section === undefined
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    this.#save(
+      placeSection(
+        this.dashboard,
+        sectionId,
+        where === "before" ? this.section.id : this.nextId,
+      ),
+    );
+  }
+
+  override connectedCallback() {
+    super.connectedCallback();
+    this.addEventListener("dragover", (event) => this.#sectionOver(event));
+    this.addEventListener("dragleave", (event) => {
+      if (event.target === this) {
+        this.sectionTarget = undefined;
+      }
+    });
+    this.addEventListener("drop", (event) => this.#sectionDrop(event));
+  }
+
   #renderTools(dashboard: Dashboard, section: Section) {
     return html`<div class="tools">
-      <button
-        class="icon-button small"
-        title="Move up"
-        ?disabled=${this.first}
-        @click=${() => this.#save(moveSection(dashboard, section.id, -1))}
-      >
-        ${icon("arrow-up")}
-      </button>
-      <button
-        class="icon-button small"
-        title="Move down"
-        ?disabled=${this.last}
-        @click=${() => this.#save(moveSection(dashboard, section.id, 1))}
-      >
-        ${icon("arrow-down")}
-      </button>
       <button
         class="icon-button small"
         title="Edit section"
@@ -272,10 +359,32 @@ export class PanelSection extends LitElement {
       section.title !== "" || section.subtitle !== undefined || this.editing;
 
     return html`
-      <div class=${this.editing ? "editing" : ""}>
+      <div class="${this.editing ? "editing" : ""} ${this.sectionTarget ?? ""}">
         ${
           hasHeader
-            ? html`<header>
+            ? html`<header
+                draggable=${this.editing ? "true" : "false"}
+                @dragstart=${(event: DragEvent) => {
+                  event.dataTransfer?.setData(
+                    "application/x-panel-section",
+                    section.id,
+                  );
+
+                  if (event.dataTransfer !== null) {
+                    event.dataTransfer.effectAllowed = "move";
+                  }
+                }}
+                @dragend=${() => {
+                  this.sectionTarget = undefined;
+                }}
+              >
+                ${
+                  this.editing
+                    ? html`<span class="grip" title="Drag to move"
+                        >${icon("grip")}</span
+                      >`
+                    : nothing
+                }
                 <div>
                   <h2>
                     ${

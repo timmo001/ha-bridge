@@ -136,8 +136,7 @@ export class PanelDashboard extends LitElement {
                     .section=${section}
                     .entities=${states}
                     .editing=${this.editing}
-                    .first=${item.index === 0}
-                    .last=${item.index === sections.length - 1}
+                    .nextId=${sections[item.index + 1]?.id}
                   ></panel-section>`;
             },
           )}

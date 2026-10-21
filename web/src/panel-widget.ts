@@ -3,7 +3,7 @@ import { customElement, property } from "lit/decorators.js";
 import type { Dashboard, Widget } from "../../src/panel/Panel.js";
 import { registry } from "./AtomController.js";
 import { type EntityMap, saveDashboard } from "./client.js";
-import { placeWidget, removeWidget } from "./edit.js";
+import { removeWidget } from "./edit.js";
 import { icon } from "./icons.js";
 import { open } from "./state.js";
 import { controls } from "./ui.js";
@@ -136,28 +136,6 @@ export class PanelWidget extends LitElement {
 
   @property() accessor sectionId = "";
 
-  // Moves the tile one place within its section, for screens that can't drag.
-  #shift(dashboard: Dashboard, widgetId: string, by: number) {
-    const widgets =
-      dashboard.sections.find(({ id }) => id === this.sectionId)?.widgets ?? [];
-
-    const index = widgets.findIndex(({ id }) => id === widgetId);
-    const before = by < 0 ? widgets[index - 1] : widgets[index + 2];
-
-    if (
-      index === -1 ||
-      (by < 0 && index === 0) ||
-      (by > 0 && index === widgets.length - 1)
-    ) {
-      return;
-    }
-
-    registry.set(
-      saveDashboard,
-      placeWidget(dashboard, widgetId, this.sectionId, before?.id),
-    );
-  }
-
   #renderContent(widget: Widget) {
     switch (widget.type) {
       case "entity":
@@ -235,20 +213,6 @@ export class PanelWidget extends LitElement {
           ? html`<div class="edit">
               <span class="grip" title="Drag to move">${icon("grip")}</span>
               <div class="pill">
-                <button
-                  class="icon-button small"
-                  title="Move earlier"
-                  @click=${() => this.#shift(dashboard, widget.id, -1)}
-                >
-                  ${icon("chevron-left")}
-                </button>
-                <button
-                  class="icon-button small"
-                  title="Move later"
-                  @click=${() => this.#shift(dashboard, widget.id, 1)}
-                >
-                  ${icon("chevron-right")}
-                </button>
                 <button
                   class="icon-button small"
                   title="Edit tile"

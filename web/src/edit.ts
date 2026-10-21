@@ -84,28 +84,34 @@ export const saveSection = (dashboard: Dashboard, next: Section): Dashboard =>
 export const removeSection = (dashboard: Dashboard, id: string): Dashboard =>
   mapSections(dashboard, (section) => (section.id === id ? [] : [section]));
 
-const move = <A>(items: ReadonlyArray<A>, from: number, to: number) => {
-  const next = [...items];
-  const [item] = next.splice(from, 1);
+// Moves an item before the one with `beforeId`, or to the end without one.
+export const placeBefore = <A extends { readonly id: string }>(
+  items: ReadonlyArray<A>,
+  id: string,
+  beforeId: string | undefined,
+): ReadonlyArray<A> => {
+  const item = items.find((existing) => existing.id === id);
 
-  if (item !== undefined) {
-    next.splice(Math.max(0, Math.min(to, next.length)), 0, item);
+  if (item === undefined || id === beforeId) {
+    return items;
   }
 
-  return next;
+  const rest = items.filter((existing) => existing.id !== id);
+  const index = rest.findIndex((existing) => existing.id === beforeId);
+
+  return index === -1
+    ? [...rest, item]
+    : [...rest.slice(0, index), item, ...rest.slice(index)];
 };
 
-export const moveSection = (
+export const placeSection = (
   dashboard: Dashboard,
   id: string,
-  by: number,
-): Dashboard => {
-  const from = dashboard.sections.findIndex((section) => section.id === id);
-
-  return from === -1
-    ? dashboard
-    : { ...dashboard, sections: move(dashboard.sections, from, from + by) };
-};
+  beforeId: string | undefined,
+): Dashboard => ({
+  ...dashboard,
+  sections: placeBefore(dashboard.sections, id, beforeId),
+});
 
 export const saveWidget = (
   dashboard: Dashboard,

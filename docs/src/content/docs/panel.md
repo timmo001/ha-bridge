@@ -31,8 +31,11 @@ Each dashboard is a list of sections, and each section is a grid of tiles. Choos
 
 - **Add tile** opens the tile types. Pick one, fill in its editor and watch the preview change.
 - Drag a tile to move it, within a section or to another one.
+- Drag a section by its header to move it above or below another.
 - The pencil on a tile edits it; the bin removes it.
-- Section controls move a section up or down, rename it, set how many columns it has, or delete it.
+- A section's pencil renames it and sets how many columns it has; its bin deletes it.
+
+In settings, drag a dashboard in the list to reorder it.
 - **Add section** adds a section at the end.
 
 A tile's width and height are in grid cells. A section has up to six columns and shows fewer on narrow screens; a tile never spans more columns than are shown.

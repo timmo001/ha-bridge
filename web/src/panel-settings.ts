@@ -17,6 +17,7 @@ import {
   saveSettings,
   settings,
 } from "./client.js";
+import { placeBefore } from "./edit.js";
 import { icon } from "./icons.js";
 import { navigate, open } from "./state.js";
 import { controls } from "./ui.js";
@@ -154,6 +155,41 @@ export class PanelSettings extends LitElement {
           var(--pn-space-5);
       }
 
+      .dashboard {
+        position: relative;
+        cursor: grab;
+      }
+
+      .dashboard.before::before,
+      .dashboard.after::after {
+        content: "";
+        position: absolute;
+        inset: auto var(--pn-space-3);
+        height: 3px;
+        border-radius: 3px;
+        background: var(--pn-accent);
+      }
+
+      .dashboard.before::before {
+        top: -1.5px;
+      }
+
+      .dashboard.after::after {
+        bottom: -1.5px;
+      }
+
+      .grip {
+        display: grid;
+        place-items: center;
+        margin-left: calc(-1 * var(--pn-space-2));
+        color: var(--pn-text-faint);
+      }
+
+      .grip .icon {
+        width: 1rem;
+        height: 1rem;
+      }
+
       .dashboard + .dashboard {
         border-top: 1px solid var(--pn-border);
       }
@@ -194,6 +230,10 @@ export class PanelSettings extends LitElement {
 
   readonly #dashboards = new AtomController(this, () => dashboards);
 
+  // The row a dashboard being dragged would land beside.
+  @state() accessor target:
+    { readonly id: string; readonly where: "before" | "after" } | undefined;
+
   @state() accessor message:
     { readonly ok: boolean; readonly text: string } | undefined;
 
@@ -201,14 +241,26 @@ export class PanelSettings extends LitElement {
     registry.set(saveSettings, { ...this.#settings.value, ...patch });
   }
 
-  #move(index: number, by: number) {
-    const ids = (this.#dashboards.value ?? []).map(({ id }) => id);
-    const [id] = ids.splice(index, 1);
+  #drop(event: DragEvent, targetId: string) {
+    const id = event.dataTransfer?.getData("application/x-panel-dashboard");
+    const where = this.target?.where;
+    const list = this.#dashboards.value ?? [];
 
-    if (id !== undefined) {
-      ids.splice(index + by, 0, id);
-      registry.set(orderDashboards, ids);
+    this.target = undefined;
+
+    if (id === undefined || id === "" || where === undefined) {
+      return;
     }
+
+    event.preventDefault();
+
+    const index = list.findIndex((dashboard) => dashboard.id === targetId);
+    const beforeId = where === "before" ? targetId : list[index + 1]?.id;
+
+    registry.set(
+      orderDashboards,
+      placeBefore(list, id, beforeId).map((dashboard) => dashboard.id),
+    );
   }
 
   #export() {
@@ -362,34 +414,66 @@ export class PanelSettings extends LitElement {
               : repeat(
                   list,
                   (dashboard) => dashboard.id,
-                  (dashboard, index) => {
+                  (dashboard) => {
                     const tiles = dashboard.sections.reduce(
                       (sum, section) => sum + section.widgets.length,
                       0,
                     );
 
-                    return html`<div class="dashboard">
+                    return html`<div
+                      class="dashboard ${
+                        this.target?.id === dashboard.id
+                          ? this.target.where
+                          : ""
+                      }"
+                      draggable="true"
+                      @dragstart=${(event: DragEvent) => {
+                        event.dataTransfer?.setData(
+                          "application/x-panel-dashboard",
+                          dashboard.id,
+                        );
+
+                        if (event.dataTransfer !== null) {
+                          event.dataTransfer.effectAllowed = "move";
+                        }
+                      }}
+                      @dragover=${(event: DragEvent) => {
+                        if (
+                          !event.dataTransfer?.types.includes(
+                            "application/x-panel-dashboard",
+                          ) ||
+                          !(event.currentTarget instanceof HTMLElement)
+                        ) {
+                          return;
+                        }
+
+                        event.preventDefault();
+
+                        const { top, height } =
+                          event.currentTarget.getBoundingClientRect();
+
+                        this.target = {
+                          id: dashboard.id,
+                          where:
+                            event.clientY < top + height / 2
+                              ? "before"
+                              : "after",
+                        };
+                      }}
+                      @dragend=${() => {
+                        this.target = undefined;
+                      }}
+                      @drop=${(event: DragEvent) =>
+                        this.#drop(event, dashboard.id)}
+                    >
+                      <span class="grip" title="Drag to reorder"
+                        >${icon("grip")}</span
+                      >
                       ${icon(dashboard.icon)}
                       <span class="name">${dashboard.name}</span>
                       <span class="count"
                         >${tiles} tile${tiles === 1 ? "" : "s"}</span
                       >
-                      <button
-                        class="icon-button small"
-                        title="Move up"
-                        ?disabled=${index === 0}
-                        @click=${() => this.#move(index, -1)}
-                      >
-                        ${icon("arrow-up")}
-                      </button>
-                      <button
-                        class="icon-button small"
-                        title="Move down"
-                        ?disabled=${index === list.length - 1}
-                        @click=${() => this.#move(index, 1)}
-                      >
-                        ${icon("arrow-down")}
-                      </button>
                       <button
                         class="icon-button small"
                         title="Rename or delete"
