@@ -154,6 +154,7 @@ import {
   type SearchResults,
 } from "@timmo001/effect-ha-bridge";
 import { serve as serveBridge } from "./bridge/Server.js";
+import { layer as servePanel } from "./panel/Server.js";
 import {
   invalidAnswerOptionMessage,
   parseAnswerOptions,
@@ -5245,6 +5246,54 @@ const serve = Command.make("serve", {}, () =>
   ),
 );
 
+const panel = Command.make(
+  "panel",
+  {
+    host: Flag.String("host").pipe(
+      Flag.withDescription(
+        "Address to listen on; anyone who can reach it can control Home Assistant",
+      ),
+      Flag.withDefault("127.0.0.1"),
+    ),
+    port: Flag.Int("port").pipe(
+      Flag.withDescription("Port to listen on"),
+      Flag.withDefault(7291),
+    ),
+    data: Flag.String("data").pipe(
+      Flag.withDescription(
+        "File the dashboards and settings are saved to (default: $XDG_CONFIG_HOME/ha-bridge/panel.json)",
+      ),
+      Flag.optional,
+    ),
+  },
+  (input) =>
+    Effect.gen(function* () {
+      const path = yield* socketPath;
+      const config = yield* BridgeConfig;
+
+      const dataPath = Option.getOrElse(input.data, () =>
+        config.path.replace(/config\.yml$/, "panel.json"),
+      );
+
+      yield* Effect.logInfo(
+        `Serving the panel on http://${input.host}:${input.port}, saving to ${dataPath}`,
+      );
+
+      return yield* Layer.launch(
+        servePanel({
+          socketPath: path,
+          hostname: input.host,
+          port: input.port,
+          dataPath,
+        }),
+      );
+    }).pipe(Effect.provide(BridgeConfig.layer)),
+).pipe(
+  Command.withDescription(
+    "Serve the dashboard panel in the browser, through the bridge socket",
+  ),
+);
+
 const setup = Command.make("setup", {}, () =>
   Effect.gen(function* () {
     const config = yield* BridgeConfig;
@@ -5588,6 +5637,7 @@ const reportCliCause = (cause: Cause.Cause<unknown>) => {
 
 const commands = [
   serve,
+  panel,
   setup,
   get,
   watch,
