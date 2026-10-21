@@ -5,7 +5,7 @@ import type { Settings } from "../../src/panel/Panel.js";
 import { AtomController, registry } from "./AtomController.js";
 import { saveSettings, settings } from "./client.js";
 import { icon } from "./icons.js";
-import { open } from "./state.js";
+import { navigate } from "./state.js";
 import {
   customPalette,
   type Palette,
@@ -239,13 +239,22 @@ export class PanelThemePicker extends LitElement {
                 <button
                   class="icon-button small edit"
                   title="Edit ${theme.name}"
-                  @click=${() => open({ kind: "theme", themeId: theme.id })}
+                  @click=${() =>
+                    navigate({
+                      page: "settings",
+                      section: "themes",
+                      id: theme.id,
+                    })}
                 >
                   ${icon("pencil")}
                 </button>
               </div>`,
           )}
-          <button class="theme new" @click=${() => open({ kind: "theme" })}>
+          <button
+            class="theme new"
+            @click=${() =>
+              navigate({ page: "settings", section: "themes", id: "new" })}
+          >
             ${icon("plus")}
             <span>New theme</span>
           </button>

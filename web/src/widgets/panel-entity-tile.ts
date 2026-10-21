@@ -216,6 +216,9 @@ export class PanelEntityTile extends LitElement {
 
   #pressed = false;
 
+  // Whether the pointer is down on the tile.
+  #holding = false;
+
   #details() {
     if (this.widget !== undefined && this.widget.entityId !== "") {
       open({ kind: "details", entityId: this.widget.entityId });
@@ -248,17 +251,34 @@ export class PanelEntityTile extends LitElement {
     }
   }
 
+  // A long press or right click opens the details once the pointer is let
+  // go. Opened while it's still down, the popover would see the release
+  // outside it as a click away, and close straight after opening.
   #down() {
     this.#pressed = false;
+    this.#holding = true;
     clearTimeout(this.#timer);
     this.#timer = setTimeout(() => {
       this.#pressed = true;
-      this.#details();
     }, longPress);
   }
 
   #up() {
     clearTimeout(this.#timer);
+
+    const opening = this.#holding && this.#pressed;
+
+    this.#holding = false;
+
+    if (opening) {
+      setTimeout(() => this.#details());
+    }
+  }
+
+  #cancel() {
+    clearTimeout(this.#timer);
+    this.#holding = false;
+    this.#pressed = false;
   }
 
   #secondary(widget: EntityWidget) {
@@ -329,12 +349,18 @@ export class PanelEntityTile extends LitElement {
         }
         @pointerdown=${() => this.#down()}
         @pointerup=${() => this.#up()}
-        @pointerleave=${() => this.#up()}
-        @pointercancel=${() => this.#up()}
+        @pointerleave=${() => this.#cancel()}
+        @pointercancel=${() => this.#cancel()}
         @contextmenu=${(event: Event) => {
           event.preventDefault();
           clearTimeout(this.#timer);
-          this.#details();
+
+          // Opens on release, unless it came from the keyboard.
+          if (this.#holding) {
+            this.#pressed = true;
+          } else {
+            this.#details();
+          }
         }}
         @click=${() => {
           if (!this.#pressed) {

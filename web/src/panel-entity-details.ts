@@ -19,7 +19,7 @@ import {
   toggleAction,
 } from "./entity.js";
 import { icon } from "./icons.js";
-import "./panel-sheet.js";
+import "./panel-dialog.js";
 import { now } from "./state.js";
 import { controls } from "./ui.js";
 import "./widgets/panel-history.js";
@@ -559,9 +559,9 @@ export class PanelEntityDetails extends LitElement {
     };
 
     if (state === undefined) {
-      return html`<panel-sheet heading=${this.entityId} bare>
+      return html`<panel-dialog heading=${this.entityId} bare>
         <div class="skeleton" style="height: 4rem"></div>
-      </panel-sheet>`;
+      </panel-dialog>`;
     }
 
     const toggle = toggleAction(state);
@@ -587,7 +587,7 @@ export class PanelEntityDetails extends LitElement {
 
     const controls = this.#controls(state);
 
-    return html`<panel-sheet heading=${update?.name ?? this.entityId} bare>
+    return html`<panel-dialog heading=${update?.name ?? this.entityId} bare>
       <div class="hero">
         <span class="chip ${isActive(state) ? "on" : ""}">
           ${icon(entityIcon(state, state.entity_id))}
@@ -653,7 +653,7 @@ export class PanelEntityDetails extends LitElement {
               </dl>`
           : nothing
       }
-    </panel-sheet>`;
+    </panel-dialog>`;
   }
 }
 

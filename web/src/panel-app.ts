@@ -16,18 +16,16 @@ import { icon } from "./icons.js";
 import "./panel-backdrop.js";
 import "./panel-dashboard.js";
 import "./panel-overlays.js";
+import "./panel-command.js";
+import { openCommands } from "./panel-command.js";
 import "./panel-settings.js";
-import {
-  editing,
-  href,
-  navigate,
-  now,
-  open,
-  prefersDark,
-  route,
-} from "./state.js";
+import { editing, href, navigate, now, prefersDark, route } from "./state.js";
 import { applyPalette, resolvePalette } from "./themes.js";
 import { controls } from "./ui.js";
+
+const settingsHome = { page: "settings", section: "appearance" } as const;
+
+const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
 
 @customElement("panel-app")
 export class PanelApp extends LitElement {
@@ -230,6 +228,63 @@ export class PanelApp extends LitElement {
       @keyframes pulse {
         50% {
           opacity: 0.3;
+        }
+      }
+
+      .search {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--pn-space-2);
+        min-width: 13rem;
+        min-height: 2.5rem;
+        padding: 0 var(--pn-space-2) 0 var(--pn-space-3);
+        border: 1px solid var(--pn-border);
+        border-radius: var(--pn-radius-full);
+        background: var(--pn-surface);
+        backdrop-filter: blur(16px);
+        color: var(--pn-text-faint);
+        font: inherit;
+        font-size: var(--pn-text-s);
+        cursor: pointer;
+        transition: border-color var(--pn-fast) var(--pn-ease);
+      }
+
+      .search:hover {
+        border-color: var(--pn-border-strong);
+        color: var(--pn-text-muted);
+      }
+
+      .search .icon {
+        width: 1rem;
+        height: 1rem;
+      }
+
+      .search span {
+        flex: 1;
+        text-align: left;
+      }
+
+      kbd {
+        padding: 0.125rem 0.4rem;
+        border: 1px solid var(--pn-border);
+        border-radius: var(--pn-radius-s);
+        background: var(--pn-surface-sunken);
+        font-family: var(--pn-font);
+        font-size: var(--pn-text-2xs);
+        font-weight: 600;
+      }
+
+      @media (max-width: 900px) {
+        .search {
+          min-width: 0;
+          width: 2.5rem;
+          padding: 0;
+          justify-content: center;
+        }
+
+        .search span,
+        .search kbd {
+          display: none;
         }
       }
 
@@ -472,11 +527,10 @@ export class PanelApp extends LitElement {
         <div class="rail-end">
           <a
             class="link"
-            href=${href({ page: "settings" })}
+            href=${href(settingsHome)}
             title="Settings"
             aria-current=${onSettings ? "page" : "false"}
-            @click=${(event: MouseEvent) =>
-              this.#link(event, { page: "settings" })}
+            @click=${(event: MouseEvent) => this.#link(event, settingsHome)}
           >
             ${icon("settings")}<span>Settings</span>
           </a>
@@ -556,6 +610,14 @@ export class PanelApp extends LitElement {
                   </span>`
             }
             <div class="actions">
+              <button
+                class="search"
+                aria-keyshortcuts="Meta+K Control+K"
+                @click=${() => openCommands()}
+              >
+                ${icon("search")}<span>Search</span>
+                <kbd>${isMac ? "⌘" : "Ctrl"} K</kbd>
+              </button>
               ${
                 dashboard !== undefined &&
                 current.page === "dashboard" &&
@@ -566,9 +628,10 @@ export class PanelApp extends LitElement {
                           ? html`<button
                               class="button ghost"
                               @click=${() =>
-                                open({
-                                  kind: "dashboard",
-                                  dashboardId: dashboard.id,
+                                navigate({
+                                  page: "settings",
+                                  section: "dashboards",
+                                  id: dashboard.id,
                                 })}
                             >
                               ${icon("settings")} Customise
@@ -590,7 +653,7 @@ export class PanelApp extends LitElement {
           </header>
           ${
             current.page === "settings"
-              ? html`<panel-settings></panel-settings>`
+              ? html`<panel-settings .route=${current}></panel-settings>`
               : dashboard === undefined
                 ? this.#renderEmpty()
                 : html`<panel-dashboard
@@ -601,6 +664,7 @@ export class PanelApp extends LitElement {
         </main>
       </div>
       <panel-overlays></panel-overlays>
+      <panel-command></panel-command>
     `;
   }
 }

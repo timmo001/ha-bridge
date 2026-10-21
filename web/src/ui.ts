@@ -38,6 +38,7 @@ export const controls = css`
     color: var(--pn-text);
     font-size: var(--pn-text-s);
     font-weight: 560;
+    text-decoration: none;
     cursor: pointer;
     transition:
       background var(--pn-fast) var(--pn-ease),

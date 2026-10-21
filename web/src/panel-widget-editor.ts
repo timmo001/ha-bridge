@@ -11,7 +11,7 @@ import { type EntityMap, entities, saveDashboard } from "./client.js";
 import { removeWidget, saveWidget } from "./edit.js";
 import { icon, iconNames } from "./icons.js";
 import "./panel-entity-picker.js";
-import "./panel-sheet.js";
+import "./panel-dialog.js";
 import "./panel-widget.js";
 import { close } from "./state.js";
 import { controls } from "./ui.js";
@@ -465,7 +465,14 @@ export class PanelWidgetEditor extends LitElement {
     const states = this.#entities.value;
 
     if (this.picking && (draft.type === "entity" || draft.type === "history")) {
-      return html`<panel-sheet heading="Choose an entity" flush bare wide>
+      return html`<panel-dialog
+        heading="Choose an entity"
+        flush
+        bare
+        wide
+        tall
+        keep
+      >
         ${
           draft.entityId === ""
             ? nothing
@@ -487,13 +494,15 @@ export class PanelWidgetEditor extends LitElement {
             this.picking = false;
           }}
         ></panel-entity-picker>
-      </panel-sheet>`;
+      </panel-dialog>`;
     }
 
     const previewWidth = Math.min(draft.size.columns, 3) * 9.5;
 
-    return html`<panel-sheet
+    return html`<panel-dialog
       heading=${this.saved ? `Edit ${label.name.toLowerCase()}` : `New ${label.name.toLowerCase()}`}
+      wide
+      keep
     >
       <div class="form">
         <div class="preview">
@@ -544,7 +553,7 @@ export class PanelWidgetEditor extends LitElement {
       >
         ${this.saved ? "Save" : "Add tile"}
       </button>
-    </panel-sheet>`;
+    </panel-dialog>`;
   }
 }
 

@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { Script } from "node:vm";
 
 const web = join(import.meta.dir, "..", "..", "web");
 
@@ -28,6 +29,18 @@ export const bundleWeb = (): Record<string, BundledFile> => {
   }
 
   const dist = join(web, "dist");
+
+  // Bun's bundler can emit a script that doesn't parse, such as a private
+  // field read left in a class whose fields it rewrote. That only shows as
+  // a blank page, so fail the build here instead.
+  for (const name of readdirSync(dist).filter((file) => file.endsWith(".js"))) {
+    try {
+      // Compiles without running.
+      new Script(readFileSync(join(dist, name), "utf8"));
+    } catch (cause) {
+      throw new Error(`The panel's ${name} doesn't parse: ${String(cause)}`);
+    }
+  }
 
   return Object.fromEntries(
     readdirSync(dist).map((name) => {

@@ -1,11 +1,16 @@
 import { css, html, LitElement, nothing, unsafeCSS } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement, property, query, state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
-import type { Dashboard, Section } from "../../src/panel/Panel.js";
+import {
+  type Dashboard,
+  type Section,
+  widgetTypes,
+} from "../../src/panel/Panel.js";
 import { registry } from "./AtomController.js";
 import { type EntityMap, saveDashboard } from "./client.js";
 import { placeSection, placeWidget, removeSection } from "./edit.js";
 import { icon } from "./icons.js";
+import { widgetLabels } from "./panel-widget-editor.js";
 import "./panel-widget.js";
 import { open } from "./state.js";
 import { controls } from "./ui.js";
@@ -183,6 +188,96 @@ export class PanelSection extends LitElement {
           color var(--pn-fast) var(--pn-ease);
       }
 
+      .add-tile {
+        anchor-name: --add-tile;
+      }
+
+      /* Opens beside the Add tile button, flipping to stay on screen. */
+      .menu {
+        position-anchor: --add-tile;
+        position-area: bottom span-right;
+        position-try-fallbacks:
+          flip-block,
+          flip-inline,
+          flip-block flip-inline;
+        inset: auto;
+        width: min(22rem, calc(100vw - 2rem));
+        margin: var(--pn-space-2) 0;
+        padding: var(--pn-space-2);
+        border: 1px solid var(--pn-border-strong);
+        border-radius: var(--pn-radius-l);
+        background: var(--pn-surface-solid);
+        color: var(--pn-text);
+        box-shadow: var(--pn-shadow-l);
+        opacity: 0;
+        transform: translateY(-0.25rem);
+        transition:
+          opacity var(--pn-fast) var(--pn-ease),
+          transform var(--pn-fast) var(--pn-ease),
+          overlay var(--pn-fast) allow-discrete,
+          display var(--pn-fast) allow-discrete;
+      }
+
+      .menu:popover-open {
+        display: grid;
+        opacity: 1;
+        transform: none;
+      }
+
+      @starting-style {
+        .menu:popover-open {
+          opacity: 0;
+          transform: translateY(-0.25rem);
+        }
+      }
+
+      .menu button {
+        display: flex;
+        align-items: center;
+        gap: var(--pn-space-3);
+        padding: var(--pn-space-2);
+        border: none;
+        border-radius: var(--pn-radius-m);
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .menu button:hover,
+      .menu button:focus-visible {
+        background: var(--pn-surface-hover);
+        outline: none;
+      }
+
+      .menu .chip {
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: var(--pn-radius-m);
+        background: var(--pn-accent-soft);
+        color: var(--pn-accent-strong);
+      }
+
+      .menu .names {
+        display: grid;
+        min-width: 0;
+      }
+
+      .menu strong {
+        font-size: var(--pn-text-s);
+        font-weight: 600;
+      }
+
+      .menu small {
+        color: var(--pn-text-muted);
+        font-size: var(--pn-text-xs);
+        line-height: 1.35;
+      }
+
       .add-tile:hover {
         border-color: var(--pn-accent);
         background: var(--pn-accent-soft);
@@ -214,6 +309,8 @@ export class PanelSection extends LitElement {
   @property({ attribute: false }) accessor nextId: string | undefined;
 
   @state() accessor dragging: string | undefined;
+
+  @query("#add-menu") accessor addMenu: HTMLElement | null = null;
 
   @state() accessor target: string | null | undefined;
 
@@ -460,17 +557,44 @@ export class PanelSection extends LitElement {
           ${
             this.editing
               ? html`<button
-                  class="add-tile"
-                  data-span="1"
-                  @click=${() =>
-                    open({
-                      kind: "add-widget",
-                      dashboardId: dashboard.id,
-                      sectionId: section.id,
+                    class="add-tile"
+                    data-span="1"
+                    popovertarget="add-menu"
+                    aria-haspopup="menu"
+                  >
+                    ${icon("plus")} Add tile
+                  </button>
+                  <div
+                    id="add-menu"
+                    class="menu"
+                    popover="auto"
+                    role="menu"
+                    aria-label="Add a tile"
+                  >
+                    ${widgetTypes.map((type) => {
+                      const label = widgetLabels[type];
+
+                      return html`<button
+                        role="menuitem"
+                        @click=${() => {
+                          this.addMenu?.hidePopover();
+
+                          open({
+                            kind: "widget",
+                            dashboardId: dashboard.id,
+                            sectionId: section.id,
+                            type,
+                          });
+                        }}
+                      >
+                        <span class="chip">${icon(label.icon)}</span>
+                        <span class="names">
+                          <strong>${label.name}</strong>
+                          <small>${label.about}</small>
+                        </span>
+                      </button>`;
                     })}
-                >
-                  ${icon("plus")} Add tile
-                </button>`
+                  </div>`
               : section.widgets.length === 0
                 ? html`<div class="empty">Nothing here yet</div>`
                 : nothing
