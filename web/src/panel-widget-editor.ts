@@ -1,4 +1,3 @@
-import { AsyncResult } from "effect/reactivity";
 import { css, html, LitElement, nothing, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import type {

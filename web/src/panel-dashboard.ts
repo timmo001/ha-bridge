@@ -1,12 +1,11 @@
 import { WindowVirtualizerController } from "@tanstack/lit-virtual";
-import { AsyncResult } from "effect/reactivity";
 import { css, html, LitElement, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ref } from "lit/directives/ref.js";
 import { repeat } from "lit/directives/repeat.js";
 import type { Dashboard } from "../../src/panel/Panel.js";
 import { AtomController, registry } from "./AtomController.js";
-import { type EntityMap, entities, saveDashboard } from "./client.js";
+import { entities, saveDashboard } from "./client.js";
 import { dashboardEntities, newSection, saveSection } from "./edit.js";
 import { icon } from "./icons.js";
 import "./panel-section.js";
