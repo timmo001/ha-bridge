@@ -62,8 +62,10 @@ The entity picker lists every entity, sorted by name, domain or state, and filte
 
 Settings apply to every screen showing the panel, and change as soon as you pick them:
 
-- **Theme**: follow the device, or always light or dark.
-- **Accent**: the colour of anything that's on.
+- **Theme**: Panel, Home Assistant, Midnight, Noctis, iOS, Catppuccin (Latte, Frappé, Macchiato and Mocha), Tokyo Night (Night, Storm, Moon and Day), Nord, Dracula, Gruvbox, Rosé Pine (Main, Moon and Dawn), Solarized and One Dark, each shown in its own colours. **New theme** makes your own from a background, card, text and accent colour.
+- **Mode**: for themes with light and dark versions, follow the device or always use one.
+- **Accent**: the theme's own, or one of seven colours laid over any theme.
+- **Background**: the theme's glow, its plain background, a colour, or an image with blur and dim, so tiles stay readable. A dashboard can set its own background in its settings, under **Edit**, then **Rename**.
 - **Density**: comfortable or compact tiles.
 - **24-hour clock**.
 - **Kiosk mode** hides navigation and editing. Open `/settings` to turn it off again.
