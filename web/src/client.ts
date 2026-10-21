@@ -1,6 +1,6 @@
 import type { Action } from "@timmo001/effect-ha";
 import type { EntityUpdate } from "@timmo001/effect-ha-bridge";
-import { Context, Effect, Layer, Schedule, Stream } from "effect";
+import { Context, Effect, Layer, Predicate, Schedule, Stream } from "effect";
 import { AsyncResult, Atom } from "effect/reactivity";
 import { RpcClient, RpcSerialization } from "effect/rpc";
 import type { RpcClientError } from "effect/rpc/RpcClientError";
@@ -114,10 +114,9 @@ export const template = Atom.family((source: string) =>
       Stream.map((update) =>
         "result" in update
           ? {
-              text:
-                typeof update.result === "string"
-                  ? update.result
-                  : JSON.stringify(update.result),
+              text: Predicate.isString(update.result)
+                ? update.result
+                : JSON.stringify(update.result),
             }
           : { error: update.error },
       ),

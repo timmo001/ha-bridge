@@ -486,10 +486,12 @@ export class PanelApp extends LitElement {
     }
 
     const current = this.#route.value;
+
     const dashboard =
       current.page === "dashboard"
         ? (list.find(({ id }) => id === current.id) ?? list[0])
         : undefined;
+
     const { kiosk } = this.#settings.value;
     const isEditing = this.#editing.value && !kiosk;
 

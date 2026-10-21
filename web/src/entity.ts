@@ -117,7 +117,7 @@ export const toggleAction = (state: EntityState): Action | undefined => {
   }
 };
 
-const deviceClassIcons: Readonly<Record<string, string>> = {
+const deviceClassIcons = {
   temperature: "thermometer",
   humidity: "droplets",
   moisture: "droplets",
@@ -147,9 +147,9 @@ const deviceClassIcons: Readonly<Record<string, string>> = {
   shutter: "blinds",
   curtain: "blinds",
   awning: "blinds",
-};
+} satisfies Record<string, string>;
 
-const domainIcons: Readonly<Record<string, string>> = {
+const domainIcons = {
   light: "lightbulb",
   switch: "toggle",
   input_boolean: "toggle",
@@ -188,7 +188,7 @@ const domainIcons: Readonly<Record<string, string>> = {
   valve: "waves",
   lawn_mower: "trees",
   remote: "tv",
-};
+} satisfies Record<string, string>;
 
 // The icon a tile shows: its own, then one for its device class, then its
 // domain's.
@@ -222,16 +222,23 @@ export const entityIcon = (
     }
 
     const deviceClass = stringAttribute(state, "device_class");
+
     const fromClass =
-      deviceClass === undefined ? undefined : deviceClassIcons[deviceClass];
+      deviceClass === undefined
+        ? undefined
+        : lookup(deviceClassIcons, deviceClass);
 
     if (fromClass !== undefined) {
       return fromClass;
     }
   }
 
-  return domainIcons[domain] ?? "circle-dot";
+  return lookup(domainIcons, domain) ?? "circle-dot";
 };
+
+// The value for a key the record may not have.
+const lookup = <V>(record: Readonly<Record<string, V>>, key: string) =>
+  Object.hasOwn(record, key) ? record[key] : undefined;
 
 const words = (value: string) =>
   value.replaceAll("_", " ").replace(/^./, (first) => first.toUpperCase());
@@ -303,7 +310,7 @@ export const stateText = (state: EntityState | undefined) => {
   return words(state.state);
 };
 
-const binaryLabels: Readonly<Record<string, readonly [string, string]>> = {
+const binaryLabels = {
   door: ["Open", "Closed"],
   garage_door: ["Open", "Closed"],
   window: ["Open", "Closed"],
@@ -319,10 +326,14 @@ const binaryLabels: Readonly<Record<string, readonly [string, string]>> = {
   lock: ["Unlocked", "Locked"],
   plug: ["Plugged in", "Unplugged"],
   problem: ["Problem", "OK"],
-};
+} satisfies Record<string, readonly [string, string]>;
 
 const binaryText = (state: EntityState) => {
-  const labels = binaryLabels[stringAttribute(state, "device_class") ?? ""];
+  const labels = lookup(
+    binaryLabels,
+    stringAttribute(state, "device_class") ?? "",
+  );
+
   const on = state.state === "on";
 
   return labels === undefined ? (on ? "On" : "Off") : labels[on ? 0 : 1];

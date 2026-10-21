@@ -1,5 +1,5 @@
-import { Schema } from "effect";
-import { css, html, LitElement, nothing } from "lit";
+import { Exit, Schema } from "effect";
+import { css, html, LitElement, nothing, type TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
 import {
@@ -216,6 +216,7 @@ export class PanelSettings extends LitElement {
       settings: this.#settings.value,
       dashboards: this.#dashboards.value ?? [],
     });
+
     const link = document.createElement("a");
 
     link.href = URL.createObjectURL(
@@ -228,6 +229,7 @@ export class PanelSettings extends LitElement {
 
   async #import(event: Event) {
     const input = event.target;
+
     const file =
       input instanceof HTMLInputElement ? input.files?.[0] : undefined;
 
@@ -238,7 +240,7 @@ export class PanelSettings extends LitElement {
     const decoded = Schema.decodeUnknownExit(PanelFile)(await file.text());
     input.value = "";
 
-    if (decoded._tag === "Failure") {
+    if (Exit.isFailure(decoded)) {
       this.message = { ok: false, text: "That file isn't a panel export." };
 
       return;
@@ -258,7 +260,7 @@ export class PanelSettings extends LitElement {
     };
   }
 
-  #item(title: string, about: string, control: unknown) {
+  #item(title: string, about: string, control: TemplateResult) {
     return html`<div class="item">
       <div class="label">
         <strong>${title}</strong>

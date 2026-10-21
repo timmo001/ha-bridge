@@ -18,9 +18,11 @@ const columnStep = 9.5;
 
 const gridRules = Array.from({ length: 6 }, (_, step) => {
   const fit = step + 1;
+
   const rules = Array.from({ length: 6 }, (_, c) => {
     const columns = c + 1;
     const shown = Math.min(columns, fit);
+
     const spans = Array.from(
       { length: 6 },
       (_, s) =>

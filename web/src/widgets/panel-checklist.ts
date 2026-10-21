@@ -1,3 +1,4 @@
+import { Predicate } from "effect";
 import { css, html, LitElement, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
@@ -199,7 +200,7 @@ export class PanelChecklist extends LitElement {
 
           const text = new FormData(form).get("text");
 
-          if (typeof text === "string" && text.trim() !== "") {
+          if (Predicate.isString(text) && text.trim() !== "") {
             this.#save([
               ...widget.items,
               { id: newId(), text: text.trim(), done: false },

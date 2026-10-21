@@ -70,6 +70,8 @@ const columns = column.columns([
 
 const rowHeight = 56;
 
+const ariaSort = { asc: "ascending", desc: "descending" } as const;
+
 // Every Home Assistant entity in a sortable, searchable table. Thousands of
 // entities scroll smoothly, as only the rows in view are rendered.
 @customElement("panel-entity-picker")
@@ -329,10 +331,12 @@ export class PanelEntityPicker extends LitElement {
     }
 
     const all = this.#data(result.value);
+
     const allowed =
       this.domains === undefined
         ? all
         : all.filter((row) => this.domains?.includes(row.domain));
+
     const domainCounts = new Map<string, number>();
 
     for (const row of allowed) {
@@ -342,6 +346,7 @@ export class PanelEntityPicker extends LitElement {
     const shownDomains = [...domainCounts.entries()].sort(
       (a, b) => b[1] - a[1],
     );
+
     const data =
       this.domain === undefined
         ? allowed
@@ -424,13 +429,7 @@ export class PanelEntityPicker extends LitElement {
 
           return html`<button
             role="columnheader"
-            aria-sort=${
-              sorted === false
-                ? "none"
-                : sorted === "asc"
-                  ? "ascending"
-                  : "descending"
-            }
+            aria-sort=${sorted === false ? "none" : ariaSort[sorted]}
             @click=${header.column.getToggleSortingHandler()}
           >
             ${FlexRender({ header })}

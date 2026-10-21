@@ -144,6 +144,7 @@ export class PanelHistory extends LitElement {
     const to = Date.now();
     const from = to - hours * 3_600_000;
     const live = Number(this.entity?.state.state);
+
     const all = Number.isFinite(live)
       ? [...points, { time: to, value: live }]
       : points;
@@ -154,6 +155,7 @@ export class PanelHistory extends LitElement {
 
     const path = line(all, from, to);
     const values = all.map(({ value }) => value);
+
     const format = new Intl.NumberFormat(undefined, {
       maximumFractionDigits: 1,
     });

@@ -93,7 +93,7 @@ import {
 
 // Every icon the panel can show, by Lucide's kebab-case name. Dashboards and
 // entity tiles can pick any of these.
-export const icons: Readonly<Record<string, IconNode>> = {
+export const icons = {
   activity: Activity,
   "air-vent": AirVent,
   "alarm-clock": AlarmClock,
@@ -182,7 +182,10 @@ export const icons: Readonly<Record<string, IconNode>> = {
   wind: Wind,
   x: X,
   zap: Zap,
-};
+} satisfies Record<string, IconNode>;
+
+const isIconName = (name: string): name is keyof typeof icons =>
+  Object.hasOwn(icons, name);
 
 export const iconNames = Object.keys(icons).sort();
 
@@ -209,7 +212,7 @@ const renderNode = ([tag, attributes]: IconNode[number]) => {
 
 // An icon by name, falling back to a dot for names the panel doesn't know.
 export const icon = (name: string): SVGTemplateResult => {
-  const node = icons[name] ?? CircleDot;
+  const node = isIconName(name) ? icons[name] : CircleDot;
 
   return svg`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${node.map(renderNode)}</svg>`;
 };

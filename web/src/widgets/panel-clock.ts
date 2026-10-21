@@ -61,6 +61,7 @@ export class PanelClock extends LitElement {
 
     const date = new Date(this.#now.value);
     const hour12 = !this.#settings.value.clock24h;
+
     const time = new Intl.DateTimeFormat(undefined, {
       hour: "numeric",
       minute: "2-digit",

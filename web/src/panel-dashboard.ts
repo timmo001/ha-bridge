@@ -91,9 +91,11 @@ export class PanelDashboard extends LitElement {
     }
 
     const result = this.#entities.value;
+
     const states: EntityMap = AsyncResult.isSuccess(result)
       ? result.value
       : new Map();
+
     const sections = dashboard.sections;
     const virtualizer = this.#virtualizer.getVirtualizer();
 

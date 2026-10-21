@@ -134,6 +134,7 @@ export class PanelOverlays extends LitElement {
     }
 
     this.#shown = current;
+
     const dashboard = this.#find(
       "dashboardId" in current ? current.dashboardId : undefined,
     );
@@ -328,9 +329,11 @@ export class PanelOverlays extends LitElement {
         </panel-sheet>`;
       case "widget": {
         const dashboard = this.#find(current.dashboardId);
+
         const existing = dashboard?.sections
           .flatMap((section) => section.widgets)
           .find(({ id }) => id === current.widgetId);
+
         const widget =
           existing ??
           (current.type === undefined ? undefined : newWidget(current.type));
@@ -347,6 +350,7 @@ export class PanelOverlays extends LitElement {
               ></panel-widget-editor>`,
             );
       }
+
       case "section": {
         const dashboard = this.#find(current.dashboardId);
 
@@ -354,6 +358,7 @@ export class PanelOverlays extends LitElement {
           ? nothing
           : this.#renderSection(dashboard, this.sectionDraft);
       }
+
       case "dashboard":
         return this.dashboardDraft === undefined
           ? nothing

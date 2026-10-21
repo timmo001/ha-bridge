@@ -280,10 +280,12 @@ export class PanelEntityTile extends LitElement {
     const compact = widget.size.rows === 1 && widget.size.columns >= 2;
     const roomy = widget.size.rows >= 2;
     const name = entityName(update, widget.entityId, widget.title);
+
     const numeric =
       state !== undefined &&
       state.state !== "" &&
       Number.isFinite(Number(state.state));
+
     const domain = domainOf(widget.entityId);
 
     return html`

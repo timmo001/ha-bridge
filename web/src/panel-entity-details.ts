@@ -1,4 +1,5 @@
 import type { Action } from "@timmo001/effect-ha";
+import { Predicate } from "effect";
 import { AsyncResult } from "effect/reactivity";
 import { css, html, LitElement, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
@@ -307,6 +308,7 @@ export class PanelEntityDetails extends LitElement {
           }
         `;
       }
+
       case "cover": {
         const position = numberAttribute(state, "current_position");
 
@@ -350,6 +352,7 @@ export class PanelEntityDetails extends LitElement {
           }
         `;
       }
+
       case "climate":
       case "water_heater": {
         const temperature = numberAttribute(state, "temperature");
@@ -410,6 +413,7 @@ export class PanelEntityDetails extends LitElement {
           }
         `;
       }
+
       case "media_player": {
         const volume = numberAttribute(state, "volume_level");
         const title = stringAttribute(state, "media_title");
@@ -472,6 +476,7 @@ export class PanelEntityDetails extends LitElement {
           }
         `;
       }
+
       case "fan": {
         const percentage = numberAttribute(state, "percentage");
 
@@ -491,6 +496,7 @@ export class PanelEntityDetails extends LitElement {
               (value) => `${value}%`,
             );
       }
+
       case "input_number":
       case "number": {
         const min = numberAttribute(state, "min") ?? 0;
@@ -510,6 +516,7 @@ export class PanelEntityDetails extends LitElement {
           (value) => String(value),
         );
       }
+
       case "input_select":
       case "select": {
         const options = attributeList(state, "options");
@@ -531,6 +538,7 @@ export class PanelEntityDetails extends LitElement {
           )}
         </div>`;
       }
+
       default:
         return nothing;
     }
@@ -538,11 +546,14 @@ export class PanelEntityDetails extends LitElement {
 
   override render() {
     const result = this.#entities.value;
+
     const update = AsyncResult.isSuccess(result)
       ? result.value.get(this.entityId)
       : undefined;
+
     const state = update?.state;
     const numeric = state !== undefined && Number.isFinite(Number(state.state));
+
     const historyWidget: HistoryWidget = {
       id: "details",
       type: "history",
@@ -559,18 +570,25 @@ export class PanelEntityDetails extends LitElement {
 
     const toggle = toggleAction(state);
     const domain = domainOf(state.entity_id);
+
     const switchable =
       canToggle(state.entity_id) &&
       toggle !== undefined &&
       !["button", "input_button", "scene", "media_player", "cover"].includes(
         domain,
       );
-    const attributes = Object.entries(state.attributes ?? {}).filter(
+
+    // Plain values only; lists and objects read poorly as one line.
+    const attributes = Object.entries(state.attributes ?? {}).flatMap(
       ([name, value]) =>
         !hiddenAttributes.has(name) &&
-        value !== null &&
-        typeof value !== "object",
+        (Predicate.isString(value) ||
+          Predicate.isNumber(value) ||
+          Predicate.isBoolean(value))
+          ? [[name, String(value)] as const]
+          : [],
     );
+
     const controls = this.#controls(state);
 
     return html`<panel-sheet heading=${update?.name ?? this.entityId} bare>
@@ -634,7 +652,7 @@ export class PanelEntityDetails extends LitElement {
                 ${attributes.map(
                   ([name, value]) =>
                     html`<dt>${name.replaceAll("_", " ")}</dt>
-                      <dd>${String(value)}</dd>`,
+                      <dd>${value}</dd>`,
                 )}
               </dl>`
           : nothing
@@ -646,9 +664,7 @@ export class PanelEntityDetails extends LitElement {
 const attributeList = (state: EntityState, name: string) => {
   const value = state.attributes?.[name];
 
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === "string")
-    : [];
+  return Array.isArray(value) ? value.filter(Predicate.isString) : [];
 };
 
 declare global {

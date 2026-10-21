@@ -1,3 +1,4 @@
+import { AsyncResult } from "effect/reactivity";
 import { css, html, LitElement, nothing, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import type {
@@ -5,7 +6,6 @@ import type {
   SecondaryInfo,
   TapAction,
   Widget,
-  WidgetSize,
 } from "../../src/panel/Panel.js";
 import { AtomController, registry } from "./AtomController.js";
 import { type EntityMap, entities, saveDashboard } from "./client.js";
@@ -205,11 +205,8 @@ export class PanelWidgetEditor extends LitElement {
     }
   }
 
-  #set(patch: Partial<Widget>) {
-    if (this.draft !== undefined) {
-      // The patch only ever holds fields of the draft's own type.
-      this.draft = { ...this.draft, ...patch } as Widget;
-    }
+  #put(next: Widget) {
+    this.draft = next;
   }
 
   #save() {
@@ -281,15 +278,16 @@ export class PanelWidgetEditor extends LitElement {
     </div>`;
   }
 
-  #size(size: WidgetSize) {
+  #size(draft: Widget) {
+    const size = draft.size;
     const steps = [1, 2, 3, 4, 5, 6].map((n) => [n, String(n)] as const);
 
     return html`
       ${this.#segmented("Width", steps, size.columns, (columns) =>
-        this.#set({ size: { ...size, columns } }),
+        this.#put({ ...draft, size: { ...size, columns } }),
       )}
       ${this.#segmented("Height", steps, size.rows, (rows) =>
-        this.#set({ size: { ...size, rows } }),
+        this.#put({ ...draft, size: { ...size, rows } }),
       )}
     `;
   }
@@ -319,7 +317,8 @@ export class PanelWidgetEditor extends LitElement {
     const title = this.#text(
       "Title",
       draft.title ?? "",
-      (value) => this.#set({ title: value === "" ? undefined : value }),
+      (value) =>
+        this.#put({ ...draft, title: value === "" ? undefined : value }),
       {
         placeholder:
           draft.type === "entity" || draft.type === "history"
@@ -333,19 +332,19 @@ export class PanelWidgetEditor extends LitElement {
         return html`
           ${this.#entityField(draft.entityId, states)} ${title}
           ${this.#segmented("When tapped", tapLabels, draft.tap, (tap) =>
-            this.#set({ tap }),
+            this.#put({ ...draft, tap }),
           )}
           ${this.#segmented(
             "Second line",
             secondaryLabels,
             draft.secondary,
-            (secondary) => this.#set({ secondary }),
+            (secondary) => this.#put({ ...draft, secondary }),
           )}
           ${this.#toggle("Custom icon", this.customIcon, (on) => {
             this.customIcon = on;
 
             if (!on) {
-              this.#set({ icon: undefined });
+              this.#put({ ...draft, icon: undefined });
             }
           })}
           ${
@@ -357,7 +356,7 @@ export class PanelWidgetEditor extends LitElement {
                         type="button"
                         title=${name}
                         aria-pressed=${draft.icon === name ? "true" : "false"}
-                        @click=${() => this.#set({ icon: name })}
+                        @click=${() => this.#put({ ...draft, icon: name })}
                       >
                         ${icon(name)}
                       </button>`,
@@ -365,7 +364,7 @@ export class PanelWidgetEditor extends LitElement {
                 </div>`
               : nothing
           }
-          ${this.#size(draft.size)}
+          ${this.#size(draft)}
         `;
       case "history":
         return html`
@@ -379,9 +378,9 @@ export class PanelWidgetEditor extends LitElement {
               [168, "Week"],
             ],
             draft.hours,
-            (hours) => this.#set({ hours }),
+            (hours) => this.#put({ ...draft, hours }),
           )}
-          ${this.#size(draft.size)}
+          ${this.#size(draft)}
         `;
       case "markdown":
         return html`
@@ -393,7 +392,7 @@ export class PanelWidgetEditor extends LitElement {
               placeholder="# Good morning&#10;It's {{ states('sensor.outside_temperature') }}° outside."
               @input=${(event: InputEvent) => {
                 if (event.target instanceof HTMLTextAreaElement) {
-                  this.#set({ content: event.target.value });
+                  this.#put({ ...draft, content: event.target.value });
                 }
               }}
             ></textarea>
@@ -401,27 +400,32 @@ export class PanelWidgetEditor extends LitElement {
               >Markdown, rendered by Home Assistant as a template first.</small
             >
           </label>
-          ${this.#size(draft.size)}
+          ${this.#size(draft)}
         `;
       case "clock":
         return html`
           ${title}
           ${this.#toggle("Show the date", draft.showDate, (showDate) =>
-            this.#set({ showDate }),
+            this.#put({ ...draft, showDate }),
           )}
           ${this.#toggle("Show seconds", draft.showSeconds, (showSeconds) =>
-            this.#set({ showSeconds }),
+            this.#put({ ...draft, showSeconds }),
           )}
-          ${this.#size(draft.size)}
+          ${this.#size(draft)}
         `;
       case "checklist":
-        return html`${title} ${this.#size(draft.size)}`;
+        return html`${title} ${this.#size(draft)}`;
       case "image":
         return html`
-          ${this.#text("Image URL", draft.url, (url) => this.#set({ url }), {
-            type: "url",
-            placeholder: "https://",
-          })}
+          ${this.#text(
+            "Image URL",
+            draft.url,
+            (url) => this.#put({ ...draft, url }),
+            {
+              type: "url",
+              placeholder: "https://",
+            },
+          )}
           ${title}
           ${this.#segmented(
             "Fit",
@@ -430,18 +434,23 @@ export class PanelWidgetEditor extends LitElement {
               ["contain", "Fit"],
             ],
             draft.fit,
-            (fit) => this.#set({ fit }),
+            (fit) => this.#put({ ...draft, fit }),
           )}
-          ${this.#size(draft.size)}
+          ${this.#size(draft)}
         `;
       case "frame":
         return html`
-          ${this.#text("Page URL", draft.url, (url) => this.#set({ url }), {
-            type: "url",
-            placeholder: "https://",
-            hint: "Some sites refuse to be embedded.",
-          })}
-          ${title} ${this.#size(draft.size)}
+          ${this.#text(
+            "Page URL",
+            draft.url,
+            (url) => this.#put({ ...draft, url }),
+            {
+              type: "url",
+              placeholder: "https://",
+              hint: "Some sites refuse to be embedded.",
+            },
+          )}
+          ${title} ${this.#size(draft)}
         `;
     }
   }
@@ -455,8 +464,10 @@ export class PanelWidgetEditor extends LitElement {
 
     const label = widgetLabels[draft.type];
     const result = this.#entities.value;
-    const states: EntityMap =
-      result._tag === "Success" ? result.value : new Map();
+
+    const states: EntityMap = AsyncResult.isSuccess(result)
+      ? result.value
+      : new Map();
 
     if (this.picking && (draft.type === "entity" || draft.type === "history")) {
       return html`<panel-sheet heading="Choose an entity" flush bare wide>
@@ -474,7 +485,7 @@ export class PanelWidgetEditor extends LitElement {
           .value=${draft.entityId}
           .domains=${draft.type === "history" ? numericDomains : undefined}
           @pick=${(event: CustomEvent<string>) => {
-            this.#set({ entityId: event.detail });
+            this.#put({ ...draft, entityId: event.detail });
             this.picking = false;
           }}
         ></panel-entity-picker>
