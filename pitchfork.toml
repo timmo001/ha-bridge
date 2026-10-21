@@ -12,3 +12,11 @@ port = { expect = [7290], bump = 10 }
 ready_cmd = 'curl -fsS "http://127.0.0.1:$PORT/"'
 health_cmd = 'curl -fsS "http://127.0.0.1:$PORT/"'
 retry = true
+
+# The dashboard panel against the dev bridge. Restart it after web changes,
+# which the bundle picks up when the server loads.
+[daemons.panel]
+run = 'HA_BRIDGE_SOCK="$XDG_RUNTIME_DIR/ha-bridge/dev.sock" exec bun run --watch src/index.ts panel --port "$PORT"'
+port = { expect = [7291], bump = 10 }
+ready_cmd = 'curl -fsS "http://127.0.0.1:$PORT/"'
+retry = true

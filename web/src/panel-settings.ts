@@ -237,7 +237,7 @@ export class PanelSettings extends LitElement {
       return;
     }
 
-    const decoded = Schema.decodeUnknownExit(PanelFile)(await file.text());
+    const decoded = Schema.decodeExit(PanelFile)(await file.text());
     input.value = "";
 
     if (Exit.isFailure(decoded)) {
