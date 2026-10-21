@@ -27,6 +27,7 @@
 - Test through that HTTPS address, in the browser, with curl and anywhere else. Never add the proxy's own port, such as `:8443`, even if Pitchfork prints one: that means the 443 redirect is missing (it's lost on reboot), so run `pitchfork proxy doctor`, then `pitchfork proxy setup -y` to restore it. Use the `127.0.0.1` port only when the proxy isn't running.
 - Run a local bridge from source with `mise run serve:bridge`, managed the same way with `serve:bridge:status`, `serve:bridge:logs`, `serve:bridge:restart` and `serve:bridge:stop`. It runs `serve` in watch mode on `$XDG_RUNTIME_DIR/ha-bridge/dev.sock`, so the installed service keeps its socket. Point clients at it with `HA_BRIDGE_SOCK`.
 - Run the dashboard panel against that bridge with `mise run serve:panel` (and `serve:panel:status`, `:logs`, `:restart`, `:stop`). It serves `http://127.0.0.1:7291/`, or the next free port. Restart it after changing `web/`, as the page is bundled when the server loads.
+- To work on the panel without Home Assistant, run `mise run serve:panel:demo` (stop it with `serve:panel:demo:stop`): the panel against a demo bridge with made-up entities, on `http://127.0.0.1:7320/`. Its bridge and fixtures are in `scripts/panel-demo/`. After a visible UI change, refresh the docs screenshots with `mise run panel:screenshots` while it runs.
 
 ## Validation
 

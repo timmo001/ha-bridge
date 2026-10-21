@@ -154,6 +154,32 @@ run = "pitchfork restart panel"
 description = "Stop the background panel"
 run = "pitchfork stop panel"
 
+[tasks."panel:demo"]
+description = "Run the dashboard panel against a demo bridge with made-up entities, in the foreground"
+depends = ["install"]
+usage = '''
+flag "--port <port>" default="7320" help="Port the panel listens on"
+flag "--reset" help="Start again from the demo dashboards"
+'''
+run = 'bun scripts/panel-demo.ts --port "$usage_port" ${usage_reset:+--reset}'
+
+[tasks."serve:panel:demo"]
+description = "Start the demo panel in the background through Pitchfork"
+depends = ["install"]
+run = "pitchfork start panel-demo"
+
+[tasks."serve:panel:demo:stop"]
+description = "Stop the background demo panel"
+run = "pitchfork stop panel-demo"
+
+[tasks."panel:screenshots"]
+description = "Screenshot the running demo panel into docs/src/assets/panel"
+depends = ["install"]
+usage = '''
+flag "--url <url>" default="http://127.0.0.1:7320" help="The demo panel to screenshot"
+'''
+run = 'bun scripts/panel-screenshots.ts --url "$usage_url"'
+
 [tasks."serve:docs"]
 description = "Start the docs dev server in the background through Pitchfork"
 run = "pitchfork start docs"

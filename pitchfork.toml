@@ -20,3 +20,11 @@ run = 'HA_BRIDGE_SOCK="$XDG_RUNTIME_DIR/ha-bridge/dev.sock" exec bun run --watch
 port = { expect = [7291], bump = 10 }
 ready_cmd = 'curl -fsS "http://127.0.0.1:$PORT/"'
 retry = true
+
+# The panel against a demo bridge with made-up entities, for trying it out and
+# screenshots without Home Assistant.
+[daemons.panel-demo]
+run = 'exec bun scripts/panel-demo.ts --port "$PORT"'
+port = { expect = [7320], bump = 10 }
+ready_cmd = 'curl -fsS "http://127.0.0.1:$PORT/"'
+retry = true

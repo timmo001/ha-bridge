@@ -13,6 +13,8 @@ ha-bridge panel
 
 Then open `http://127.0.0.1:7291`.
 
+![A dashboard in the Panel theme, with a clock, sensors, a note, light and media tiles, and history charts](../../assets/panel/panel-dark.jpg)
+
 ## Options
 
 | Flag | Default | What it does |
@@ -39,6 +41,8 @@ Each dashboard is a list of sections, and each section is a grid of tiles. Choos
 
 In settings, drag a dashboard in the list to reorder it.
 
+![Editing a dashboard: drag handles on each section, tile controls and Add tile](../../assets/panel/edit-mode.jpg)
+
 A tile's width and height are in grid cells. A section has up to six columns and shows fewer on narrow screens; a tile never spans more columns than are shown.
 
 Dashboards with many sections stay quick, as only the sections near the screen are drawn.
@@ -57,6 +61,8 @@ Dashboards with many sections stay quick, as only the sections near the screen a
 
 An entity's details show controls for its domain: brightness and colour temperature for lights, position for covers, target temperature and mode for climate, playback and volume for media players, speed for fans, values and options for numbers and selects. Numeric entities also show their last day of history.
 
+![A light's details, with brightness and colour temperature](../../assets/panel/light-details.jpg)
+
 The entity picker lists every entity, sorted by name, domain or state, and filters as you type or by domain.
 
 ## Settings
@@ -71,7 +77,15 @@ Settings apply to every screen showing the panel, and change as soon as you pick
 - **24-hour clock**.
 - **Kiosk mode** hides navigation and editing. Open `/settings` to turn it off again.
 
+![The theme gallery, with each theme shown in its own colours](../../assets/panel/settings.jpg)
+
 **Export** downloads every dashboard and setting as one JSON file, and **Import** restores one. Imported dashboards replace those with the same ID.
+
+## Trying it without Home Assistant
+
+From a checkout, `mise run panel:demo` runs the panel against a demo bridge with made-up lights, sensors, a lock, a speaker and more, on `http://127.0.0.1:7320`. Actions change the demo's entities, so tiles respond, and changes to dashboards are kept between runs. `mise run panel:demo --reset` starts again from the demo dashboards, and `mise run serve:panel:demo` runs it in the background through Pitchfork.
+
+With the demo running, `mise run panel:screenshots` captures the screenshots on this page into `docs/src/assets/panel`. It needs Playwright's Chromium, from `bunx playwright install chromium`.
 
 ## Running it as a service
 
