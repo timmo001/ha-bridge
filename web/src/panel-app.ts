@@ -543,7 +543,7 @@ export class PanelApp extends LitElement {
                                   dashboardId: dashboard.id,
                                 })}
                             >
-                              ${icon("pencil")} Rename
+                              ${icon("settings")} Customise
                             </button>`
                           : nothing
                       }

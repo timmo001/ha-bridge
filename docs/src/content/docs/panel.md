@@ -34,9 +34,10 @@ Each dashboard is a list of sections, and each section is a grid of tiles. Choos
 - Drag a section by its header to move it above or below another.
 - The pencil on a tile edits it; the bin removes it.
 - A section's pencil renames it and sets how many columns it has; its bin deletes it.
+- **Add section** adds a section at the end.
+- **Customise** sets the dashboard's name, icon and its own background, or deletes it.
 
 In settings, drag a dashboard in the list to reorder it.
-- **Add section** adds a section at the end.
 
 A tile's width and height are in grid cells. A section has up to six columns and shows fewer on narrow screens; a tile never spans more columns than are shown.
 
@@ -65,7 +66,7 @@ Settings apply to every screen showing the panel, and change as soon as you pick
 - **Theme**: Panel, Home Assistant, Midnight, Noctis, iOS, Catppuccin (Latte, Frappé, Macchiato and Mocha), Tokyo Night (Night, Storm, Moon and Day), Nord, Dracula, Gruvbox, Rosé Pine (Main, Moon and Dawn), Solarized and One Dark, each shown in its own colours. **New theme** makes your own from a background, card, text and accent colour.
 - **Mode**: for themes with light and dark versions, follow the device or always use one.
 - **Accent**: the theme's own, or one of seven colours laid over any theme.
-- **Background**: the theme's glow, its plain background, a colour, or an image with blur and dim, so tiles stay readable. A dashboard can set its own background in its settings, under **Edit**, then **Rename**.
+- **Background**: the theme's glow, its plain background, a colour, or an image with blur and dim, so tiles stay readable. A dashboard can set its own, under **Edit**, then **Customise**.
 - **Density**: comfortable or compact tiles.
 - **24-hour clock**.
 - **Kiosk mode** hides navigation and editing. Open `/settings` to turn it off again.

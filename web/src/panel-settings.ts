@@ -525,7 +525,7 @@ export class PanelSettings extends LitElement {
                       >
                       <button
                         class="icon-button small"
-                        title="Rename or delete"
+                        title="Customise"
                         @click=${() =>
                           open({
                             kind: "dashboard",
