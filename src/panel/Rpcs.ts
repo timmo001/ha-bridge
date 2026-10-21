@@ -1,6 +1,8 @@
 import { Schema } from "effect";
 import { Rpc, RpcGroup } from "effect/rpc";
-import { BridgeRpcs } from "@timmo001/effect-ha-bridge";
+// Straight from the file rather than the package, whose index also brings in
+// the Node socket client, which the browser bundle can't use.
+import { BridgeRpcs } from "../../packages/client/src/Rpcs.js";
 import { Dashboard, PanelError, PanelState, Settings } from "./Panel.js";
 
 // What the panel saves: its dashboards and settings.

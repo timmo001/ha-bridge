@@ -163,32 +163,39 @@ export const history = Atom.family((key: string) => {
 
 // Mutations stay mounted, so one set from an event handler runs to the end.
 export const callAction = runtime
-  .fn((action: Action) =>
-    PanelClient.use((client) => client.CallAction(action)),
+  .fn(
+    (action: Action) => PanelClient.use((client) => client.CallAction(action)),
+    { concurrent: true },
   )
   .pipe(Atom.keepAlive);
 
 export const saveDashboard = runtime
-  .fn((dashboard: Dashboard) =>
-    PanelClient.use((client) => client.SaveDashboard(dashboard)),
+  .fn(
+    (dashboard: Dashboard) =>
+      PanelClient.use((client) => client.SaveDashboard(dashboard)),
+    { concurrent: true },
   )
   .pipe(Atom.keepAlive);
 
 export const deleteDashboard = runtime
-  .fn((id: string) =>
-    PanelClient.use((client) => client.DeleteDashboard({ id })),
+  .fn(
+    (id: string) => PanelClient.use((client) => client.DeleteDashboard({ id })),
+    { concurrent: true },
   )
   .pipe(Atom.keepAlive);
 
 export const orderDashboards = runtime
-  .fn((ids: ReadonlyArray<string>) =>
-    PanelClient.use((client) => client.OrderDashboards({ ids })),
+  .fn(
+    (ids: ReadonlyArray<string>) =>
+      PanelClient.use((client) => client.OrderDashboards({ ids })),
+    { concurrent: true },
   )
   .pipe(Atom.keepAlive);
 
 export const saveSettings = runtime
-  .fn((next: Settings) =>
-    PanelClient.use((client) => client.SaveSettings(next)),
+  .fn(
+    (next: Settings) => PanelClient.use((client) => client.SaveSettings(next)),
+    { concurrent: true },
   )
   .pipe(Atom.keepAlive);
 
