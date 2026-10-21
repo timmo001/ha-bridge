@@ -12,6 +12,7 @@
 ## Rules
 
 - Keep source under `src/`. Keep the CLI tree in `src/index.ts` so help and completions come from one place.
+- The dashboard panel's browser client lives in `web/` (Lit, Effect atoms, TanStack Table and Virtual). Its schemas and RPCs live in `src/panel/` and are shared with the server, which builds `web/` into the binary through a Bun macro. The browser only reaches the bridge operations `PanelBridgeRpcs` keeps.
 - Every operation goes through the bridge socket. CLI commands are thin socket clients; they never open their own Home Assistant connection.
 - Pin dependencies to exact versions (`bun add -E`).
 - Run project tasks through mise. Scripts complex enough to need logic are written in Effect and exposed as mise tasks.
@@ -25,6 +26,7 @@
 - The daemon is configured in `pitchfork.toml`. It serves `http://127.0.0.1:7290/`, or the next free port, and is always at `https://docs.ha-bridge.localhost` through the Pitchfork proxy.
 - Test through that HTTPS address, in the browser, with curl and anywhere else. Never add the proxy's own port, such as `:8443`, even if Pitchfork prints one: that means the 443 redirect is missing (it's lost on reboot), so run `pitchfork proxy doctor`, then `pitchfork proxy setup -y` to restore it. Use the `127.0.0.1` port only when the proxy isn't running.
 - Run a local bridge from source with `mise run serve:bridge`, managed the same way with `serve:bridge:status`, `serve:bridge:logs`, `serve:bridge:restart` and `serve:bridge:stop`. It runs `serve` in watch mode on `$XDG_RUNTIME_DIR/ha-bridge/dev.sock`, so the installed service keeps its socket. Point clients at it with `HA_BRIDGE_SOCK`.
+- Run the dashboard panel against that bridge with `mise run serve:panel` (and `serve:panel:status`, `:logs`, `:restart`, `:stop`). It serves `http://127.0.0.1:7291/`, or the next free port. Restart it after changing `web/`, as the page is bundled when the server loads.
 
 ## Validation
 

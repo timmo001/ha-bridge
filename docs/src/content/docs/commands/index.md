@@ -10,6 +10,7 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | Command | Alias |
 | --- | --- |
 | [`serve`](/commands/serve) | None |
+| [`panel`](/commands/panel) | None |
 | [`setup`](/commands/setup) | None |
 | [`get`](/commands/get) | `g` |
 | [`watch`](/commands/watch) | `w` |
@@ -123,6 +124,7 @@ GLOBAL FLAGS
 
 SUBCOMMANDS
   serve               Hold the shared Home Assistant connection and serve it on the bridge socket
+  panel               Serve the dashboard panel in the browser, through the bridge socket
   setup               Set the Home Assistant URL and access token
   get, g              Print the state of every entity a target matches once
   watch, w            Print the state of every entity a target matches now and on every change

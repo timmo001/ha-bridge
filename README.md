@@ -6,6 +6,8 @@ One shared Home Assistant connection for your machine, served to local apps over
 
 See the [documentation](https://ha-bridge.timmo.dev) to install, configure and use it.
 
+`ha-bridge panel` also serves dashboards in the browser, built from sections of tiles, for a wall tablet or a spare screen. See [Dashboard panel](https://ha-bridge.timmo.dev/panel).
+
 ## Agent skills
 
 The `ha-bridge-cli` skill teaches coding agents to use the CLI, and the `home-assistant` skill teaches them to look up how Home Assistant works and write automations the current way. Install them with the [Skills CLI](https://skills.sh):

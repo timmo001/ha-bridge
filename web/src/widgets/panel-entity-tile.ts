@@ -119,14 +119,25 @@ export class PanelEntityTile extends LitElement {
         box-shadow: 0 6px 18px -6px var(--pn-accent-ring);
       }
 
+      :host {
+        position: relative;
+      }
+
       .more {
+        position: absolute;
+        top: var(--pn-space-2);
+        right: var(--pn-space-2);
+        z-index: 1;
         display: grid;
         place-items: center;
-        width: 1.75rem;
-        height: 1.75rem;
-        margin: -0.125rem -0.375rem 0 0;
+        width: 2rem;
+        height: 2rem;
+        padding: 0;
+        border: none;
         border-radius: var(--pn-radius-full);
+        background: transparent;
         color: var(--pn-text-faint);
+        cursor: pointer;
       }
 
       .more:hover {
@@ -289,6 +300,18 @@ export class PanelEntityTile extends LitElement {
     const domain = domainOf(widget.entityId);
 
     return html`
+      ${
+        roomy && !this.editing
+          ? html`<button
+              class="more"
+              title="Details"
+              aria-label="${name} details"
+              @click=${() => this.#details()}
+            >
+              ${icon("chevron-right")}
+            </button>`
+          : nothing
+      }
       <button
         class="tile ${active ? "active" : ""} ${off ? "off" : ""} ${
           compact ? "compact" : ""
@@ -324,23 +347,6 @@ export class PanelEntityTile extends LitElement {
           <span class="chip">
             ${icon(widget.icon ?? entityIcon(state, widget.entityId))}
           </span>
-          ${
-            roomy && !this.editing
-              ? html`<span
-                  class="more"
-                  role="button"
-                  tabindex="0"
-                  title="Details"
-                  @pointerdown=${(event: Event) => event.stopPropagation()}
-                  @click=${(event: Event) => {
-                    event.stopPropagation();
-                    this.#details();
-                  }}
-                >
-                  ${icon("chevron-right")}
-                </span>`
-              : nothing
-          }
         </div>
         ${
           roomy && numeric

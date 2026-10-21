@@ -1,6 +1,7 @@
 [
   "/commands",
   "/commands/serve",
+  "/commands/panel",
   "/commands/setup",
   "/commands/get",
   "/commands/watch",

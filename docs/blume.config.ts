@@ -15,6 +15,7 @@ export default defineConfig(
         "/install",
         "/configuration",
         "/running",
+        "/panel",
         {
           label: "Actions",
           root: "/actions",
