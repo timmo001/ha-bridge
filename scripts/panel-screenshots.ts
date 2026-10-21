@@ -67,24 +67,49 @@ const shots: ReadonlyArray<Shot> = [
         .getByRole("button", { name: "Add tile", exact: true })
         .first()
         .click();
-      await page.getByRole("button", { name: /^Entity/ }).click();
+      await page.getByRole("menuitem", { name: /^Entity/ }).click();
     },
   },
   {
-    name: "settings",
+    name: "add-tile-menu",
+    settings: { theme: "catppuccin-macchiato" },
+    act: async (page) => {
+      await page.getByRole("button", { name: "Edit", exact: true }).click();
+      await page
+        .getByRole("button", { name: "Add tile", exact: true })
+        .first()
+        .click();
+    },
+  },
+  {
+    name: "command-menu",
+    settings: { theme: "tokyo-night-moon" },
+    act: async (page) => {
+      await page.keyboard.press("Control+k");
+      await page.waitForTimeout(500);
+      await page.keyboard.type("light");
+    },
+  },
+  {
+    name: "settings-appearance",
     settings: { theme: "catppuccin-frappe" },
-    path: "settings",
+    path: "settings/appearance",
+  },
+  {
+    name: "settings-themes",
+    settings: { theme: "catppuccin-frappe" },
+    path: "settings/themes",
     fullPage: true,
+  },
+  {
+    name: "settings-dashboard",
+    settings: { theme: "rose-pine-moon" },
+    path: "settings/dashboards/home",
   },
   {
     name: "custom-theme",
     settings: { theme: "ocean" },
-    path: "settings",
-    act: async (page) => {
-      await page
-        .getByRole("button", { name: "Edit Ocean", exact: true })
-        .click();
-    },
+    path: "settings/themes/ocean",
   },
   {
     name: "phone",

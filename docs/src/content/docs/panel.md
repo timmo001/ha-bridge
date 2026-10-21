@@ -31,15 +31,15 @@ The panel only accepts its socket from pages it served itself, so a website open
 
 Each dashboard is a list of sections, and each section is a grid of tiles. Choose **Edit** to change one:
 
-- **Add tile** opens the tile types. Pick one, fill in its editor and watch the preview change.
+- **Add tile** opens a menu of tile types beside it. Pick one, fill in its editor and watch the preview change.
 - Drag a tile to move it, within a section or to another one.
 - Drag a section by its header to move it above or below another.
 - The pencil on a tile edits it; the bin removes it.
 - A section's pencil renames it and sets how many columns it has; its bin deletes it.
 - **Add section** adds a section at the end.
-- **Customise** sets the dashboard's name, icon and its own background, or deletes it.
+- **Customise** opens the dashboard's settings page: its name, icon and own background, or deleting it.
 
-In settings, drag a dashboard in the list to reorder it.
+Editors open in the middle of the screen and stay open if you click outside them, so a stray tap doesn't lose your changes; press Escape, **Cancel** or the close button to leave. An entity's details close on a click outside.
 
 ![Editing a dashboard: drag handles on each section, tile controls and Add tile](../../assets/panel/edit-mode.jpg)
 
@@ -65,19 +65,32 @@ An entity's details show controls for its domain: brightness and colour temperat
 
 The entity picker lists every entity, sorted by name, domain or state, and filters as you type or by domain.
 
+## Finding anything
+
+Press ⌘K, or Ctrl+K, or choose **Search** in the top bar, to search everything in the panel: dashboards, settings pages, actions such as editing the dashboard or switching to dark mode, every theme, and every entity. Type to filter, move with the arrow keys and press Enter to go. Choosing an entity opens its details.
+
+![The command menu, searching for lights](../../assets/panel/command-menu.jpg)
+
 ## Settings
 
-Settings apply to every screen showing the panel, and change as soon as you pick them:
+Settings apply to every screen showing the panel, and change as soon as you pick them. Each area has its own page, at `/settings/<page>`:
+
+- **Appearance** (`/settings/appearance`): mode, accent, density, background, the 24-hour clock and kiosk mode.
+- **Themes** (`/settings/themes`): every theme, and a page for each of your own, at `/settings/themes/<id>`.
+- **Dashboards** (`/settings/dashboards`): drag to reorder, and a page for each dashboard, at `/settings/dashboards/<id>`.
+- **Backup** (`/settings/backup`): export and import.
+
+What you can set:
 
 - **Theme**: Panel, Home Assistant, Midnight, Noctis, iOS, Catppuccin (Latte, Frappé, Macchiato and Mocha), Tokyo Night (Night, Storm, Moon and Day), Nord, Dracula, Gruvbox, Rosé Pine (Main, Moon and Dawn), Solarized and One Dark, each shown in its own colours. **New theme** makes your own from a background, card, text and accent colour.
 - **Mode**: for themes with light and dark versions, follow the device or always use one.
 - **Accent**: the theme's own, or one of seven colours laid over any theme.
-- **Background**: the theme's glow, its plain background, a colour, or an image with blur and dim, so tiles stay readable. A dashboard can set its own, under **Edit**, then **Customise**.
+- **Background**: the theme's glow, its plain background, a colour, or an image with blur and dim, so tiles stay readable. A dashboard can set its own on its settings page.
 - **Density**: comfortable or compact tiles.
 - **24-hour clock**.
 - **Kiosk mode** hides navigation and editing. Open `/settings` to turn it off again.
 
-![The theme gallery, with each theme shown in its own colours](../../assets/panel/settings.jpg)
+![The theme gallery, with each theme shown in its own colours](../../assets/panel/settings-themes.jpg)
 
 **Export** downloads every dashboard and setting as one JSON file, and **Import** restores one. Imported dashboards replace those with the same ID.
 
