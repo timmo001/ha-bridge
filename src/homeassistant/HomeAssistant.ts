@@ -622,10 +622,19 @@ export class HomeAssistant extends Context.Service<
       ) {
         const current = yield* connected;
         const resolved = yield* resolve(request.target, request.domain);
+        const named = valuesOf(resolved.entity_id ?? []);
 
-        const unknown = valuesOf(resolved.entity_id ?? []).filter(
-          (entityId) => !states.has(entityId),
-        );
+        // `all`, as in action targets: every entity, from the cache.
+        if (named.includes("all")) {
+          return yield* Effect.forEach(
+            knownStates(states.keys()).filter(({ entity_id }) =>
+              inDomain(request.domain)(entity_id),
+            ),
+            withName,
+          );
+        }
+
+        const unknown = named.filter((entityId) => !states.has(entityId));
 
         if (unknown.length > 0) {
           return yield* new TargetError({

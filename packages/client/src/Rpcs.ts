@@ -58,7 +58,8 @@ const LogFailure = Schema.Union([HomeAssistantError, LogUnavailable]);
 const ConfigFailure = Schema.Union([HomeAssistantError, ConfigUnavailable]);
 
 export class BridgeRpcs extends RpcGroup.make(
-  // Every entity the target refers to, as Home Assistant expands it.
+  // Every entity the target refers to, as Home Assistant expands it. An
+  // entity_id of all gives every entity the bridge knows.
   Rpc.make("GetEntities", {
     payload: TargetRequest,
     success: Schema.Array(EntityUpdate),
