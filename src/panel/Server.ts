@@ -21,22 +21,18 @@ const unreachable = (error: RpcClientError) =>
   });
 
 // Calls fail as Home Assistant errors while the bridge is unreachable.
-const fromBridge = <A, E>(
-  effect: Effect.Effect<A, E | RpcClientError>,
-): Effect.Effect<A, Exclude<E, RpcClientError> | HomeAssistantError> =>
-  Effect.mapError(effect, (error) =>
-    error instanceof RpcClientError
-      ? unreachable(error)
-      : (error as Exclude<E, RpcClientError>),
+const fromBridge = <A, E>(effect: Effect.Effect<A, E | RpcClientError>) =>
+  Effect.catchIf(
+    effect,
+    (error: E | RpcClientError) => error instanceof RpcClientError,
+    (error) => Effect.fail(unreachable(error)),
   );
 
-const streamFromBridge = <A, E>(
-  stream: Stream.Stream<A, E | RpcClientError>,
-): Stream.Stream<A, Exclude<E, RpcClientError> | HomeAssistantError> =>
-  Stream.mapError(stream, (error) =>
-    error instanceof RpcClientError
-      ? unreachable(error)
-      : (error as Exclude<E, RpcClientError>),
+const streamFromBridge = <A, E>(stream: Stream.Stream<A, E | RpcClientError>) =>
+  Stream.catchIf(
+    stream,
+    (error: E | RpcClientError) => error instanceof RpcClientError,
+    (error) => Stream.fail(unreachable(error)),
   );
 
 // Each browser call goes on to the bridge socket as it is.

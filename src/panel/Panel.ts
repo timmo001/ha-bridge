@@ -30,12 +30,7 @@ export const TapAction = Schema.Literals(["toggle", "details", "none"]);
 export type TapAction = typeof TapAction.Type;
 
 // The second line of an entity tile.
-export const SecondaryInfo = Schema.Literals([
-  "state",
-  "last-changed",
-  "area",
-  "none",
-]);
+export const SecondaryInfo = Schema.Literals(["state", "last-changed", "none"]);
 
 export type SecondaryInfo = typeof SecondaryInfo.Type;
 
