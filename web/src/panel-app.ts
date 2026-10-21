@@ -51,7 +51,7 @@ export class PanelApp extends LitElement {
         padding: var(--pn-space-5) var(--pn-space-3);
         border-right: 1px solid var(--pn-border);
         background: color-mix(
-          in oklch,
+          in oklab,
           var(--pn-surface-solid) 55%,
           transparent
         );
@@ -65,6 +65,10 @@ export class PanelApp extends LitElement {
         padding: 0 var(--pn-space-3) var(--pn-space-5);
         font-weight: 680;
         letter-spacing: -0.01em;
+      }
+
+      .brand.compact {
+        display: none;
       }
 
       .mark {
@@ -177,8 +181,8 @@ export class PanelApp extends LitElement {
           clamp(var(--pn-space-4), 3vw, var(--pn-space-10));
         /* Frosted, fading out at the bottom, so it works over any background. */
         background: linear-gradient(
-          color-mix(in oklch, var(--pn-bg) 72%, transparent),
-          color-mix(in oklch, var(--pn-bg) 0%, transparent)
+          color-mix(in oklab, var(--pn-bg) 72%, transparent),
+          color-mix(in oklab, var(--pn-bg) 0%, transparent)
         );
         backdrop-filter: blur(14px) saturate(1.3);
         mask-image: linear-gradient(black 65%, transparent);
@@ -310,7 +314,7 @@ export class PanelApp extends LitElement {
           border: 1px solid var(--pn-border);
           border-radius: var(--pn-radius-xl);
           background: color-mix(
-            in oklch,
+            in oklab,
             var(--pn-surface-solid) 80%,
             transparent
           );

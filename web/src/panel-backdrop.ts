@@ -36,7 +36,7 @@ export class PanelBackdrop extends LitElement {
         ),
         radial-gradient(
           50rem 36rem at -10% 110%,
-          color-mix(in oklch, var(--pn-accent) 10%, transparent),
+          color-mix(in oklab, var(--pn-accent) 10%, transparent),
           transparent 70%
         );
     }

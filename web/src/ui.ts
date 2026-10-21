@@ -7,6 +7,13 @@ export const controls = css`
     font-family: var(--pn-font);
   }
 
+  /* The page's box sizing doesn't reach into shadow roots. */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
   .icon {
     width: 1.25rem;
     height: 1.25rem;
@@ -60,7 +67,7 @@ export const controls = css`
   }
 
   .button.primary:hover {
-    background: color-mix(in oklch, var(--pn-text) 88%, var(--pn-bg));
+    background: color-mix(in oklab, var(--pn-text) 88%, var(--pn-bg));
   }
 
   .button.accent {

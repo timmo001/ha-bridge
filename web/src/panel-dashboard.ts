@@ -68,7 +68,6 @@ export class PanelDashboard extends LitElement {
     count: 0,
     estimateSize: () => 360,
     overscan: 2,
-    gap: 40,
   });
 
   #list: HTMLDivElement | undefined;
@@ -126,7 +125,7 @@ export class PanelDashboard extends LitElement {
                 ? nothing
                 : html`<panel-section
                     data-index=${item.index}
-                    style="display: block"
+                    style="display: block; padding-bottom: 2rem"
                     ${ref((element) => {
                       if (element instanceof HTMLElement) {
                         virtualizer.measureElement(element);

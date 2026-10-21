@@ -15,44 +15,44 @@
   --pn-success: #2f9e5b;
 
   --pn-bg: var(--pn-base-bg);
-  --pn-bg-glow: color-mix(in oklch, var(--pn-accent) 22%, transparent);
-  --pn-surface: color-mix(in oklch, var(--pn-base-card) 84%, transparent);
+  --pn-bg-glow: color-mix(in oklab, var(--pn-accent) 22%, transparent);
+  --pn-surface: color-mix(in oklab, var(--pn-base-card) 84%, transparent);
   --pn-surface-solid: var(--pn-base-card);
   --pn-surface-sunken: color-mix(
-    in oklch,
+    in oklab,
     var(--pn-base-bg) 92%,
     var(--pn-base-text)
   );
   --pn-surface-hover: color-mix(
-    in oklch,
+    in oklab,
     var(--pn-base-card) 94%,
     var(--pn-base-text)
   );
-  --pn-border: color-mix(in oklch, var(--pn-base-text) 10%, transparent);
-  --pn-border-strong: color-mix(in oklch, var(--pn-base-text) 19%, transparent);
+  --pn-border: color-mix(in oklab, var(--pn-base-text) 10%, transparent);
+  --pn-border-strong: color-mix(in oklab, var(--pn-base-text) 19%, transparent);
   --pn-text: var(--pn-base-text);
   --pn-text-muted: color-mix(
-    in oklch,
+    in oklab,
     var(--pn-base-text) 68%,
     var(--pn-base-bg)
   );
   --pn-text-faint: color-mix(
-    in oklch,
+    in oklab,
     var(--pn-base-text) 48%,
     var(--pn-base-bg)
   );
 
   --pn-accent-strong: color-mix(
-    in oklch,
+    in oklab,
     var(--pn-accent) 78%,
     var(--pn-base-text)
   );
-  --pn-accent-soft: color-mix(in oklch, var(--pn-accent) 16%, transparent);
-  --pn-accent-ring: color-mix(in oklch, var(--pn-accent) 45%, transparent);
-  --pn-accent-glow: color-mix(in oklch, var(--pn-accent) 30%, transparent);
-  --pn-accent-edge: color-mix(in oklch, var(--pn-accent) 38%, transparent);
-  --pn-danger-soft: color-mix(in oklch, var(--pn-danger) 13%, transparent);
-  --pn-scrim: color-mix(in oklch, var(--pn-base-bg) 30%, oklch(10% 0 0 / 45%));
+  --pn-accent-soft: color-mix(in oklab, var(--pn-accent) 16%, transparent);
+  --pn-accent-ring: color-mix(in oklab, var(--pn-accent) 45%, transparent);
+  --pn-accent-glow: color-mix(in oklab, var(--pn-accent) 30%, transparent);
+  --pn-accent-edge: color-mix(in oklab, var(--pn-accent) 38%, transparent);
+  --pn-danger-soft: color-mix(in oklab, var(--pn-danger) 13%, transparent);
+  --pn-scrim: color-mix(in oklab, var(--pn-base-bg) 30%, oklch(10% 0 0 / 45%));
 
   --pn-shadow-s: 0 1px 2px oklch(20% 0.02 75 / 6%);
   --pn-shadow-m:

@@ -466,16 +466,19 @@ export class PanelWidgetEditor extends LitElement {
 
     if (this.picking && (draft.type === "entity" || draft.type === "history")) {
       return html`<panel-sheet heading="Choose an entity" flush bare wide>
-        <button
-          slot="actions"
-          class="button ghost"
-          ?hidden=${draft.entityId === ""}
-          @click=${() => {
-            this.picking = false;
-          }}
-        >
-          ${icon("chevron-left")} Back
-        </button>
+        ${
+          draft.entityId === ""
+            ? nothing
+            : html`<button
+                slot="actions"
+                class="button ghost"
+                @click=${() => {
+                  this.picking = false;
+                }}
+              >
+                ${icon("chevron-left")} Back
+              </button>`
+        }
         <panel-entity-picker
           .value=${draft.entityId}
           .domains=${draft.type === "history" ? numericDomains : undefined}

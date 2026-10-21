@@ -78,7 +78,7 @@ export class PanelWidget extends LitElement {
         justify-content: space-between;
         padding: var(--pn-space-2);
         border-radius: var(--pn-radius-l);
-        background: color-mix(in oklch, var(--pn-bg) 35%, transparent);
+        background: color-mix(in oklab, var(--pn-bg) 35%, transparent);
         outline: 1.5px solid var(--pn-border-strong);
         outline-offset: -1.5px;
         cursor: grab;

@@ -288,7 +288,8 @@ export class PanelEntityTile extends LitElement {
     const active = state !== undefined && isActive(state);
     const off = state === undefined || isUnavailable(state);
     const actionable = widget.tap !== "none";
-    const compact = widget.size.rows === 1 && widget.size.columns >= 2;
+    // One row is too short to stack the icon over the text.
+    const compact = widget.size.rows === 1;
     const roomy = widget.size.rows >= 2;
     const name = entityName(update, widget.entityId, widget.title);
 

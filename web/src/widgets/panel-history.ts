@@ -96,7 +96,7 @@ export class PanelHistory extends LitElement {
 
       .stroke {
         fill: none;
-        stroke: var(--pn-accent-strong);
+        stroke: var(--pn-accent);
         stroke-width: 2.25;
         stroke-linejoin: round;
         stroke-linecap: round;

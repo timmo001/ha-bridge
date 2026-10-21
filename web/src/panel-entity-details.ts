@@ -89,7 +89,6 @@ export class PanelEntityDetails extends LitElement {
 
       .hero .switch {
         margin-left: auto;
-        transform: scale(1.25);
       }
 
       .controls {

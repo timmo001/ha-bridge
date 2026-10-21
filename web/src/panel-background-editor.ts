@@ -33,7 +33,7 @@ export class PanelBackgroundEditor extends LitElement {
         background: var(--pn-bg);
       }
 
-      .preview > div {
+      .preview > div:not(.tiles) {
         position: absolute;
         inset: 0;
         background-position: center;

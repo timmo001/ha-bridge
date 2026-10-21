@@ -297,7 +297,7 @@ export const stateText = (state: EntityState | undefined) => {
 
   if (state.state !== "" && Number.isFinite(number)) {
     const formatted = new Intl.NumberFormat(undefined, {
-      maximumFractionDigits: Math.abs(number) < 10 ? 1 : 0,
+      maximumFractionDigits: Math.abs(number) < 100 ? 1 : 0,
     }).format(number);
 
     return unit === undefined ? formatted : `${formatted} ${unit}`;

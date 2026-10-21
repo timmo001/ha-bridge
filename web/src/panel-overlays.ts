@@ -154,7 +154,7 @@ export class PanelOverlays extends LitElement {
         width: 2.25rem;
         height: 2.25rem;
         border-radius: var(--pn-radius-m);
-        background: color-mix(in oklch, var(--text) 10%, transparent);
+        background: color-mix(in oklab, var(--text) 10%, transparent);
       }
 
       .theme-preview .on .chip {
