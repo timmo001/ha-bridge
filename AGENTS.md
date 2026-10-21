@@ -12,7 +12,7 @@
 ## Rules
 
 - Keep source under `src/`. Keep the CLI tree in `src/index.ts` so help and completions come from one place.
-- The dashboard panel's browser client lives in `web/` (Lit, Effect atoms, TanStack Table and Virtual). Its schemas and RPCs live in `src/panel/` and are shared with the server, which builds `web/` into the binary through a Bun macro. The browser only reaches the bridge operations `PanelBridgeRpcs` keeps.
+- The dashboard panel's browser client lives in `web/` (Lit, Effect atoms, TanStack Virtual). Its schemas and RPCs live in `src/panel/` and are shared with the server, which builds `web/` into the binary through a Bun macro. The browser only reaches the bridge operations `PanelBridgeRpcs` keeps.
 - Every operation goes through the bridge socket. CLI commands are thin socket clients; they never open their own Home Assistant connection.
 - Pin dependencies to exact versions (`bun add -E`).
 - Run project tasks through mise. Scripts complex enough to need logic are written in Effect and exposed as mise tasks.
