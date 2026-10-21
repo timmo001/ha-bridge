@@ -54,10 +54,8 @@ const watch = <A, E>(
   open: (client: PanelClient["Service"]) => Stream.Stream<A, E>,
 ) =>
   resilient(
-    Stream.unwrap(
-      PanelClient.use((client) => Effect.succeed(open(client))),
-    ).pipe(Stream.orDie),
-  );
+    Stream.unwrap(PanelClient.use((client) => Effect.succeed(open(client)))),
+  ).pipe(Stream.orDie);
 
 // The saved dashboards and settings, kept current from every browser.
 export const panel = runtime
@@ -82,21 +80,32 @@ export const dashboards = Atom.make(
 
 export type EntityMap = ReadonlyMap<string, EntityUpdate>;
 
-// The latest update for each entity, keyed by the entity IDs joined with
-// commas, so a dashboard opens one watch for everything it shows.
-export const entities = Atom.family((key: string) =>
+// One entity's latest update. Each has its own watch, so an entity that's
+// gone or failing never holds up the others.
+export const entity = Atom.family((entityId: string) =>
   runtime.atom(
-    key === ""
-      ? Stream.succeed<EntityMap>(new Map())
-      : watch((client) =>
-          client.WatchEntities({ target: { entity_id: key.split(",") } }),
-        ).pipe(
-          Stream.scan(
-            (): EntityMap => new Map(),
-            (current, update): EntityMap =>
-              new Map(current).set(update.state.entity_id, update),
-          ),
-        ),
+    watch((client) =>
+      client.WatchEntities({ target: { entity_id: entityId } }),
+    ),
+  ),
+);
+
+// The latest update for each entity, keyed by the entity IDs joined with
+// commas. Entities still loading, or failing, are left out.
+export const entities = Atom.family((key: string) =>
+  Atom.make(
+    (get): EntityMap =>
+      new Map(
+        key === ""
+          ? []
+          : key.split(",").flatMap((entityId) => {
+              const result = get(entity(entityId));
+
+              return AsyncResult.isSuccess(result)
+                ? [[entityId, result.value] as const]
+                : [];
+            }),
+      ),
   ),
 );
 

@@ -5,7 +5,7 @@ import { css, html, LitElement, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import type { HistoryWidget } from "../../src/panel/Panel.js";
 import { AtomController, registry } from "./AtomController.js";
-import { callAction, entities } from "./client.js";
+import { callAction, entity } from "./client.js";
 import {
   canToggle,
   domainOf,
@@ -213,7 +213,7 @@ export class PanelEntityDetails extends LitElement {
 
   @property() accessor entityId = "";
 
-  readonly #entities = new AtomController(this, () => entities(this.entityId));
+  readonly #entity = new AtomController(this, () => entity(this.entityId));
 
   readonly #now = new AtomController(this, () => now(30_000));
 
@@ -545,11 +545,8 @@ export class PanelEntityDetails extends LitElement {
   }
 
   override render() {
-    const result = this.#entities.value;
-
-    const update = AsyncResult.isSuccess(result)
-      ? result.value.get(this.entityId)
-      : undefined;
+    const result = this.#entity.value;
+    const update = AsyncResult.isSuccess(result) ? result.value : undefined;
 
     const state = update?.state;
     const numeric = state !== undefined && Number.isFinite(Number(state.state));

@@ -463,11 +463,7 @@ export class PanelWidgetEditor extends LitElement {
     }
 
     const label = widgetLabels[draft.type];
-    const result = this.#entities.value;
-
-    const states: EntityMap = AsyncResult.isSuccess(result)
-      ? result.value
-      : new Map();
+    const states = this.#entities.value;
 
     if (this.picking && (draft.type === "entity" || draft.type === "history")) {
       return html`<panel-sheet heading="Choose an entity" flush bare wide>
