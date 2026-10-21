@@ -80,11 +80,11 @@ export class PanelEntityTile extends LitElement {
         background:
           radial-gradient(
             120% 90% at 0% 0%,
-            oklch(80% var(--pn-chroma) var(--pn-hue) / 34%),
+            var(--pn-accent-glow),
             transparent 70%
           ),
           var(--pn-surface);
-        border-color: oklch(70% var(--pn-chroma) var(--pn-hue) / 35%);
+        border-color: var(--pn-accent-edge);
       }
 
       .tile.off {

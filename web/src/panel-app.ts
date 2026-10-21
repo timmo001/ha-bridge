@@ -6,10 +6,20 @@ import { AtomController, registry } from "./AtomController.js";
 import { dashboards, panel, saveDashboard, settings } from "./client.js";
 import { newDashboard } from "./edit.js";
 import { icon } from "./icons.js";
+import "./panel-backdrop.js";
 import "./panel-dashboard.js";
 import "./panel-overlays.js";
 import "./panel-settings.js";
-import { editing, href, navigate, now, open, route } from "./state.js";
+import {
+  editing,
+  href,
+  navigate,
+  now,
+  open,
+  prefersDark,
+  route,
+} from "./state.js";
+import { applyPalette, resolvePalette } from "./themes.js";
 import { controls } from "./ui.js";
 
 @customElement("panel-app")
@@ -23,6 +33,8 @@ export class PanelApp extends LitElement {
       }
 
       .shell {
+        position: relative;
+        z-index: 1;
         display: grid;
         grid-template-columns: auto minmax(0, 1fr);
         min-height: 100dvh;
@@ -163,10 +175,13 @@ export class PanelApp extends LitElement {
         margin: 0 calc(-1 * clamp(var(--pn-space-4), 3vw, var(--pn-space-10)));
         padding: var(--pn-space-3)
           clamp(var(--pn-space-4), 3vw, var(--pn-space-10));
+        /* Frosted, fading out at the bottom, so it works over any background. */
         background: linear-gradient(
-          var(--pn-bg) 40%,
+          color-mix(in oklch, var(--pn-bg) 72%, transparent),
           color-mix(in oklch, var(--pn-bg) 0%, transparent)
         );
+        backdrop-filter: blur(14px) saturate(1.3);
+        mask-image: linear-gradient(black 65%, transparent);
       }
 
       h1 {
@@ -342,13 +357,14 @@ export class PanelApp extends LitElement {
 
   readonly #now = new AtomController(this, () => now(15_000));
 
+  readonly #prefersDark = new AtomController(this, () => prefersDark);
+
   override updated() {
-    const { theme, accent, density } = this.#settings.value;
+    const current = this.#settings.value;
     const root = document.documentElement;
 
-    root.dataset.theme = theme;
-    root.dataset.accent = accent;
-    root.dataset.density = density;
+    applyPalette(root, resolvePalette(current, this.#prefersDark.value));
+    root.dataset.density = current.density;
   }
 
   #create() {
@@ -496,6 +512,9 @@ export class PanelApp extends LitElement {
     const isEditing = this.#editing.value && !kiosk;
 
     return html`
+      <panel-backdrop
+        .background=${dashboard?.background ?? this.#settings.value.background}
+      ></panel-backdrop>
       <div class="shell ${kiosk ? "kiosk" : ""}">
         ${this.#renderRail(dashboard?.id)}
         <main>

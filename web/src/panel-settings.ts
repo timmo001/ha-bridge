@@ -3,11 +3,11 @@ import { css, html, LitElement, nothing, type TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
 import {
-  type Accent,
+  type Background,
   type Density,
+  type Mode,
   PanelState,
   type Settings,
-  type Theme,
 } from "../../src/panel/Panel.js";
 import { AtomController, registry } from "./AtomController.js";
 import {
@@ -20,21 +20,14 @@ import {
 import { placeBefore } from "./edit.js";
 import { icon } from "./icons.js";
 import { navigate, open } from "./state.js";
+import "./panel-background-editor.js";
+import "./panel-theme-picker.js";
+import { accents, hasBothSchemes, themes } from "./themes.js";
 import { controls } from "./ui.js";
 
 const PanelFile = Schema.fromJsonString(PanelState);
 
-const accents: ReadonlyArray<readonly [Accent, number, number]> = [
-  ["amber", 75, 0.16],
-  ["coral", 38, 0.16],
-  ["rose", 8, 0.16],
-  ["violet", 295, 0.16],
-  ["blue", 252, 0.16],
-  ["teal", 185, 0.12],
-  ["lime", 128, 0.17],
-];
-
-const themes: ReadonlyArray<readonly [Theme, string, string]> = [
+const modes: ReadonlyArray<readonly [Mode, string, string]> = [
   ["system", "System", "monitor"],
   ["light", "Light", "sun"],
   ["dark", "Dark", "moon"],
@@ -124,6 +117,22 @@ export class PanelSettings extends LitElement {
         cursor: pointer;
         box-shadow: inset 0 0 0 1px oklch(0% 0 0 / 10%);
         transition: transform var(--pn-fast) var(--pn-ease);
+      }
+
+      .theme-accent {
+        background: conic-gradient(
+          var(--pn-accent) 0 50%,
+          var(--pn-surface-sunken) 0
+        );
+      }
+
+      .card.padded {
+        padding: var(--pn-space-5);
+      }
+
+      .item.stacked {
+        display: grid;
+        align-items: stretch;
       }
 
       .swatch:hover {
@@ -335,20 +344,40 @@ export class PanelSettings extends LitElement {
   override render() {
     const current = this.#settings.value;
     const list = this.#dashboards.value ?? [];
+    const builtIn = themes.find(({ id }) => id === current.theme);
+    const custom = current.customThemes.find(({ id }) => id === current.theme);
+
+    const followsMode =
+      custom === undefined &&
+      (builtIn === undefined || hasBothSchemes(builtIn));
+
+    const onlyDark =
+      custom === undefined
+        ? builtIn?.dark !== undefined
+        : custom.scheme === "dark";
 
     return html`
+      <section>
+        <h2>Theme</h2>
+        <div class="card padded">
+          <panel-theme-picker></panel-theme-picker>
+        </div>
+      </section>
       <section>
         <h2>Appearance</h2>
         <div class="card">
           ${this.#item(
-            "Theme",
-            "Follow the device, or always light or dark",
-            html`<div class="segmented" role="group" aria-label="Theme">
-              ${themes.map(
-                ([theme, label, name]) =>
+            "Mode",
+            followsMode
+              ? "Follow the device, or always light or dark"
+              : "This theme is only " + (onlyDark ? "dark" : "light"),
+            html`<div class="segmented" role="group" aria-label="Mode">
+              ${modes.map(
+                ([mode, label, name]) =>
                   html`<button
-                    aria-pressed=${current.theme === theme ? "true" : "false"}
-                    @click=${() => this.#save({ theme })}
+                    aria-pressed=${current.mode === mode ? "true" : "false"}
+                    ?disabled=${!followsMode}
+                    @click=${() => this.#save({ mode })}
                   >
                     ${icon(name)} ${label}
                   </button>`,
@@ -357,8 +386,15 @@ export class PanelSettings extends LitElement {
           )}
           ${this.#item(
             "Accent",
-            "The colour of anything that's on",
+            "The colour of anything that's on: the theme's own, or another",
             html`<div class="swatches" role="group" aria-label="Accent">
+              <button
+                class="swatch theme-accent"
+                title="Theme"
+                aria-label="Theme"
+                aria-pressed=${current.accent === "theme" ? "true" : "false"}
+                @click=${() => this.#save({ accent: "theme" })}
+              ></button>
               ${accents.map(
                 ([accent, hue, chroma]) =>
                   html`<button
@@ -366,12 +402,25 @@ export class PanelSettings extends LitElement {
                     title=${accent}
                     aria-label=${accent}
                     aria-pressed=${current.accent === accent ? "true" : "false"}
-                    style="background: oklch(70% ${chroma} ${hue})"
+                    style="background: oklch(72% ${chroma} ${hue})"
                     @click=${() => this.#save({ accent })}
                   ></button>`,
               )}
             </div>`,
           )}
+          <div class="item stacked">
+            <div class="label">
+              <strong>Background</strong>
+              <span
+                >Behind every dashboard, unless a dashboard sets its own</span
+              >
+            </div>
+            <panel-background-editor
+              .value=${current.background}
+              @background-change=${(event: CustomEvent<Background>) =>
+                this.#save({ background: event.detail })}
+            ></panel-background-editor>
+          </div>
           ${this.#item(
             "Density",
             "How tall tiles are and how close together",

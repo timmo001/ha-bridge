@@ -1,35 +1,58 @@
 /*
- * Design tokens. Neutrals are warm in light mode and cool in dark, the
- * accent comes from one hue picked in settings, and every size is in rem so
- * the panel follows the browser's font size. Components read these through
- * the shadow DOM, as custom properties inherit into it.
+ * Design tokens. A theme sets a handful of base colours on the root (see
+ * themes.ts) and every other colour is mixed from them here, so all themes
+ * get the same surfaces, borders and states. Sizes are in rem so the panel
+ * follows the browser's font size. Components read these through the shadow
+ * DOM, as custom properties inherit into it.
  */
 :root {
-  --pn-hue: 75;
-  --pn-chroma: 0.16;
+  --pn-base-bg: oklch(97.4% 0.006 85);
+  --pn-base-card: oklch(99.5% 0.002 85);
+  --pn-base-text: oklch(22% 0.012 75);
+  --pn-accent: oklch(76% 0.16 75);
+  --pn-accent-text: oklch(22% 0.04 75);
+  --pn-danger: #d93a3a;
+  --pn-success: #2f9e5b;
 
-  --pn-bg: oklch(97.4% 0.006 85);
-  --pn-bg-glow: oklch(93% 0.04 var(--pn-hue) / 55%);
-  --pn-surface: oklch(100% 0 0 / 82%);
-  --pn-surface-solid: oklch(99.5% 0.002 85);
-  --pn-surface-sunken: oklch(94.5% 0.006 85);
-  --pn-surface-hover: oklch(96% 0.008 85);
-  --pn-border: oklch(25% 0.02 85 / 9%);
-  --pn-border-strong: oklch(25% 0.02 85 / 18%);
-  --pn-text: oklch(22% 0.012 75);
-  --pn-text-muted: oklch(50% 0.012 75);
-  --pn-text-faint: oklch(64% 0.01 75);
+  --pn-bg: var(--pn-base-bg);
+  --pn-bg-glow: color-mix(in oklch, var(--pn-accent) 22%, transparent);
+  --pn-surface: color-mix(in oklch, var(--pn-base-card) 84%, transparent);
+  --pn-surface-solid: var(--pn-base-card);
+  --pn-surface-sunken: color-mix(
+    in oklch,
+    var(--pn-base-bg) 92%,
+    var(--pn-base-text)
+  );
+  --pn-surface-hover: color-mix(
+    in oklch,
+    var(--pn-base-card) 94%,
+    var(--pn-base-text)
+  );
+  --pn-border: color-mix(in oklch, var(--pn-base-text) 10%, transparent);
+  --pn-border-strong: color-mix(in oklch, var(--pn-base-text) 19%, transparent);
+  --pn-text: var(--pn-base-text);
+  --pn-text-muted: color-mix(
+    in oklch,
+    var(--pn-base-text) 68%,
+    var(--pn-base-bg)
+  );
+  --pn-text-faint: color-mix(
+    in oklch,
+    var(--pn-base-text) 48%,
+    var(--pn-base-bg)
+  );
 
-  --pn-accent: oklch(70% var(--pn-chroma) var(--pn-hue));
-  --pn-accent-strong: oklch(58% var(--pn-chroma) var(--pn-hue));
-  --pn-accent-text: oklch(22% 0.04 var(--pn-hue));
-  --pn-accent-soft: oklch(70% var(--pn-chroma) var(--pn-hue) / 16%);
-  --pn-accent-ring: oklch(70% var(--pn-chroma) var(--pn-hue) / 45%);
-
-  --pn-danger: oklch(58% 0.19 25);
-  --pn-danger-soft: oklch(58% 0.19 25 / 12%);
-  --pn-success: oklch(62% 0.15 150);
-  --pn-scrim: oklch(15% 0.01 75 / 36%);
+  --pn-accent-strong: color-mix(
+    in oklch,
+    var(--pn-accent) 78%,
+    var(--pn-base-text)
+  );
+  --pn-accent-soft: color-mix(in oklch, var(--pn-accent) 16%, transparent);
+  --pn-accent-ring: color-mix(in oklch, var(--pn-accent) 45%, transparent);
+  --pn-accent-glow: color-mix(in oklch, var(--pn-accent) 30%, transparent);
+  --pn-accent-edge: color-mix(in oklch, var(--pn-accent) 38%, transparent);
+  --pn-danger-soft: color-mix(in oklch, var(--pn-danger) 13%, transparent);
+  --pn-scrim: color-mix(in oklch, var(--pn-base-bg) 30%, oklch(10% 0 0 / 45%));
 
   --pn-shadow-s: 0 1px 2px oklch(20% 0.02 75 / 6%);
   --pn-shadow-m:
@@ -81,77 +104,15 @@
   --pn-gap: 0.5rem;
 }
 
-:root[data-accent="amber"] {
-  --pn-hue: 75;
-}
-:root[data-accent="coral"] {
-  --pn-hue: 38;
-}
-:root[data-accent="rose"] {
-  --pn-hue: 8;
-}
-:root[data-accent="violet"] {
-  --pn-hue: 295;
-}
-:root[data-accent="blue"] {
-  --pn-hue: 252;
-}
-:root[data-accent="teal"] {
-  --pn-hue: 185;
-  --pn-chroma: 0.12;
-}
-:root[data-accent="lime"] {
-  --pn-hue: 128;
-  --pn-chroma: 0.17;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --pn-bg: oklch(16.5% 0.008 265);
-    --pn-bg-glow: oklch(32% 0.06 var(--pn-hue) / 22%);
-    --pn-surface: oklch(22% 0.01 265 / 78%);
-    --pn-surface-solid: oklch(21% 0.01 265);
-    --pn-surface-sunken: oklch(18.5% 0.009 265);
-    --pn-surface-hover: oklch(26% 0.012 265);
-    --pn-border: oklch(100% 0 0 / 7%);
-    --pn-border-strong: oklch(100% 0 0 / 14%);
-    --pn-text: oklch(95% 0.005 265);
-    --pn-text-muted: oklch(72% 0.01 265);
-    --pn-text-faint: oklch(56% 0.012 265);
-    --pn-accent-text: oklch(18% 0.04 var(--pn-hue));
-    --pn-accent-soft: oklch(72% var(--pn-chroma) var(--pn-hue) / 18%);
-    --pn-scrim: oklch(5% 0 0 / 55%);
-    --pn-shadow-s: 0 1px 2px oklch(0% 0 0 / 30%);
-    --pn-shadow-m:
-      0 1px 2px oklch(0% 0 0 / 30%), 0 8px 24px -8px oklch(0% 0 0 / 50%);
-    --pn-shadow-l: 0 24px 80px -12px oklch(0% 0 0 / 70%);
-  }
-}
-
-:root[data-theme="dark"] {
+:root[data-scheme="dark"] {
   color-scheme: dark;
-  --pn-bg: oklch(16.5% 0.008 265);
-  --pn-bg-glow: oklch(32% 0.06 var(--pn-hue) / 22%);
-  --pn-surface: oklch(22% 0.01 265 / 78%);
-  --pn-surface-solid: oklch(21% 0.01 265);
-  --pn-surface-sunken: oklch(18.5% 0.009 265);
-  --pn-surface-hover: oklch(26% 0.012 265);
-  --pn-border: oklch(100% 0 0 / 7%);
-  --pn-border-strong: oklch(100% 0 0 / 14%);
-  --pn-text: oklch(95% 0.005 265);
-  --pn-text-muted: oklch(72% 0.01 265);
-  --pn-text-faint: oklch(56% 0.012 265);
-  --pn-accent-text: oklch(18% 0.04 var(--pn-hue));
-  --pn-accent-soft: oklch(72% var(--pn-chroma) var(--pn-hue) / 18%);
-  --pn-scrim: oklch(5% 0 0 / 55%);
   --pn-shadow-s: 0 1px 2px oklch(0% 0 0 / 30%);
   --pn-shadow-m:
     0 1px 2px oklch(0% 0 0 / 30%), 0 8px 24px -8px oklch(0% 0 0 / 50%);
   --pn-shadow-l: 0 24px 80px -12px oklch(0% 0 0 / 70%);
 }
 
-:root[data-theme="light"] {
+:root[data-scheme="light"] {
   color-scheme: light;
 }
 
@@ -171,14 +132,7 @@ body {
   font-feature-settings: "cv11", "ss01", "tnum";
   line-height: 1.45;
   color: var(--pn-text);
-  background:
-    radial-gradient(
-      60rem 40rem at 85% -10%,
-      var(--pn-bg-glow),
-      transparent 70%
-    ),
-    var(--pn-bg);
-  background-attachment: fixed;
+  background: var(--pn-bg);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   scrollbar-width: thin;

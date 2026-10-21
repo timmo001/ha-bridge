@@ -58,7 +58,9 @@ export type Overlay =
       readonly dashboardId: string;
       readonly sectionId?: string;
     }
-  | { readonly kind: "dashboard"; readonly dashboardId?: string };
+  | { readonly kind: "dashboard"; readonly dashboardId?: string }
+  // A custom theme, or a new one without an ID.
+  | { readonly kind: "theme"; readonly themeId?: string };
 
 export const overlay = Atom.make<Overlay>({ kind: "none" }).pipe(
   Atom.keepAlive,
@@ -77,3 +79,14 @@ export const now = Atom.family((every: number) =>
     return Date.now();
   }),
 );
+
+// Whether the device prefers a dark theme, for themes that follow it.
+export const prefersDark = Atom.make((get) => {
+  const query = matchMedia("(prefers-color-scheme: dark)");
+  const update = () => get.setSelf(query.matches);
+
+  query.addEventListener("change", update);
+  get.addFinalizer(() => query.removeEventListener("change", update));
+
+  return query.matches;
+}).pipe(Atom.keepAlive);

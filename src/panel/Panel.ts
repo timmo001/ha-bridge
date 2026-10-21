@@ -153,21 +153,80 @@ export const Section = Schema.Struct({
 
 export type Section = typeof Section.Type;
 
+// What shows behind a dashboard: the theme's own glow, its plain background,
+// a colour, or an image, blurred and dimmed so tiles stay readable.
+export const BackgroundKind = Schema.Literals([
+  "theme",
+  "plain",
+  "color",
+  "image",
+]);
+
+export type BackgroundKind = typeof BackgroundKind.Type;
+
+export const Background = Schema.Struct({
+  kind: withDefault(BackgroundKind, "theme"),
+  // A CSS colour, for the color kind.
+  color: Schema.optional(Schema.String),
+  // An image URL, for the image kind.
+  image: Schema.optional(Schema.String),
+  // Pixels of blur over the image.
+  blur: withDefault(
+    Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 40 })),
+    0,
+  ),
+  // Percent of the theme's background laid over the image.
+  dim: withDefault(
+    Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 90 })),
+    30,
+  ),
+});
+
+export type Background = typeof Background.Type;
+
+export const defaultBackground: Background = {
+  kind: "theme",
+  blur: 0,
+  dim: 30,
+};
+
 export const Dashboard = Schema.Struct({
   id: Id,
   name: Schema.String,
   // A Lucide icon name in kebab case, such as house.
   icon: withDefault(Schema.String, "layout-grid"),
   sections: withDefault(Schema.Array(Section), []),
+  // Replaces the panel's background on this dashboard.
+  background: Schema.optional(Background),
 });
 
 export type Dashboard = typeof Dashboard.Type;
 
-export const Theme = Schema.Literals(["system", "light", "dark"]);
+// Light or dark, for themes that come in both, or whichever the device uses.
+export const Mode = Schema.Literals(["system", "light", "dark"]);
 
-export type Theme = typeof Theme.Type;
+export type Mode = typeof Mode.Type;
 
+export const Scheme = Schema.Literals(["light", "dark"]);
+
+export type Scheme = typeof Scheme.Type;
+
+// A theme someone made, from a few colours the rest are mixed from.
+export const CustomTheme = Schema.Struct({
+  id: Id,
+  name: Schema.String,
+  scheme: withDefault(Scheme, "dark"),
+  background: Schema.String,
+  card: Schema.String,
+  text: Schema.String,
+  accent: Schema.String,
+});
+
+export type CustomTheme = typeof CustomTheme.Type;
+
+// The theme's own accent, or one of these laid over it.
 export const Accent = Schema.Literals([
+  "theme",
   "amber",
   "coral",
   "rose",
@@ -185,9 +244,13 @@ export type Density = typeof Density.Type;
 
 // How the panel looks and behaves. Nothing here reaches Home Assistant.
 export const Settings = Schema.Struct({
-  theme: withDefault(Theme, "system"),
-  accent: withDefault(Accent, "amber"),
+  // A built-in theme's ID, or a custom theme's.
+  theme: withDefault(Schema.String, "panel"),
+  mode: withDefault(Mode, "system"),
+  accent: withDefault(Accent, "theme"),
   density: withDefault(Density, "comfortable"),
+  background: withDefault(Background, defaultBackground),
+  customThemes: withDefault(Schema.Array(CustomTheme), []),
   // Hides the sidebar and editing controls, for a wall tablet.
   kiosk: withDefault(Schema.Boolean, false),
   clock24h: withDefault(Schema.Boolean, true),
@@ -196,9 +259,12 @@ export const Settings = Schema.Struct({
 export type Settings = typeof Settings.Type;
 
 export const defaultSettings: Settings = {
-  theme: "system",
-  accent: "amber",
+  theme: "panel",
+  mode: "system",
+  accent: "theme",
   density: "comfortable",
+  background: defaultBackground,
+  customThemes: [],
   kiosk: false,
   clock24h: true,
 };
