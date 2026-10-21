@@ -68,7 +68,7 @@ export const href = (next: Route) => {
 export const navigate = (next: Route) => {
   history.pushState(null, "", href(next));
   registry.set(route, next);
-  registry.set(overlay, { kind: "none" });
+  registry.set(overlays, []);
   scrollTo({ top: 0 });
 };
 
@@ -93,13 +93,27 @@ export type Overlay =
       readonly sectionId?: string;
     };
 
-export const overlay = Atom.make<Overlay>({ kind: "none" }).pipe(
+// The open views, newest last. Opening one stacks it on the others, so
+// closing it returns to the one before.
+export const overlays = Atom.make<ReadonlyArray<Overlay>>([]).pipe(
   Atom.keepAlive,
 );
 
-export const open = (next: Overlay) => registry.set(overlay, next);
+export const open = (next: Overlay) =>
+  registry.set(
+    overlays,
+    next.kind === "none" ? [] : [...registry.get(overlays), next],
+  );
 
-export const close = () => registry.set(overlay, { kind: "none" });
+// Closes the newest view, or the given one and every view opened from it.
+export const close = (view?: Overlay) => {
+  const stack = registry.get(overlays);
+  const index = view === undefined ? stack.length - 1 : stack.indexOf(view);
+
+  if (index >= 0) {
+    registry.set(overlays, stack.slice(0, index));
+  }
+};
 
 // A minute-by-minute clock, or second-by-second for clocks showing seconds.
 export const now = Atom.family((every: number) =>

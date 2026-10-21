@@ -1,13 +1,13 @@
 import { css, html, LitElement } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 import { icon } from "./icons.js";
-import { close } from "./state.js";
 import { controls } from "./ui.js";
 
 // A dialog in the top layer, built on the Popover API: centred over the page,
-// and a floating card near the bottom on phones. Views close when someone
-// clicks outside or presses Escape. Editors set `keep`, so a stray click
-// can't lose a draft; they close with Escape, Cancel or the close button.
+// and a floating card near the bottom on phones. A dialog opened from another
+// stacks on it. The newest closes when someone clicks outside or presses
+// Escape. Editors set `keep`, so a stray click can't lose a draft; they close
+// with Escape, Cancel or the close button.
 @customElement("panel-dialog")
 export class PanelDialog extends LitElement {
   static override styles = [
@@ -140,18 +140,46 @@ export class PanelDialog extends LitElement {
 
   @query("[popover]") accessor popup: HTMLElement | null = null;
 
-  // A manual popover ignores Escape by itself, and focus may have left it
-  // after a click outside, so editors listen on the window.
+  // Open dialogs, newest last. Only the newest closes on Escape or a click
+  // outside, so a dialog opened from another leaves it in place.
+  static readonly #shown: Array<PanelDialog> = [];
+
+  get #top() {
+    return PanelDialog.#shown.at(-1) === this;
+  }
+
+  // Asks the view this dialog shows to close.
+  #close() {
+    this.dispatchEvent(
+      new Event("dialog-close", { bubbles: true, composed: true }),
+    );
+  }
+
+  // Manual popovers ignore Escape by themselves, and focus may have left the
+  // dialog after a click outside, so dialogs listen on the window.
   readonly #escape = (event: KeyboardEvent) => {
-    if (event.key === "Escape" && this.keep) {
+    if (event.key === "Escape" && this.#top) {
       event.preventDefault();
-      close();
+      this.#close();
+    }
+  };
+
+  readonly #outside = (event: PointerEvent) => {
+    if (
+      !this.keep &&
+      this.#top &&
+      this.popup !== null &&
+      !event.composedPath().includes(this.popup)
+    ) {
+      this.#close();
     }
   };
 
   override connectedCallback() {
     super.connectedCallback();
+    PanelDialog.#shown.push(this);
     addEventListener("keydown", this.#escape);
+    addEventListener("pointerdown", this.#outside, true);
   }
 
   // Where focus was before the dialog opened, to return it on close.
@@ -172,7 +200,9 @@ export class PanelDialog extends LitElement {
 
   override disconnectedCallback() {
     super.disconnectedCallback();
+    PanelDialog.#shown.splice(PanelDialog.#shown.indexOf(this), 1);
     removeEventListener("keydown", this.#escape);
+    removeEventListener("pointerdown", this.#outside, true);
     this.popup?.hidePopover();
 
     if (
@@ -186,21 +216,20 @@ export class PanelDialog extends LitElement {
   override render() {
     return html`
       <div
-        popover=${this.keep ? "manual" : "auto"}
+        popover="manual"
         tabindex="-1"
         role="dialog"
         aria-modal="true"
         aria-label=${this.heading}
-        @toggle=${(event: ToggleEvent) => {
-          if (event.newState === "closed" && this.isConnected) {
-            close();
-          }
-        }}
       >
         <header>
           <h2>${this.heading}</h2>
           <slot name="actions"></slot>
-          <button class="icon-button" title="Close" @click=${() => close()}>
+          <button
+            class="icon-button"
+            title="Close"
+            @click=${() => this.#close()}
+          >
             ${icon("x")}
           </button>
         </header>

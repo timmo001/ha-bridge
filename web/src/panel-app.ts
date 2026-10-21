@@ -1,6 +1,6 @@
 import { AsyncResult } from "effect/reactivity";
 import { css, html, LitElement, nothing } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, query } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
 import logo from "../../docs/src/assets/logo.svg";
 import { AtomController, registry } from "./AtomController.js";
@@ -37,45 +37,6 @@ export class PanelApp extends LitElement {
         min-height: 100dvh;
       }
 
-      .shell {
-        position: relative;
-        z-index: 1;
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
-        min-height: 100dvh;
-      }
-
-      .rail {
-        position: sticky;
-        top: 0;
-        display: flex;
-        flex-direction: column;
-        gap: var(--pn-space-1);
-        width: 15rem;
-        height: 100dvh;
-        padding: var(--pn-space-5) var(--pn-space-3);
-        border-right: 1px solid var(--pn-border);
-        background: color-mix(
-          in oklab,
-          var(--pn-surface-solid) 55%,
-          transparent
-        );
-        backdrop-filter: blur(24px) saturate(1.4);
-      }
-
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: var(--pn-space-3);
-        padding: 0 var(--pn-space-3) var(--pn-space-5);
-        font-weight: 680;
-        letter-spacing: -0.01em;
-      }
-
-      .brand.compact {
-        display: none;
-      }
-
       .logo {
         display: block;
         flex: none;
@@ -83,28 +44,55 @@ export class PanelApp extends LitElement {
         height: 2rem;
       }
 
-      .brand span {
-        display: grid;
-        line-height: 1.15;
+      .switcher {
+        display: flex;
+        align-items: center;
+        gap: var(--pn-space-3);
+        min-width: 0;
+        margin-left: calc(-1 * var(--pn-space-2));
+        padding: var(--pn-space-1) var(--pn-space-2);
+        border: none;
+        border-radius: var(--pn-radius-m);
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+        anchor-name: --switcher;
       }
 
-      .brand small {
+      .switcher:hover {
+        background: var(--pn-surface-hover);
+      }
+
+      .switcher > .icon {
+        flex: none;
         color: var(--pn-text-faint);
-        font-size: var(--pn-text-2xs);
-        font-weight: 560;
-        letter-spacing: 0.02em;
       }
 
-      .nav {
+      .menu {
+        position: fixed;
+        position-anchor: --switcher;
+        inset: auto;
+        top: anchor(bottom);
+        left: anchor(left);
+        position-try-fallbacks: flip-block;
+        width: 16rem;
+        max-height: min(30rem, 70dvh);
+        margin: var(--pn-space-2) 0 0;
+        padding: var(--pn-space-2);
+        overflow-y: auto;
+        border: 1px solid var(--pn-border-strong);
+        border-radius: var(--pn-radius-l);
+        background: var(--pn-surface-solid);
+        color: var(--pn-text);
+        box-shadow: var(--pn-shadow-l);
+        scrollbar-width: thin;
+      }
+
+      .menu:popover-open {
         display: flex;
         flex-direction: column;
         gap: 2px;
-        overflow-y: auto;
-        scrollbar-width: none;
-      }
-
-      .nav-label {
-        padding: var(--pn-space-3) var(--pn-space-3) var(--pn-space-2);
       }
 
       .link {
@@ -113,14 +101,16 @@ export class PanelApp extends LitElement {
         gap: var(--pn-space-3);
         min-height: 2.5rem;
         padding: 0 var(--pn-space-3);
+        border: none;
         border-radius: var(--pn-radius-m);
+        background: transparent;
         color: var(--pn-text-muted);
+        font: inherit;
         font-size: var(--pn-text-s);
         font-weight: 560;
+        text-align: left;
         text-decoration: none;
-        transition:
-          background var(--pn-fast) var(--pn-ease),
-          color var(--pn-fast) var(--pn-ease);
+        cursor: pointer;
       }
 
       .link span {
@@ -135,34 +125,24 @@ export class PanelApp extends LitElement {
       }
 
       .link[aria-current="page"] {
-        background: var(--pn-surface-solid);
         color: var(--pn-text);
-        box-shadow:
-          var(--pn-shadow-s),
-          inset 0 0 0 1px var(--pn-border);
       }
 
       .link[aria-current="page"] .icon {
         color: var(--pn-accent-strong);
       }
 
-      .new {
-        margin-top: var(--pn-space-1);
-        border: 1px dashed var(--pn-border-strong);
-        background: transparent;
-        cursor: pointer;
-        font: inherit;
-        font-size: var(--pn-text-s);
-      }
-
-      .rail-end {
-        margin-top: auto;
-        padding-top: var(--pn-space-3);
+      .menu hr {
+        margin: var(--pn-space-1) 0;
+        border: none;
         border-top: 1px solid var(--pn-border);
       }
 
       main {
+        position: relative;
+        z-index: 1;
         min-width: 0;
+        min-height: 100dvh;
         padding: 0 clamp(var(--pn-space-4), 3vw, var(--pn-space-10))
           var(--pn-space-10);
       }
@@ -342,84 +322,15 @@ export class PanelApp extends LitElement {
         }
       }
 
-      .kiosk .rail {
-        display: none;
-      }
-
-      .kiosk {
-        grid-template-columns: minmax(0, 1fr);
-      }
-
-      @media (max-width: 1100px) {
-        .rail {
-          width: 4.5rem;
-          align-items: center;
-        }
-
-        .brand,
-        .nav-label,
-        .link span {
-          display: none;
-        }
-
-        .brand.compact {
-          display: flex;
-          padding: 0 0 var(--pn-space-5);
-        }
-
-        .link {
-          justify-content: center;
-          width: 3rem;
-          padding: 0;
-        }
-      }
-
       @media (max-width: 700px) {
-        .shell {
-          grid-template-columns: minmax(0, 1fr);
-        }
-
-        .rail {
-          position: fixed;
-          inset: auto var(--pn-space-3) var(--pn-space-3);
-          z-index: 20;
-          flex-direction: row;
-          width: auto;
-          height: auto;
-          padding: var(--pn-space-1);
-          border: 1px solid var(--pn-border);
-          border-radius: var(--pn-radius-xl);
-          background: color-mix(
-            in oklab,
-            var(--pn-surface-solid) 80%,
-            transparent
-          );
-          box-shadow: var(--pn-shadow-l);
-        }
-
-        .brand.compact {
-          display: none;
-        }
-
-        .nav {
-          flex-direction: row;
-          overflow-x: auto;
-          flex: 1;
-        }
-
-        .rail-end {
-          margin: 0;
-          padding: 0 0 0 var(--pn-space-1);
-          border-top: none;
-          border-left: 1px solid var(--pn-border);
-        }
-
-        main {
-          padding-bottom: 6rem;
-        }
-
         .time {
           display: none;
+        }
+
+        .menu {
+          inset: auto var(--pn-space-3) var(--pn-space-3);
+          width: auto;
+          margin: 0;
         }
       }
     `,
@@ -440,6 +351,8 @@ export class PanelApp extends LitElement {
   readonly #prefersDark = new AtomController(this, () => prefersDark);
 
   readonly #connected = new AtomController(this, () => connected);
+
+  @query("#switcher") accessor menu: HTMLElement | null = null;
 
   override updated() {
     const current = this.#settings.value;
@@ -470,6 +383,7 @@ export class PanelApp extends LitElement {
     }
 
     event.preventDefault();
+    this.menu?.hidePopover();
     navigate(to);
   }
 
@@ -482,59 +396,60 @@ export class PanelApp extends LitElement {
     }).format(this.#now.value);
   }
 
-  #renderRail(current: string | undefined) {
+  // The dashboard switcher in the top bar: the logo and the page's name,
+  // opening a menu of dashboards and settings.
+  #renderSwitcher(title: string, current: string | undefined) {
     const list = this.#dashboards.value ?? [];
     const onSettings = this.#route.value.page === "settings";
 
     return html`
-      <nav class="rail" aria-label="Dashboards">
-        <div class="brand">
-          <img class="logo" src=${logo} alt="" />
-          <span>Panel<small>Home Assistant Bridge</small></span>
-        </div>
-        <div class="brand compact">
-          <img class="logo" src=${logo} alt="Home Assistant Bridge panel" />
-        </div>
-        <div class="eyebrow nav-label">Dashboards</div>
-        <div class="nav">
-          ${repeat(
-            list,
-            (dashboard) => dashboard.id,
-            (dashboard) => {
-              const to = { page: "dashboard", id: dashboard.id } as const;
+      <button
+        class="switcher"
+        popovertarget="switcher"
+        aria-haspopup="menu"
+        title="Dashboards and settings"
+      >
+        <img class="logo" src=${logo} alt="" />
+        <h1>${title}</h1>
+        ${icon("chevron-down")}
+      </button>
+      <nav id="switcher" class="menu" popover aria-label="Dashboards">
+        ${repeat(
+          list,
+          (dashboard) => dashboard.id,
+          (dashboard) => {
+            const to = { page: "dashboard", id: dashboard.id } as const;
 
-              return html`<a
-                class="link"
-                href=${href(to)}
-                title=${dashboard.name}
-                aria-current=${
-                  !onSettings && dashboard.id === current ? "page" : "false"
-                }
-                @click=${(event: MouseEvent) => this.#link(event, to)}
-              >
-                ${icon(dashboard.icon)}<span>${dashboard.name}</span>
-              </a>`;
-            },
-          )}
-          <button
-            class="link new"
-            title="New dashboard"
-            @click=${() => this.#create()}
-          >
-            ${icon("plus")}<span>New dashboard</span>
-          </button>
-        </div>
-        <div class="rail-end">
-          <a
-            class="link"
-            href=${href(settingsHome)}
-            title="Settings"
-            aria-current=${onSettings ? "page" : "false"}
-            @click=${(event: MouseEvent) => this.#link(event, settingsHome)}
-          >
-            ${icon("settings")}<span>Settings</span>
-          </a>
-        </div>
+            return html`<a
+              class="link"
+              href=${href(to)}
+              aria-current=${
+                !onSettings && dashboard.id === current ? "page" : "false"
+              }
+              @click=${(event: MouseEvent) => this.#link(event, to)}
+            >
+              ${icon(dashboard.icon)}<span>${dashboard.name}</span>
+            </a>`;
+          },
+        )}
+        <button
+          class="link"
+          @click=${() => {
+            this.menu?.hidePopover();
+            this.#create();
+          }}
+        >
+          ${icon("plus")}<span>New dashboard</span>
+        </button>
+        <hr />
+        <a
+          class="link"
+          href=${href(settingsHome)}
+          aria-current=${onSettings ? "page" : "false"}
+          @click=${(event: MouseEvent) => this.#link(event, settingsHome)}
+        >
+          ${icon("settings")}<span>Settings</span>
+        </a>
       </nav>
     `;
   }
@@ -586,83 +501,75 @@ export class PanelApp extends LitElement {
     const { kiosk } = this.#settings.value;
     const isEditing = this.#editing.value && !kiosk;
 
+    const title =
+      current.page === "settings" ? "Settings" : (dashboard?.name ?? "Panel");
+
     return html`
       <panel-backdrop
         .background=${dashboard?.background ?? this.#settings.value.background}
       ></panel-backdrop>
-      <div class="shell ${kiosk ? "kiosk" : ""}">
-        ${this.#renderRail(dashboard?.id)}
-        <main>
-          <header class="topbar">
-            <h1>
-              ${
-                current.page === "settings"
-                  ? "Settings"
-                  : (dashboard?.name ?? "Panel")
-              }
-            </h1>
-            <span class="time">${this.#time()}</span>
-            ${
-              this.#connected.value
-                ? nothing
-                : html`<span class="offline" role="status">
-                    <span class="pulse"></span>Reconnecting
-                  </span>`
-            }
-            <div class="actions">
-              <button
-                class="search"
-                aria-keyshortcuts="Meta+K Control+K"
-                @click=${() => openCommands()}
-              >
-                ${icon("search")}<span>Search</span>
-                <kbd>${isMac ? "⌘" : "Ctrl"} K</kbd>
-              </button>
-              ${
-                dashboard !== undefined &&
-                current.page === "dashboard" &&
-                !kiosk
-                  ? html`
-                      ${
-                        isEditing
-                          ? html`<button
-                              class="button ghost"
-                              @click=${() =>
-                                navigate({
-                                  page: "settings",
-                                  section: "dashboards",
-                                  id: dashboard.id,
-                                })}
-                            >
-                              ${icon("settings")} Customise
-                            </button>`
-                          : nothing
-                      }
-                      <button
-                        class="button ${isEditing ? "primary" : ""}"
-                        aria-pressed=${isEditing ? "true" : "false"}
-                        @click=${() => registry.set(editing, !isEditing)}
-                      >
-                        ${icon(isEditing ? "check" : "pencil")}
-                        ${isEditing ? "Done" : "Edit"}
-                      </button>
-                    `
-                  : nothing
-              }
-            </div>
-          </header>
+      <main>
+        <header class="topbar">
+          ${kiosk ? html`<h1>${title}</h1>` : this.#renderSwitcher(title, dashboard?.id)}
+          <span class="time">${this.#time()}</span>
           ${
-            current.page === "settings"
-              ? html`<panel-settings .route=${current}></panel-settings>`
-              : dashboard === undefined
-                ? this.#renderEmpty()
-                : html`<panel-dashboard
-                    .dashboard=${dashboard}
-                    .editing=${isEditing}
-                  ></panel-dashboard>`
+            this.#connected.value
+              ? nothing
+              : html`<span class="offline" role="status">
+                  <span class="pulse"></span>Reconnecting
+                </span>`
           }
-        </main>
-      </div>
+          <div class="actions">
+            <button
+              class="search"
+              aria-keyshortcuts="Meta+K Control+K"
+              @click=${() => openCommands()}
+            >
+              ${icon("search")}<span>Search</span>
+              <kbd>${isMac ? "⌘" : "Ctrl"} K</kbd>
+            </button>
+            ${
+              dashboard !== undefined && current.page === "dashboard" && !kiosk
+                ? html`
+                    ${
+                      isEditing
+                        ? html`<button
+                            class="button ghost"
+                            @click=${() =>
+                              navigate({
+                                page: "settings",
+                                section: "dashboards",
+                                id: dashboard.id,
+                              })}
+                          >
+                            ${icon("settings")} Customise
+                          </button>`
+                        : nothing
+                    }
+                    <button
+                      class="button ${isEditing ? "primary" : ""}"
+                      aria-pressed=${isEditing ? "true" : "false"}
+                      @click=${() => registry.set(editing, !isEditing)}
+                    >
+                      ${icon(isEditing ? "check" : "pencil")}
+                      ${isEditing ? "Done" : "Edit"}
+                    </button>
+                  `
+                : nothing
+            }
+          </div>
+        </header>
+        ${
+          current.page === "settings"
+            ? html`<panel-settings .route=${current}></panel-settings>`
+            : dashboard === undefined
+              ? this.#renderEmpty()
+              : html`<panel-dashboard
+                  .dashboard=${dashboard}
+                  .editing=${isEditing}
+                ></panel-dashboard>`
+        }
+      </main>
       <panel-overlays></panel-overlays>
       <panel-command></panel-command>
     `;

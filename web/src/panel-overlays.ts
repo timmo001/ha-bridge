@@ -1,7 +1,7 @@
 import { css, html, LitElement, nothing } from "lit";
-import { customElement, state } from "lit/decorators.js";
-import { keyed } from "lit/directives/keyed.js";
-import type { Dashboard, Section } from "../../src/panel/Panel.js";
+import { customElement } from "lit/decorators.js";
+import { repeat } from "lit/directives/repeat.js";
+import type { Dashboard, Section, Widget } from "../../src/panel/Panel.js";
 import { AtomController, registry } from "./AtomController.js";
 import { dashboards, saveDashboard } from "./client.js";
 import { newSection, newWidget, saveSection } from "./edit.js";
@@ -9,18 +9,19 @@ import "./panel-dialog.js";
 import "./panel-entity-details.js";
 import "./panel-widget-editor.js";
 import { settingsStyles, textField } from "./settings/parts.js";
-import { close, type Overlay, overlay } from "./state.js";
+import { close, type Overlay, overlays } from "./state.js";
 import { controls } from "./ui.js";
 
-// Whichever dialog is open over the page: an entity's details, or the tile
-// or section editor.
+// Every open dialog, oldest first: an entity's details, or the tile or
+// section editor. One opened from another stacks on it.
 @customElement("panel-overlays")
 export class PanelOverlays extends LitElement {
   static override styles = [
     controls,
     settingsStyles,
     css`
-      :host {
+      :host,
+      .view {
         display: contents;
       }
 
@@ -35,40 +36,47 @@ export class PanelOverlays extends LitElement {
     `,
   ];
 
-  readonly #overlay = new AtomController(this, () => overlay);
+  readonly #overlays = new AtomController(this, () => overlays);
 
   readonly #dashboards = new AtomController(this, () => dashboards);
 
-  // The section being edited, for the open dialog.
-  @state() accessor sectionDraft: Section | undefined;
+  // The section being edited in each open section dialog.
+  readonly #sections = new Map<Overlay, Section>();
 
-  #shown: Overlay | undefined;
+  // New tiles, made once per view so their IDs stay put between renders.
+  readonly #newWidgets = new WeakMap<Overlay, Widget>();
 
   override willUpdate() {
-    const current = this.#overlay.value;
+    const stack = this.#overlays.value;
 
-    if (current === this.#shown) {
-      return;
+    for (const view of this.#sections.keys()) {
+      if (!stack.includes(view)) {
+        this.#sections.delete(view);
+      }
     }
 
-    this.#shown = current;
-    this.sectionDraft =
-      current.kind === "section"
-        ? (this.#find(current.dashboardId)?.sections.find(
-            ({ id }) => id === current.sectionId,
-          ) ?? newSection(""))
-        : undefined;
+    for (const view of stack) {
+      if (view.kind === "section" && !this.#sections.has(view)) {
+        this.#sections.set(
+          view,
+          this.#find(view.dashboardId)?.sections.find(
+            ({ id }) => id === view.sectionId,
+          ) ?? newSection(""),
+        );
+      }
+    }
   }
 
   #find(id: string) {
     return this.#dashboards.value?.find((dashboard) => dashboard.id === id);
   }
 
-  #renderSection(dashboard: Dashboard, draft: Section) {
+  #renderSection(view: Overlay, dashboard: Dashboard, draft: Section) {
     const exists = dashboard.sections.some(({ id }) => id === draft.id);
 
     const set = (next: Section) => {
-      this.sectionDraft = next;
+      this.#sections.set(view, next);
+      this.requestUpdate();
     };
 
     return html`<panel-dialog
@@ -106,7 +114,7 @@ export class PanelOverlays extends LitElement {
         </div>
       </div>
       <span slot="footer" class="grow-spacer"></span>
-      <button slot="footer" class="button" @click=${() => close()}>
+      <button slot="footer" class="button" @click=${() => close(view)}>
         Cancel
       </button>
       <button
@@ -114,7 +122,7 @@ export class PanelOverlays extends LitElement {
         class="button primary"
         @click=${() => {
           registry.set(saveDashboard, saveSection(dashboard, draft));
-          close();
+          close(view);
         }}
       >
         Save
@@ -122,51 +130,58 @@ export class PanelOverlays extends LitElement {
     </panel-dialog>`;
   }
 
-  override render() {
-    const current = this.#overlay.value;
-
-    switch (current.kind) {
+  #renderView(view: Overlay) {
+    switch (view.kind) {
       case "none":
         return nothing;
       case "details":
-        return keyed(
-          current.entityId,
-          html`<panel-entity-details
-            .entityId=${current.entityId}
-          ></panel-entity-details>`,
-        );
+        return html`<panel-entity-details
+          .entityId=${view.entityId}
+        ></panel-entity-details>`;
       case "widget": {
-        const dashboard = this.#find(current.dashboardId);
+        const dashboard = this.#find(view.dashboardId);
 
         const existing = dashboard?.sections
           .flatMap((section) => section.widgets)
-          .find(({ id }) => id === current.widgetId);
+          .find(({ id }) => id === view.widgetId);
 
-        const widget =
-          existing ??
-          (current.type === undefined ? undefined : newWidget(current.type));
+        let widget = existing ?? this.#newWidgets.get(view);
+
+        if (widget === undefined && view.type !== undefined) {
+          widget = newWidget(view.type);
+          this.#newWidgets.set(view, widget);
+        }
 
         return widget === undefined
           ? nothing
-          : keyed(
-              `${current.widgetId ?? current.type}`,
-              html`<panel-widget-editor
-                .dashboard=${dashboard}
-                .sectionId=${current.sectionId}
-                .widget=${widget}
-                .saved=${existing !== undefined}
-              ></panel-widget-editor>`,
-            );
+          : html`<panel-widget-editor
+              .dashboard=${dashboard}
+              .sectionId=${view.sectionId}
+              .widget=${widget}
+              .saved=${existing !== undefined}
+            ></panel-widget-editor>`;
       }
 
       case "section": {
-        const dashboard = this.#find(current.dashboardId);
+        const dashboard = this.#find(view.dashboardId);
+        const draft = this.#sections.get(view);
 
-        return dashboard === undefined || this.sectionDraft === undefined
+        return dashboard === undefined || draft === undefined
           ? nothing
-          : this.#renderSection(dashboard, this.sectionDraft);
+          : this.#renderSection(view, dashboard, draft);
       }
     }
+  }
+
+  override render() {
+    return repeat(
+      this.#overlays.value,
+      (view) => view,
+      (view) =>
+        html`<div class="view" @dialog-close=${() => close(view)}>
+          ${this.#renderView(view)}
+        </div>`,
+    );
   }
 }
 
