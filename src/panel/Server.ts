@@ -87,9 +87,10 @@ const contentTypes = new Map([
   ["js", "text/javascript; charset=utf-8"],
   ["css", "text/css; charset=utf-8"],
   ["svg", "image/svg+xml"],
+  ["png", "image/png"],
 ]);
 
-const { "index.html": indexHtml = "", ...assets } = bundleWeb();
+const { "index.html": indexFile, ...assets } = bundleWeb();
 
 const compressFrom = 1024;
 
@@ -99,12 +100,17 @@ const assetHeaders = {
 };
 
 // The UI's assets, built into the binary. Their names carry a content hash,
-// so they never change, and the bigger ones are gzipped once here.
+// so they never change. Bigger text files are gzipped once here; images are
+// compressed already.
 const webFiles = new Map(
-  Object.entries(assets).map(([name, body]) => {
+  Object.entries(assets).map(([name, file]) => {
     const contentType = contentTypes.get(name.split(".").pop() ?? "");
 
-    const plain = HttpServerResponse.text(body, {
+    const bytes = file.base64
+      ? Uint8Array.fromBase64(file.body)
+      : new TextEncoder().encode(file.body);
+
+    const plain = HttpServerResponse.uint8Array(bytes, {
       contentType,
       headers: assetHeaders,
     });
@@ -114,15 +120,12 @@ const webFiles = new Map(
       {
         plain,
         gzipped:
-          body.length < compressFrom
+          file.base64 || bytes.length < compressFrom
             ? plain
-            : HttpServerResponse.uint8Array(
-                Bun.gzipSync(new TextEncoder().encode(body)),
-                {
-                  contentType,
-                  headers: { ...assetHeaders, "content-encoding": "gzip" },
-                },
-              ),
+            : HttpServerResponse.uint8Array(Bun.gzipSync(bytes), {
+                contentType,
+                headers: { ...assetHeaders, "content-encoding": "gzip" },
+              }),
       },
     ];
   }),
@@ -131,7 +134,7 @@ const webFiles = new Map(
 const acceptsGzip = (request: HttpServerRequest.HttpServerRequest) =>
   /(?:^|,)\s*gzip\s*(?:;|,|$)/.test(request.headers["accept-encoding"] ?? "");
 
-const page = HttpServerResponse.text(indexHtml, {
+const page = HttpServerResponse.text(indexFile?.body ?? "", {
   contentType: contentTypes.get("html"),
   headers: { "cache-control": "no-cache" },
 });
@@ -199,7 +202,13 @@ export const layer = (options: PanelOptions) =>
     { middleware: sameOrigin },
   ).pipe(
     Layer.provide(
-      BunHttpServer.layer({ hostname: options.hostname, port: options.port }),
+      BunHttpServer.layer({
+        hostname: options.hostname,
+        port: options.port,
+        // Open pages hold their socket until they close, so waiting for
+        // them would hold up every restart; they reconnect on their own.
+        gracefulShutdownTimeout: "2 seconds",
+      }),
     ),
     Layer.provide(bridgeClient(options.socketPath)),
     Layer.provide(PanelStore.layer(options.dataPath)),

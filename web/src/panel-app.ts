@@ -2,8 +2,15 @@ import { AsyncResult } from "effect/reactivity";
 import { css, html, LitElement, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
+import logo from "../../docs/src/assets/logo.svg";
 import { AtomController, registry } from "./AtomController.js";
-import { dashboards, panel, saveDashboard, settings } from "./client.js";
+import {
+  connected,
+  dashboards,
+  panel,
+  saveDashboard,
+  settings,
+} from "./client.js";
 import { newDashboard } from "./edit.js";
 import { icon } from "./icons.js";
 import "./panel-backdrop.js";
@@ -71,29 +78,23 @@ export class PanelApp extends LitElement {
         display: none;
       }
 
-      .mark {
+      .logo {
+        display: block;
+        flex: none;
+        width: 2rem;
+        height: 2rem;
+      }
+
+      .brand span {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 3px;
-        width: 1.75rem;
-        height: 1.75rem;
-        padding: 5px;
-        border-radius: 0.6rem;
-        background: var(--pn-accent);
+        line-height: 1.15;
       }
 
-      .mark span {
-        border-radius: 2px;
-        background: var(--pn-accent-text);
-      }
-
-      .mark span:nth-child(2) {
-        opacity: 0.5;
-      }
-
-      .mark span:nth-child(3) {
-        grid-column: span 2;
-        opacity: 0.8;
+      .brand small {
+        color: var(--pn-text-faint);
+        font-size: var(--pn-text-2xs);
+        font-weight: 560;
+        letter-spacing: 0.02em;
       }
 
       .nav {
@@ -205,6 +206,33 @@ export class PanelApp extends LitElement {
         font-variant-numeric: tabular-nums;
       }
 
+      .offline {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--pn-space-2);
+        min-height: 1.75rem;
+        padding: 0 var(--pn-space-3);
+        border-radius: var(--pn-radius-full);
+        background: var(--pn-danger-soft);
+        color: var(--pn-danger);
+        font-size: var(--pn-text-xs);
+        font-weight: 600;
+      }
+
+      .pulse {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: currentColor;
+        animation: pulse 1.2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        50% {
+          opacity: 0.3;
+        }
+      }
+
       .actions {
         display: flex;
         align-items: center;
@@ -238,17 +266,10 @@ export class PanelApp extends LitElement {
         color: var(--pn-text-muted);
       }
 
-      .hero-mark {
-        width: 4rem;
-        height: 4rem;
-        padding: 0.8rem;
-        gap: 5px;
-        border-radius: 1.25rem;
-        box-shadow: 0 16px 40px -12px var(--pn-accent-ring);
-      }
-
-      .hero-mark span {
-        border-radius: 4px;
+      .hero-logo {
+        width: 5.5rem;
+        height: 5.5rem;
+        filter: drop-shadow(0 16px 32px var(--pn-accent-ring));
       }
 
       .spinner {
@@ -363,6 +384,8 @@ export class PanelApp extends LitElement {
 
   readonly #prefersDark = new AtomController(this, () => prefersDark);
 
+  readonly #connected = new AtomController(this, () => connected);
+
   override updated() {
     const current = this.#settings.value;
     const root = document.documentElement;
@@ -411,15 +434,11 @@ export class PanelApp extends LitElement {
     return html`
       <nav class="rail" aria-label="Dashboards">
         <div class="brand">
-          <span class="mark" aria-hidden="true"
-            ><span></span><span></span><span></span
-          ></span>
-          Panel
+          <img class="logo" src=${logo} alt="" />
+          <span>Panel<small>Home Assistant Bridge</small></span>
         </div>
         <div class="brand compact">
-          <span class="mark" aria-hidden="true"
-            ><span></span><span></span><span></span
-          ></span>
+          <img class="logo" src=${logo} alt="Home Assistant Bridge panel" />
         </div>
         <div class="eyebrow nav-label">Dashboards</div>
         <div class="nav">
@@ -470,9 +489,7 @@ export class PanelApp extends LitElement {
     return html`
       <div class="center">
         <div class="empty">
-          <span class="mark hero-mark" aria-hidden="true"
-            ><span></span><span></span><span></span
-          ></span>
+          <img class="hero-logo" src=${logo} alt="" />
           <h2>Build your first dashboard</h2>
           <p>
             Group your home into sections, then fill them with tiles for lights,
@@ -531,6 +548,13 @@ export class PanelApp extends LitElement {
               }
             </h1>
             <span class="time">${this.#time()}</span>
+            ${
+              this.#connected.value
+                ? nothing
+                : html`<span class="offline" role="status">
+                    <span class="pulse"></span>Reconnecting
+                  </span>`
+            }
             <div class="actions">
               ${
                 dashboard !== undefined &&

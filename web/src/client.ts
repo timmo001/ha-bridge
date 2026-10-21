@@ -12,6 +12,7 @@ import {
   type Settings,
 } from "../../src/panel/Panel.js";
 import { PanelRpcs } from "../../src/panel/Rpcs.js";
+import { registry } from "./AtomController.js";
 
 // The panel's RPC socket, next to the page so it works under a path prefix.
 const socketUrl = () => {
@@ -20,6 +21,15 @@ const socketUrl = () => {
 
   return url.href;
 };
+
+// Whether the socket to the panel is open. Starts true, so the page doesn't
+// flash a warning while it first connects.
+export const connected = Atom.make(true).pipe(Atom.keepAlive);
+
+const connectionHooks = Layer.succeed(RpcClient.ConnectionHooks, {
+  onConnect: Effect.sync(() => registry.set(connected, true)),
+  onDisconnect: Effect.sync(() => registry.set(connected, false)),
+});
 
 export class PanelClient extends Context.Service<
   PanelClient,
@@ -36,6 +46,7 @@ export class PanelClient extends Context.Service<
         retryTransientErrors: true,
       }),
     ),
+    Layer.provide(connectionHooks),
     Layer.provide(RpcSerialization.layerJson),
     Layer.provide(Socket.layerWebSocket(socketUrl())),
     Layer.provide(Socket.layerWebSocketConstructorGlobal),
@@ -44,18 +55,18 @@ export class PanelClient extends Context.Service<
 
 const runtime = Atom.runtime(PanelClient.layer);
 
-// Watches start over after the socket drops, so a restarted panel or bridge
-// is picked up without a reload.
-const resilient = <A, E>(stream: Stream.Stream<A, E, PanelClient>) =>
-  stream.pipe(Stream.retry(Schedule.spaced("2 seconds")));
-
-// One of the client's streams, opened when the atom is first read.
+// One of the client's streams, opened when the atom is first read. A watch
+// ends when the socket drops or the panel restarts: failing, or interrupted
+// by the server shutting down. Whichever it is, it opens again two seconds
+// later, and the atom keeps its last value meanwhile, so tiles don't blank
+// out while the panel reconnects.
 const watch = <A, E>(
   open: (client: PanelClient["Service"]) => Stream.Stream<A, E>,
 ) =>
-  resilient(
-    Stream.unwrap(PanelClient.use((client) => Effect.succeed(open(client)))),
-  ).pipe(Stream.orDie);
+  Stream.unwrap(PanelClient.use((client) => Effect.succeed(open(client)))).pipe(
+    Stream.catchCause(() => Stream.empty),
+    Stream.repeat(Schedule.spaced("2 seconds")),
+  );
 
 // The saved dashboards and settings, kept current from every browser.
 export const panel = runtime
@@ -163,6 +174,8 @@ export const history = Atom.family((key: string) => {
               : [];
           }),
         ),
+        // Waits out the panel restarting rather than showing an error.
+        Effect.retry(Schedule.spaced("5 seconds")),
       ),
       Schedule.spaced("5 minutes"),
     ),
