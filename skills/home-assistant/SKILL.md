@@ -1,6 +1,6 @@
 ---
 name: home-assistant
-description: Look up how Home Assistant behaves in its official docs and source, and write automations, scripts, triggers and conditions the current way. Use when explaining why an automation ran when it did, how an integration, trigger, condition, action or entity state works, or when writing or changing an automation or script, preferring Home Assistant's purpose-specific triggers, conditions and actions such as light.turned_on and light.is_on over templates. Pairs with the ha-bridge-cli skill, which reads, tests and saves them through the bridge.
+description: Look up how Home Assistant behaves in its docs and source, and write automations and scripts the current way, preferring purpose-specific triggers, conditions and actions such as light.turned_on over templates. Use when explaining why an automation ran, how an integration, trigger, condition, action or entity state works, or when writing or changing an automation or script.
 license: Apache-2.0
 compatibility: Needs search or fetch tools for the docs. Reading and changing a live Home Assistant needs the ha-bridge-cli skill and a running bridge.
 ---

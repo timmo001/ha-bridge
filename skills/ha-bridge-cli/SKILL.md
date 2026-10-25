@@ -1,6 +1,6 @@
 ---
 name: ha-bridge-cli
-description: Control and read Home Assistant from the shell, scripts and status bars with the ha-bridge CLI. Use when calling Home Assistant actions, reading or watching entity state, feeding a bar or script with --bar-json, rendering templates, watching events, searching entities, reading or changing automation and script configs, reading, watching or searching Home Assistant's logs (Core's errors, Core, the Supervisor, the host, plugins and apps) to diagnose a problem or confirm a fix, or connecting an app to a running bridge. For changing ha-bridge itself, use its repository's own skills.
+description: Control and read Home Assistant from the shell, scripts and status bars with the ha-bridge CLI. Use for calling actions, reading or watching state and events, --bar-json output, templates, searching entities, automation and script configs, reading Home Assistant's logs to diagnose or confirm a fix, or connecting an app to a bridge. Not for changing ha-bridge itself.
 license: Apache-2.0
 compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve, normally the ha-bridge.service user unit on a desktop, or started by the app inside a Home Assistant app). The docs-ha-bridge MCP server is optional.
 ---
