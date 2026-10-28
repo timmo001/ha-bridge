@@ -7,7 +7,7 @@ compatibility: Needs search or fetch tools for the docs. Reading and changing a 
 
 # Home Assistant
 
-This skill is the reference half: how Home Assistant works and how to write for it. The `ha-bridge-cli` skill is the hands: it reads configs, state, history and logs, tests triggers and conditions, and saves automations and scripts. Load both when you diagnose or change a real home.
+This skill is the reference half: how Home Assistant works and how to write for it. The `ha-bridge-cli` skill is the hands: it reads configs, state, history and logs, tests triggers and conditions, and saves automations and scripts. Load both when you diagnose or change a real home. When the agent has an `ha-bridge` Code Mode namespace, use its tools for the `ha-bridge` commands below.
 
 ## Rules
 

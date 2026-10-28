@@ -7,7 +7,7 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 
 # ha-bridge CLI
 
-`ha-bridge` keeps one Home Assistant connection per machine and serves it on a Unix socket. Every command except `serve` and `setup` is a small client of that socket.
+`ha-bridge` keeps one Home Assistant connection per machine and serves it on a Unix socket. Every command except `serve` and `setup` is a small client of that socket. When the agent has an `ha-bridge` Code Mode namespace, prefer its tools for the operations it covers (reading state, search, templates, history, logs, configs, calling actions); the rules below still apply.
 
 ## Rules
 
@@ -95,6 +95,6 @@ You're inside a Home Assistant app when `SUPERVISOR_TOKEN` is set. The bridge th
 
 ## When it fails
 
-- "could not reach the bridge": the bridge isn't running. Check `systemctl --user status ha-bridge.service`, or the app's log inside an app; don't start a second `serve` alongside it.
-- "the bridge is not connected to Home Assistant": the bridge is reconnecting, every 5 seconds. Check `journalctl --user -u ha-bridge.service`, or the app's log inside an app.
+- "could not reach the bridge": the bridge isn't running. Check the `ha-bridge.service` user unit's status (the `systemd` Code Mode namespace, or `systemctl --user status ha-bridge.service`), or the app's log inside an app; don't start a second `serve` alongside it.
+- "the bridge is not connected to Home Assistant": the bridge is reconnecting, every 5 seconds. Check the unit's journal (the `systemd` namespace's logs, or `journalctl --user -u ha-bridge.service`), or the app's log inside an app.
 - Commands find the socket from `--socket`, then `$HA_BRIDGE_SOCK`, then `$XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock`. Set `HA_BRIDGE_SOCK` only to target a different bridge, such as a development one.
