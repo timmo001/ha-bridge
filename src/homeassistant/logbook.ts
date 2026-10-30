@@ -68,32 +68,12 @@ const byTime = <A extends { readonly when: string }>(
   entries: ReadonlyArray<A>,
 ) => entries.toSorted((a, b) => (timeOf(a) ?? 0) - (timeOf(b) ?? 0));
 
-// The newest day of a long query shares its boundary with the older
-// remainder, so the same entry can arrive in both chunks.
-const dedupe = <A extends { readonly when: string }>(
-  entries: ReadonlyArray<A>,
-) => {
-  const seen = new Set<string>();
-
-  return entries.filter((entry) => {
-    const key = JSON.stringify(entry);
-
-    if (seen.has(key)) {
-      return false;
-    }
-
-    seen.add(key);
-
-    return true;
-  });
-};
-
 // A chunk that starts after the last delivered entry leaves a gap. Home
 // Assistant fills that gap with a later chunk, so this one has to wait.
 const startsAfterGap = <A>(batch: LogbookBatch<A>, deliveredThrough: number) =>
   batch.partial &&
   batch.startTime !== undefined &&
-  batch.startTime > deliveredThrough + 1;
+  batch.startTime > deliveredThrough;
 
 export interface LogbookAcceptance<A> {
   readonly cursor: LogbookCursor<A>;
@@ -134,12 +114,13 @@ export const acceptLogbookBatch = <A extends { readonly when: string }>(
     };
   }
 
-  const pending =
-    cursor.heldHistory.length === 0
-      ? batch.entries
-      : dedupe([...batch.entries, ...cursor.heldHistory]);
+  const fresh = byTime(
+    newerThan(
+      [...batch.entries, ...cursor.heldHistory],
+      cursor.deliveredThrough,
+    ),
+  );
 
-  const fresh = byTime(newerThan(pending, cursor.deliveredThrough));
   const deliveredThrough = advance(fresh, cursor.deliveredThrough);
 
   if (batch.partial) {
