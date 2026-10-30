@@ -1,5 +1,7 @@
 // The recorder's catch-up batch can arrive after newer live entries, so live
-// entries are held until history finishes.
+// entries are held until history finishes. A query longer than a day is also
+// split, and the newest day arrives before the older remainder; that newer
+// day is held until a chunk covers everything up to the cursor.
 
 export interface LogbookCursor<A> {
   // Milliseconds. Entries at or before this time have been delivered.
@@ -7,15 +9,18 @@ export interface LogbookCursor<A> {
   // True until the final historical chunk of this subscription arrives.
   readonly awaitingHistory: boolean;
   readonly heldLive: ReadonlyArray<A>;
+  // Historical entries from a chunk that starts after deliveredThrough.
+  readonly heldHistory: ReadonlyArray<A>;
 }
 
 export const initialLogbookCursor = <A>(now: number): LogbookCursor<A> => ({
   deliveredThrough: now,
   awaitingHistory: true,
   heldLive: [],
+  heldHistory: [],
 });
 
-// A new subscription replays history. Live entries held for the previous
+// A new subscription replays history. Entries held for the previous
 // connection were not delivered; the replay covers them.
 export const beginLogbookSubscription = <A>(
   cursor: LogbookCursor<A>,
@@ -23,6 +28,7 @@ export const beginLogbookSubscription = <A>(
   deliveredThrough: cursor.deliveredThrough,
   awaitingHistory: true,
   heldLive: [],
+  heldHistory: [],
 });
 
 const timeOf = (entry: { readonly when: string }) => {
@@ -53,8 +59,41 @@ const advance = (
 export interface LogbookBatch<A> {
   readonly past: boolean;
   readonly partial: boolean;
+  // Start of a historical chunk, in milliseconds. Live batches omit it.
+  readonly startTime?: number | undefined;
   readonly entries: ReadonlyArray<A>;
 }
+
+const byTime = <A extends { readonly when: string }>(
+  entries: ReadonlyArray<A>,
+) => entries.toSorted((a, b) => (timeOf(a) ?? 0) - (timeOf(b) ?? 0));
+
+// The newest day of a long query shares its boundary with the older
+// remainder, so the same entry can arrive in both chunks.
+const dedupe = <A extends { readonly when: string }>(
+  entries: ReadonlyArray<A>,
+) => {
+  const seen = new Set<string>();
+
+  return entries.filter((entry) => {
+    const key = JSON.stringify(entry);
+
+    if (seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+
+    return true;
+  });
+};
+
+// A chunk that starts after the last delivered entry leaves a gap. Home
+// Assistant fills that gap with a later chunk, so this one has to wait.
+const startsAfterGap = <A>(batch: LogbookBatch<A>, deliveredThrough: number) =>
+  batch.partial &&
+  batch.startTime !== undefined &&
+  batch.startTime > deliveredThrough + 1;
 
 export interface LogbookAcceptance<A> {
   readonly cursor: LogbookCursor<A>;
@@ -85,12 +124,27 @@ export const acceptLogbookBatch = <A extends { readonly when: string }>(
     };
   }
 
-  const fresh = newerThan(batch.entries, cursor.deliveredThrough);
+  if (startsAfterGap(batch, cursor.deliveredThrough)) {
+    return {
+      cursor: {
+        ...cursor,
+        heldHistory: [...cursor.heldHistory, ...batch.entries],
+      },
+      entries: [],
+    };
+  }
+
+  const pending =
+    cursor.heldHistory.length === 0
+      ? batch.entries
+      : dedupe([...batch.entries, ...cursor.heldHistory]);
+
+  const fresh = byTime(newerThan(pending, cursor.deliveredThrough));
   const deliveredThrough = advance(fresh, cursor.deliveredThrough);
 
   if (batch.partial) {
     return {
-      cursor: { ...cursor, deliveredThrough },
+      cursor: { ...cursor, deliveredThrough, heldHistory: [] },
       entries: fresh,
     };
   }
@@ -102,6 +156,7 @@ export const acceptLogbookBatch = <A extends { readonly when: string }>(
       deliveredThrough: advance(cursor.heldLive, deliveredThrough),
       awaitingHistory: false,
       heldLive: [],
+      heldHistory: [],
     },
     entries: [...fresh, ...cursor.heldLive],
   };
