@@ -858,10 +858,11 @@ export class HomeAssistant extends Context.Service<
       // Home Assistant sends historical entries, then live ones, then a
       // catch-up batch for events the recorder had not committed. Live
       // entries are held until that batch arrives, so a gap entry is not
-      // dropped because a newer live entry was seen first. Each subscription
-      // starts a minute before the last entry delivered, so a clock ahead of
-      // Home Assistant is still accepted, and entries from a disconnect
-      // arrive once.
+      // dropped because a newer live entry was seen first. A reconnect longer
+      // than a day is split, newest day first; that day is held until the
+      // older remainder arrives. Each subscription starts a minute before the
+      // last entry delivered, so a clock ahead of Home Assistant is still
+      // accepted, and entries from a disconnect arrive once.
       const watchLogbook = (request: WatchLogbookRequest) =>
         Stream.unwrap(
           Effect.gen(function* () {

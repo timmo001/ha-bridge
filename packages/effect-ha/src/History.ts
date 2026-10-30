@@ -120,13 +120,16 @@ export const logbookFrom = (result: Schema.Json | null) =>
     Effect.mapError(logbookError),
   );
 
-// Reads a `logbook/event_stream` event: its entries, and whether they are
-// past entries sent before the live ones.
+// Reads a `logbook/event_stream` event: its entries, whether they are past
+// entries, and where a historical chunk starts. A query longer than a day
+// is split, and the newest day is sent before the older remainder.
 export const logbookEventFrom = (event: Schema.Json) =>
   decodeLogbookEvent(event).pipe(
     Effect.map(({ events, start_time, partial }) => ({
       past: start_time !== undefined,
       partial: partial === true,
+      startTime:
+        start_time === undefined ? undefined : Math.round(start_time * 1000),
       entries: events.map(toLogbookEntry),
     })),
     Effect.mapError(logbookError),
