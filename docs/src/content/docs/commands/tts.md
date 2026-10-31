@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge tts <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -36,7 +36,6 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the tts. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string          Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --media-player string    Media player to speak on: entity ID, object ID or name
   --language string        Language, such as en-GB
   --cache                  Cache the audio (the default); --no-cache skips it
@@ -46,6 +45,9 @@ FLAGS
   --area string            Area ID or name; repeat for more
   --floor string           Floor ID or name; repeat for more
   --label string           Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge tts clear-cache`
@@ -57,6 +59,6 @@ DESCRIPTION
 USAGE
   ha-bridge tts clear-cache [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

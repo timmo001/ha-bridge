@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge hassio <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -34,7 +34,7 @@ USAGE
 ARGUMENTS
   app string    App slug, such as core_ssh
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -50,7 +50,7 @@ USAGE
 ARGUMENTS
   app string    App slug, such as core_ssh
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -66,7 +66,7 @@ USAGE
 ARGUMENTS
   app string    App slug, such as core_ssh
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -84,8 +84,10 @@ ARGUMENTS
   input string    Text to write
 
 FLAGS
+  --json    Send the input as a JSON object
+
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
-  --json             Send the input as a JSON object
 ```
 
 ## `ha-bridge hassio host-reboot`
@@ -97,7 +99,7 @@ DESCRIPTION
 USAGE
   ha-bridge hassio host-reboot [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -110,7 +112,7 @@ DESCRIPTION
 USAGE
   ha-bridge hassio host-shutdown [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -124,12 +126,14 @@ USAGE
   ha-bridge hassio backup-full [flags]
 
 FLAGS
-  --socket string       Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --name string         Backup name (default: the date and time)
   --password string     Password to protect it with
   --compressed          Compress the backup (the default); --no-compressed doesn't
   --location string     Backup mount to save to (default: local storage)
   --exclude-database    Leave out the Home Assistant database
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge hassio backup-partial`
@@ -142,7 +146,6 @@ USAGE
   ha-bridge hassio backup-partial [flags]
 
 FLAGS
-  --socket string       Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --name string         Backup name (default: the date and time)
   --password string     Password to protect it with
   --compressed          Compress the backup (the default); --no-compressed doesn't
@@ -151,6 +154,9 @@ FLAGS
   --homeassistant       Include Home Assistant's configuration
   --folder choice       Folder to include; repeat for more (choices: share, addons/local, ssl, media)
   --app string          App slug to include; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge hassio restore-full`
@@ -166,8 +172,10 @@ ARGUMENTS
   slug string    Backup slug
 
 FLAGS
-  --socket string      Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --password string    Backup password
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge hassio restore-partial`
@@ -183,11 +191,13 @@ ARGUMENTS
   slug string    Backup slug
 
 FLAGS
-  --socket string      Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --password string    Backup password
   --homeassistant      Include Home Assistant's configuration
   --folder choice      Folder to include; repeat for more (choices: share, addons/local, ssl, media)
   --app string         App slug to include; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge hassio mount-reload`
@@ -202,6 +212,6 @@ USAGE
 ARGUMENTS
   device string    Mount device ID or name
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

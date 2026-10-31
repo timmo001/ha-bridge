@@ -20,7 +20,7 @@ DESCRIPTION
 USAGE
   ha-bridge assist_satellite <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -40,7 +40,6 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the assist_satellite. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string                  Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --media-id string                Media ID to play instead of speaking the message
   --preannounce                    Play the pre-announcement sound first (the default); --no-preannounce skips it
   --preannounce-media-id string    Media ID to play as the pre-announcement
@@ -49,6 +48,9 @@ FLAGS
   --area string                    Area ID or name; repeat for more
   --floor string                   Floor ID or name; repeat for more
   --label string                   Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge assist_satellite start-conversation`
@@ -67,7 +69,6 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the assist_satellite. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string                  Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --media-id string                Media ID to play instead of speaking the message
   --extra-system-prompt string     Context for the conversation agent, such as why it was started
   --preannounce                    Play the pre-announcement sound first (the default); --no-preannounce skips it
@@ -77,6 +78,9 @@ FLAGS
   --area string                    Area ID or name; repeat for more
   --floor string                   Floor ID or name; repeat for more
   --label string                   Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge assist_satellite ask-question`
@@ -95,7 +99,6 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the assist_satellite. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string                  Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --answer string                  Possible answer as id=sentence,sentence; repeat for more answers
   --media-id string                Media ID to play instead of speaking the question
   --preannounce                    Play the pre-announcement sound first (the default); --no-preannounce skips it
@@ -105,4 +108,7 @@ FLAGS
   --area string                    Area ID or name; repeat for more
   --floor string                   Floor ID or name; repeat for more
   --label string                   Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

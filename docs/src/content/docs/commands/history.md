@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge history <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -35,7 +35,6 @@ ARGUMENTS
   entity_id... string    Entity ID, such as light.desk; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --start string     Start, as an ISO time or a duration before now, such as "2 hours"
   --end string       End, as an ISO time or a duration before now; now when left out
   --json             Print JSON
@@ -47,4 +46,7 @@ FLAGS
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

@@ -20,7 +20,7 @@ DESCRIPTION
 USAGE
   ha-bridge climate <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -39,12 +39,14 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the climate. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge climate turn-on`
@@ -62,12 +64,14 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the climate. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge climate turn-off`
@@ -85,12 +89,14 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the climate. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge climate toggle`
@@ -108,12 +114,14 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the climate. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge climate hvac-mode`
@@ -130,12 +138,14 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the climate. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge climate temperature`
@@ -151,7 +161,6 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the climate. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string              Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --temperature number         Target temperature, or set a range instead
   --target-temp-low number     Lower target temperature, set with --target-temp-high
   --target-temp-high number    Upper target temperature, set with --target-temp-low
@@ -161,6 +170,9 @@ FLAGS
   --area string                Area ID or name; repeat for more
   --floor string               Floor ID or name; repeat for more
   --label string               Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge climate humidity`
@@ -177,12 +189,14 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the climate. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge climate preset-mode`
@@ -199,12 +213,14 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the climate. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge climate fan-mode`
@@ -221,12 +237,14 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the climate. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge climate swing-mode`
@@ -243,12 +261,14 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the climate. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge climate swing-horizontal-mode`
@@ -265,10 +285,12 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the climate. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

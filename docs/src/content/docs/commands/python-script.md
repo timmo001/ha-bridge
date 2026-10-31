@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge python_script <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -35,9 +35,11 @@ ARGUMENTS
   name string    Name, without python_script.
 
 FLAGS
+  --data string    Data to pass, as a JSON object, such as '{"room":"office"}'
+  --response       Wait for the result and print it as JSON
+
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
-  --data string      Data to pass, as a JSON object, such as '{"room":"office"}'
-  --response         Wait for the result and print it as JSON
 ```
 
 ## `ha-bridge python_script reload`
@@ -49,6 +51,6 @@ DESCRIPTION
 USAGE
   ha-bridge python_script reload [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

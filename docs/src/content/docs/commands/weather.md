@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge weather <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -35,11 +35,13 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the weather. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --type choice      Forecast type (choices: daily, hourly, twice_daily)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

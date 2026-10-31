@@ -20,7 +20,7 @@ DESCRIPTION
 USAGE
   ha-bridge switch <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -39,12 +39,14 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the switch. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge switch turn-off`
@@ -62,12 +64,14 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the switch. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge switch toggle`
@@ -85,10 +89,12 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the switch. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

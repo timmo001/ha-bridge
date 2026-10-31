@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge trigger <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -37,6 +37,8 @@ ARGUMENTS
   trigger string    Trigger config as YAML or JSON, such as '{trigger: state, entity_id: sun.sun}'
 
 FLAGS
-  --socket string       Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --variables string    Variables as a JSON object, such as '{"room":"office"}'
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

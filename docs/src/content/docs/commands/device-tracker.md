@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge device_tracker <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -32,7 +32,6 @@ USAGE
   ha-bridge device_tracker see [flags]
 
 FLAGS
-  --socket string           Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --mac string              Device MAC address
   --dev-id string           Device ID
   --host-name string        Host name
@@ -41,4 +40,7 @@ FLAGS
   --longitude number        GPS longitude
   --gps-accuracy integer    GPS accuracy in metres
   --battery integer         Battery percentage
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

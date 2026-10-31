@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge remote <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -37,13 +37,15 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the remote. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string      Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --activity string    Activity, one of the remote's activity_list
   --entity string      Entity ID or name; repeat for more
   --device string      Device ID or name; repeat for more
   --area string        Area ID or name; repeat for more
   --floor string       Floor ID or name; repeat for more
   --label string       Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge remote turn-off`
@@ -61,12 +63,14 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the remote. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge remote toggle`
@@ -84,12 +88,14 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the remote. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge remote send-command`
@@ -105,7 +111,6 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the remote. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string           Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --command string          Command; repeat for a sequence
   --remote-device string    Device the command is for, as the remote's integration names it
   --num-repeats integer     Times to repeat the commands (default: 1)
@@ -116,6 +121,9 @@ FLAGS
   --area string             Area ID or name; repeat for more
   --floor string            Floor ID or name; repeat for more
   --label string            Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge remote learn-command`
@@ -131,7 +139,6 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the remote. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string           Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --command string          Name for a command to learn; repeat for more
   --remote-device string    Device the command is for, as the remote's integration names it
   --command-type choice     Command type (default: ir) (choices: ir, rf)
@@ -142,6 +149,9 @@ FLAGS
   --area string             Area ID or name; repeat for more
   --floor string            Floor ID or name; repeat for more
   --label string            Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge remote delete-command`
@@ -157,7 +167,6 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the remote. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string           Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --command string          Command; repeat for a sequence
   --remote-device string    Device the command is for, as the remote's integration names it
   --entity string           Entity ID or name; repeat for more
@@ -165,4 +174,7 @@ FLAGS
   --area string             Area ID or name; repeat for more
   --floor string            Floor ID or name; repeat for more
   --label string            Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

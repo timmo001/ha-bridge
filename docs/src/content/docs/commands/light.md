@@ -20,7 +20,7 @@ DESCRIPTION
 USAGE
   ha-bridge light <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -39,7 +39,6 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the light. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string                 Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --transition string             Transition time in seconds
   --flash choice                  Flash the light (choices: short, long)
   --brightness string             Brightness from 0 to 255
@@ -61,6 +60,9 @@ FLAGS
   --area string                   Area ID or name; repeat for more
   --floor string                  Floor ID or name; repeat for more
   --label string                  Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge light turn-off`
@@ -78,7 +80,6 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the light. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --transition string    Transition time in seconds
   --flash choice         Flash the light (choices: short, long)
   --entity string        Entity ID or name; repeat for more
@@ -86,6 +87,9 @@ FLAGS
   --area string          Area ID or name; repeat for more
   --floor string         Floor ID or name; repeat for more
   --label string         Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge light toggle`
@@ -103,7 +107,6 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the light. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string                 Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --transition string             Transition time in seconds
   --flash choice                  Flash the light (choices: short, long)
   --brightness string             Brightness from 0 to 255
@@ -125,4 +128,7 @@ FLAGS
   --area string                   Area ID or name; repeat for more
   --floor string                  Floor ID or name; repeat for more
   --label string                  Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

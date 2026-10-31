@@ -22,7 +22,6 @@ ARGUMENTS
   query... string    Words to search for, such as kitchen lamp; leave out to list everything the target and filters match (optional)
 
 FLAGS
-  --socket string          Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --kind choice            Only return this kind; repeat for more (default: all) (choices: entity, device, area, command)
   --domain string          Only entities in this domain, such as light, and the devices, areas and commands for it
   --device-class string    Only entities with this device class, such as temperature, and their devices and areas
@@ -34,4 +33,7 @@ FLAGS
   --area string            Area ID or name; repeat for more
   --floor string           Floor ID or name; repeat for more
   --label string           Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

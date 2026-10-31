@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge ai_task <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -37,13 +37,15 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the ai_task. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string       Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --structure string    Output structure as a JSON object of selectors
   --entity string       Entity ID or name; repeat for more
   --device string       Device ID or name; repeat for more
   --area string         Area ID or name; repeat for more
   --floor string        Floor ID or name; repeat for more
   --label string        Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge ai_task generate-image`
@@ -61,12 +63,14 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the ai_task. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge ai_task clear-images`
@@ -79,6 +83,8 @@ USAGE
   ha-bridge ai_task clear-images [flags]
 
 FLAGS
+  --days integer    Only delete images older than this many days
+
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
-  --days integer     Only delete images older than this many days
 ```

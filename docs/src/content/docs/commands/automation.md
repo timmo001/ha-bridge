@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge automation <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -37,12 +37,14 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the automation. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge automation turn-off`
@@ -60,13 +62,15 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the automation. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --stop-actions     Stop running actions (the default); --no-stop-actions lets them finish
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge automation toggle`
@@ -84,12 +88,14 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the automation. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge automation trigger`
@@ -105,13 +111,15 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the automation. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string     Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --skip-condition    Skip the conditions (the default); --no-skip-condition checks them
   --entity string     Entity ID or name; repeat for more
   --device string     Device ID or name; repeat for more
   --area string       Area ID or name; repeat for more
   --floor string      Floor ID or name; repeat for more
   --label string      Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge automation reload`
@@ -123,7 +131,7 @@ DESCRIPTION
 USAGE
   ha-bridge automation reload [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -136,7 +144,7 @@ DESCRIPTION
 USAGE
   ha-bridge automation config <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -155,8 +163,10 @@ ARGUMENTS
   automation string    The automation's entity ID, with or without automation.
 
 FLAGS
+  --json    Print as JSON
+
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
-  --json             Print as JSON
 ```
 
 ## `ha-bridge automation config create`
@@ -169,9 +179,11 @@ USAGE
   ha-bridge automation config create [flags]
 
 FLAGS
-  --socket string      Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --id string          ID for the new automation (default: made up)
   --file, -f string    YAML or JSON file holding the config, or - for stdin
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge automation config update`
@@ -187,8 +199,10 @@ ARGUMENTS
   automation string    The automation's entity ID, with or without automation.
 
 FLAGS
-  --socket string      Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --file, -f string    YAML or JSON file holding the config, or - for stdin
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge automation config delete`
@@ -203,7 +217,7 @@ USAGE
 ARGUMENTS
   automation string    The automation's entity ID, with or without automation.
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -219,7 +233,9 @@ USAGE
   ha-bridge automation config validate [flags]
 
 FLAGS
-  --socket string      Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --file, -f string    YAML or JSON file holding the config, or - for stdin
   --json               Print as JSON
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

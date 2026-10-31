@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge conversation <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -35,10 +35,12 @@ ARGUMENTS
   text string    What to say, such as "turn on the desk light"
 
 FLAGS
-  --socket string             Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --language string           Language, such as en
   --agent-id string           Conversation agent (default: Home Assistant)
   --conversation-id string    Continue this conversation
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge conversation reload`
@@ -51,7 +53,9 @@ USAGE
   ha-bridge conversation reload [flags]
 
 FLAGS
-  --socket string      Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --language string    Language, such as en
   --agent-id string    Conversation agent (default: Home Assistant)
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

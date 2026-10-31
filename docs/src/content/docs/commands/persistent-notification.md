@@ -20,7 +20,7 @@ DESCRIPTION
 USAGE
   ha-bridge persistent_notification <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -37,9 +37,11 @@ ARGUMENTS
   message string    Message text
 
 FLAGS
+  --title string    Title
+  --id string       Notification ID; reusing one replaces that notification
+
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
-  --title string     Title
-  --id string        Notification ID; reusing one replaces that notification
 ```
 
 ## `ha-bridge persistent_notification dismiss`
@@ -54,7 +56,7 @@ USAGE
 ARGUMENTS
   id string    Notification ID
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -67,6 +69,6 @@ DESCRIPTION
 USAGE
   ha-bridge persistent_notification dismiss-all [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

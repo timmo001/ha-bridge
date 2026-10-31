@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge logbook <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -35,7 +35,6 @@ ARGUMENTS
   entity_id... string    Entity ID, such as light.desk; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --start string     Start, as an ISO time or a duration before now, such as "2 hours"
   --end string       End, as an ISO time or a duration before now; now when left out
   --json             Print JSON
@@ -45,6 +44,9 @@ FLAGS
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logbook watch`
@@ -62,7 +64,6 @@ ARGUMENTS
   entity_id... string    Entity ID, such as light.desk; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json             Print each entry as JSON
   --domain string    Only entities in this domain, such as light
   --entity string    Entity ID or name; repeat for more
@@ -70,6 +71,9 @@ FLAGS
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logbook log`
@@ -86,7 +90,9 @@ ARGUMENTS
   message string    What happened, such as is being used
 
 FLAGS
-  --socket string       Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity-id string    Full entity ID to tie the entry to
   --domain string       Domain whose icon the entry shows
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

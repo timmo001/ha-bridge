@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge system_log <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -35,9 +35,11 @@ ARGUMENTS
   message string    Message text
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --level choice     Log level (default: error) (choices: debug, info, warning, error, critical)
   --logger string    Logger name, such as mycomponent.myplatform
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge system_log clear`
@@ -49,6 +51,6 @@ DESCRIPTION
 USAGE
   ha-bridge system_log clear [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

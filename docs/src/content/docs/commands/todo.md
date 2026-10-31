@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge todo <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -35,13 +35,15 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the todo. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --status choice    Only items with this status; repeat for both (choices: needs_action, completed)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge todo add`
@@ -58,7 +60,6 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the todo. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string          Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --due-date string        Due date as YYYY-MM-DD
   --due-datetime string    Due date and time, such as "2026-10-01 18:30"
   --description string     Description
@@ -67,6 +68,9 @@ FLAGS
   --area string            Area ID or name; repeat for more
   --floor string           Floor ID or name; repeat for more
   --label string           Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge todo update`
@@ -83,7 +87,6 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the todo. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string          Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --rename string          New name
   --status choice          New status (choices: needs_action, completed)
   --due-date string        Due date as YYYY-MM-DD
@@ -94,6 +97,9 @@ FLAGS
   --area string            Area ID or name; repeat for more
   --floor string           Floor ID or name; repeat for more
   --label string           Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge todo remove`
@@ -109,13 +115,15 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the todo. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --item string      Item name or UID; repeat for more
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge todo remove-completed`
@@ -131,10 +139,12 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the todo. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

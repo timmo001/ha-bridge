@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge logger <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -34,7 +34,7 @@ USAGE
 ARGUMENTS
   level string    Level for loggers without their own: debug, info, warning, error, fatal, critical
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -50,6 +50,6 @@ USAGE
 ARGUMENTS
   logger=level... string   Logger and level, such as homeassistant.components.mqtt=debug; repeat for more
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

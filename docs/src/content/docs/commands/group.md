@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge group <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -35,13 +35,15 @@ ARGUMENTS
   object_id string    Group ID, without group.
 
 FLAGS
-  --socket string           Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --name string             Group name
   --icon string             Icon, such as mdi:lamp
   --all                     On only when every member is on
   --entity string           Member entity ID, replacing the members; repeat for more
   --add-entity string       Entity ID to add
   --remove-entity string    Entity ID to remove
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge group remove`
@@ -56,7 +58,7 @@ USAGE
 ARGUMENTS
   object_id string    Group ID, without group.
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -69,6 +71,6 @@ DESCRIPTION
 USAGE
   ha-bridge group reload [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

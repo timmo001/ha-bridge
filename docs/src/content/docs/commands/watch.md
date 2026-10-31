@@ -24,7 +24,6 @@ ARGUMENTS
   entity_id... string    Entity ID, such as light.desk; repeat for more (optional)
 
 FLAGS
-  --socket string          Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --domain string          Only entities in this domain, such as light
   --device-class string    Only entities with this device class, such as temperature
   --json                   Print the full entity update as JSON
@@ -46,4 +45,7 @@ FLAGS
   --area string            Area ID or name; repeat for more
   --floor string           Floor ID or name; repeat for more
   --label string           Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

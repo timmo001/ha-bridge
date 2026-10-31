@@ -20,7 +20,7 @@ DESCRIPTION
 USAGE
   ha-bridge wake_on_lan <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -39,8 +39,10 @@ ARGUMENTS
   mac string    MAC address, such as aa:bb:cc:dd:ee:ff
 
 FLAGS
-  --socket string               Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --secureon-password string    SecureOn password
   --broadcast-address string    Address to send to (default: the whole network)
   --broadcast-port integer      Port to send to (default: 9)
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge event <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -36,7 +36,7 @@ USAGE
 ARGUMENTS
   event-type string    Event type, such as call_service; every type when left out. Most need an admin token (optional)
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -53,6 +53,8 @@ ARGUMENTS
   event-type string    Event type, such as my_event
 
 FLAGS
+  --data string    Event data as a JSON object, such as '{"room":"office"}'
+
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
-  --data string      Event data as a JSON object, such as '{"room":"office"}'
 ```

@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge condition <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -37,8 +37,10 @@ ARGUMENTS
   condition string    Condition config as YAML or JSON, such as '{condition: state, entity_id: sun.sun, state: above_horizon}'
 
 FLAGS
-  --socket string       Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --variables string    Variables as a JSON object, such as '{"room":"office"}'
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge condition watch`
@@ -55,6 +57,6 @@ USAGE
 ARGUMENTS
   condition string    Condition config as YAML or JSON, such as '{condition: state, entity_id: sun.sun, state: above_horizon}'
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

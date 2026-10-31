@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge scene <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -37,13 +37,15 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the scene. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --transition number    Transition time in seconds
   --entity string        Entity ID or name; repeat for more
   --device string        Device ID or name; repeat for more
   --area string          Area ID or name; repeat for more
   --floor string         Floor ID or name; repeat for more
   --label string         Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge scene apply`
@@ -59,8 +61,10 @@ ARGUMENTS
   entities string    Entity states as a JSON object, such as '{"light.desk":{"state":"on","brightness":80}}'
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --transition number    Transition time in seconds
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge scene create`
@@ -76,9 +80,11 @@ ARGUMENTS
   scene_id string    ID for the new scene, such as before_movie
 
 FLAGS
-  --socket string             Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entities string           Entity states as a JSON object, such as '{"light.desk":{"state":"on","brightness":80}}'
   --snapshot-entity string    Entity ID whose current state to capture; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge scene delete`
@@ -94,12 +100,14 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the scene. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --entity string    Entity ID or name; repeat for more
   --device string    Device ID or name; repeat for more
   --area string      Area ID or name; repeat for more
   --floor string     Floor ID or name; repeat for more
   --label string     Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge scene reload`
@@ -111,6 +119,6 @@ DESCRIPTION
 USAGE
   ha-bridge scene reload [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

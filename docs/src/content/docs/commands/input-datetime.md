@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge input_datetime <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -35,7 +35,6 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the input_datetime. prefix; repeat for more (optional)
 
 FLAGS
-  --socket string       Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --date string         Date as YYYY-MM-DD
   --time string         Time as HH:MM or HH:MM:SS
   --datetime string     Date and time, such as "2026-10-01 18:30"
@@ -45,6 +44,9 @@ FLAGS
   --area string         Area ID or name; repeat for more
   --floor string        Floor ID or name; repeat for more
   --label string        Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge input_datetime reload`
@@ -56,6 +58,6 @@ DESCRIPTION
 USAGE
   ha-bridge input_datetime reload [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

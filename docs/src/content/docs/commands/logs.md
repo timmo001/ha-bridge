@@ -20,7 +20,7 @@ DESCRIPTION
 USAGE
   ha-bridge logs <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -35,7 +35,7 @@ DESCRIPTION
 USAGE
   ha-bridge logs core <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -49,7 +49,6 @@ USAGE
   ha-bridge logs core get [flags]
 
 FLAGS
-  --socket string         Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                  Print as JSON
   --search string         Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer     How many of the latest records to show
@@ -57,6 +56,9 @@ FLAGS
   --verbose               Add the time, host and process to each line
   --latest                Only what was logged since Core last started
   --integration string    Only this integration's records, such as mqtt, including its libraries'
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs core watch`
@@ -71,11 +73,13 @@ USAGE
   ha-bridge logs core watch [flags]
 
 FLAGS
-  --socket string         Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                  Print as JSON
   --search string         Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer     How many of the latest records to show
   --integration string    Only this integration's records, such as mqtt, including its libraries'
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs core errors`
@@ -87,7 +91,7 @@ DESCRIPTION
 USAGE
   ha-bridge logs core errors <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -101,9 +105,11 @@ USAGE
   ha-bridge logs core errors get [flags]
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json             Print as JSON
   --search string    Only show what fuzzily matches this text, as ha-bridge search does
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs core errors watch`
@@ -118,9 +124,11 @@ USAGE
   ha-bridge logs core errors watch [flags]
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json             Print as JSON
   --search string    Only show what fuzzily matches this text, as ha-bridge search does
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs supervisor`
@@ -134,7 +142,7 @@ DESCRIPTION
 USAGE
   ha-bridge logs supervisor <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -148,12 +156,14 @@ USAGE
   ha-bridge logs supervisor get [flags]
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                 Print as JSON
   --search string        Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer    How many of the latest records to show
   --boot, -b integer     A boot by offset: 0 for this one, -1 for the one before (see logs host boots)
   --verbose              Add the time, host and process to each line
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs supervisor watch`
@@ -168,11 +178,13 @@ USAGE
   ha-bridge logs supervisor watch [flags]
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                 Print as JSON
   --search string        Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer    How many of the latest records to show
   --verbose              Add the time, host and process to each line
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs host`
@@ -186,7 +198,7 @@ DESCRIPTION
 USAGE
   ha-bridge logs host <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -200,12 +212,14 @@ USAGE
   ha-bridge logs host get [flags]
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                 Print as JSON
   --search string        Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer    How many of the latest records to show
   --boot, -b integer     A boot by offset: 0 for this one, -1 for the one before (see logs host boots)
   --verbose              Add the time, host and process to each line
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs host watch`
@@ -220,11 +234,13 @@ USAGE
   ha-bridge logs host watch [flags]
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                 Print as JSON
   --search string        Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer    How many of the latest records to show
   --verbose              Add the time, host and process to each line
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs host boots`
@@ -237,8 +253,10 @@ USAGE
   ha-bridge logs host boots [flags]
 
 FLAGS
+  --json    Print as JSON
+
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
-  --json             Print as JSON
 ```
 
 ## `ha-bridge logs apps`
@@ -252,7 +270,7 @@ DESCRIPTION
 USAGE
   ha-bridge logs apps <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -268,8 +286,10 @@ USAGE
   ha-bridge logs apps list [flags]
 
 FLAGS
+  --json    Print as JSON
+
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
-  --json             Print as JSON
 ```
 
 ## `ha-bridge logs apps get`
@@ -285,12 +305,14 @@ ARGUMENTS
   slug string    The app's slug, such as core_mosquitto
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                 Print as JSON
   --search string        Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer    How many of the latest records to show
   --boot, -b integer     A boot by offset: 0 for this one, -1 for the one before (see logs host boots)
   --verbose              Add the time, host and process to each line
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs apps watch`
@@ -308,11 +330,13 @@ ARGUMENTS
   slug string    The app's slug, such as core_mosquitto
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                 Print as JSON
   --search string        Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer    How many of the latest records to show
   --verbose              Add the time, host and process to each line
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs audio`
@@ -326,7 +350,7 @@ DESCRIPTION
 USAGE
   ha-bridge logs audio <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -340,12 +364,14 @@ USAGE
   ha-bridge logs audio get [flags]
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                 Print as JSON
   --search string        Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer    How many of the latest records to show
   --boot, -b integer     A boot by offset: 0 for this one, -1 for the one before (see logs host boots)
   --verbose              Add the time, host and process to each line
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs audio watch`
@@ -360,11 +386,13 @@ USAGE
   ha-bridge logs audio watch [flags]
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                 Print as JSON
   --search string        Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer    How many of the latest records to show
   --verbose              Add the time, host and process to each line
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs cli`
@@ -376,7 +404,7 @@ DESCRIPTION
 USAGE
   ha-bridge logs cli <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -390,12 +418,14 @@ USAGE
   ha-bridge logs cli get [flags]
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                 Print as JSON
   --search string        Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer    How many of the latest records to show
   --boot, -b integer     A boot by offset: 0 for this one, -1 for the one before (see logs host boots)
   --verbose              Add the time, host and process to each line
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs cli watch`
@@ -410,11 +440,13 @@ USAGE
   ha-bridge logs cli watch [flags]
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                 Print as JSON
   --search string        Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer    How many of the latest records to show
   --verbose              Add the time, host and process to each line
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs dns`
@@ -426,7 +458,7 @@ DESCRIPTION
 USAGE
   ha-bridge logs dns <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -440,12 +472,14 @@ USAGE
   ha-bridge logs dns get [flags]
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                 Print as JSON
   --search string        Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer    How many of the latest records to show
   --boot, -b integer     A boot by offset: 0 for this one, -1 for the one before (see logs host boots)
   --verbose              Add the time, host and process to each line
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs dns watch`
@@ -460,11 +494,13 @@ USAGE
   ha-bridge logs dns watch [flags]
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                 Print as JSON
   --search string        Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer    How many of the latest records to show
   --verbose              Add the time, host and process to each line
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs multicast`
@@ -478,7 +514,7 @@ DESCRIPTION
 USAGE
   ha-bridge logs multicast <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -492,12 +528,14 @@ USAGE
   ha-bridge logs multicast get [flags]
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                 Print as JSON
   --search string        Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer    How many of the latest records to show
   --boot, -b integer     A boot by offset: 0 for this one, -1 for the one before (see logs host boots)
   --verbose              Add the time, host and process to each line
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs multicast watch`
@@ -512,11 +550,13 @@ USAGE
   ha-bridge logs multicast watch [flags]
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                 Print as JSON
   --search string        Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer    How many of the latest records to show
   --verbose              Add the time, host and process to each line
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs observer`
@@ -528,7 +568,7 @@ DESCRIPTION
 USAGE
   ha-bridge logs observer <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -542,12 +582,14 @@ USAGE
   ha-bridge logs observer get [flags]
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                 Print as JSON
   --search string        Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer    How many of the latest records to show
   --boot, -b integer     A boot by offset: 0 for this one, -1 for the one before (see logs host boots)
   --verbose              Add the time, host and process to each line
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs observer watch`
@@ -562,11 +604,13 @@ USAGE
   ha-bridge logs observer watch [flags]
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --json                 Print as JSON
   --search string        Only show what fuzzily matches this text, as ha-bridge search does
   --lines, -n integer    How many of the latest records to show
   --verbose              Add the time, host and process to each line
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge logs search`
@@ -582,10 +626,12 @@ ARGUMENTS
   query... string    Words to search for, such as mqtt timeout
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --source string        Where to look: errors, core, supervisor, host, audio, cli, dns, multicast, observer or an app's slug; repeat for more (default: errors and core)
   --lines, -n integer    How many of each log's latest records to search (default: 1000)
   --limit integer        Most results to show
   --page integer         Show this page of --limit results, starting at 1
   --json                 Print the results as JSON
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

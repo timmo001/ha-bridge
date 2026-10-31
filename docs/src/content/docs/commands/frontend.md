@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge frontend <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -32,10 +32,12 @@ USAGE
   ha-bridge frontend set-theme [flags]
 
 FLAGS
-  --socket string       Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --name string         Default theme, or with --mode that mode's default; none goes back to Home Assistant's theme
   --name-dark string    Default theme in dark mode
   --mode choice         Mode that --name sets the default for (choices: light, dark)
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge frontend reload-themes`
@@ -47,6 +49,6 @@ DESCRIPTION
 USAGE
   ha-bridge frontend reload-themes [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge template <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -37,12 +37,14 @@ ARGUMENTS
   template string    Template, such as "{{ states('sun.sun') }}"
 
 FLAGS
-  --socket string       Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --variables string    Variables as a JSON object, such as '{"room":"office"}'
   --strict              Fail on undefined variables
   --timeout number      Seconds the first render may take
   --json                Print each result as JSON
   --bar-json            Print one bar JSON object per result, taking text, tooltip and class from an object result
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge template watch`
@@ -60,12 +62,14 @@ ARGUMENTS
   template string    Template, such as "{{ states('sun.sun') }}"
 
 FLAGS
-  --socket string       Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --variables string    Variables as a JSON object, such as '{"room":"office"}'
   --strict              Fail on undefined variables
   --timeout number      Seconds the first render may take
   --json                Print each result as JSON
   --bar-json            Print one bar JSON object per result, taking text, tooltip and class from an object result
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge template reload`
@@ -77,6 +81,6 @@ DESCRIPTION
 USAGE
   ha-bridge template reload [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

@@ -18,7 +18,7 @@ DESCRIPTION
 USAGE
   ha-bridge recorder <subcommand> [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -32,10 +32,12 @@ USAGE
   ha-bridge recorder purge [flags]
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --keep-days integer    Days of history to keep, up to 365 (default: the recorder's purge_keep_days)
   --repack               Free the disk space afterwards, which can take a while
   --apply-filter         Also remove what the recorder's filters now exclude
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge recorder purge-entities`
@@ -51,7 +53,6 @@ ARGUMENTS
   entity_id... string    Entity ID, such as light.desk; repeat for more (optional)
 
 FLAGS
-  --socket string        Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --domain string        Purge every entity in this domain; repeat for more
   --glob string          Purge entity IDs matching this glob, such as sensor.weather_*; repeat for more
   --keep-days integer    Days of history to keep (default: none)
@@ -60,6 +61,9 @@ FLAGS
   --area string          Area ID or name; repeat for more
   --floor string         Floor ID or name; repeat for more
   --label string         Label ID or name; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
 ## `ha-bridge recorder enable`
@@ -71,7 +75,7 @@ DESCRIPTION
 USAGE
   ha-bridge recorder enable [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -84,7 +88,7 @@ DESCRIPTION
 USAGE
   ha-bridge recorder disable [flags]
 
-FLAGS
+INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
@@ -102,9 +106,11 @@ ARGUMENTS
   statistic_id... string   Entity ID or external statistic ID; repeat for more
 
 FLAGS
-  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
   --end string       End (default: now)
   --period choice    Length of each row (choices: 5minute, hour, day, week, month, year)
   --type choice      Value to include; repeat for more (choices: change, last_reset, max, mean, min, state, sum)
   --unit string      Unit to convert a unit class to, such as energy=kWh; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
