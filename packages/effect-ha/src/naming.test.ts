@@ -65,4 +65,32 @@ describe("displayName", () => {
   test("uses the device name when the entity name only adds spaces", () => {
     expect(displayName(namer, "light.bar", "x")).toBe("Bar Plug");
   });
+
+  test("leaves the device out when the entity has its own area", () => {
+    const named = entityNamerFrom(
+      {
+        entities: [
+          { ei: "light.lamp", di: "plug", ai: "office", en: "Lamp" },
+          {
+            ei: "switch.socket",
+            di: "socket",
+            en: "Power",
+          },
+        ],
+      },
+      [
+        { id: "plug", name: "Kitchen plug", area_id: "kitchen" },
+        { id: "strip", name: "Power strip", area_id: "kitchen" },
+        {
+          id: "socket",
+          name: "Socket",
+          parent_device_id: "strip",
+          area_id: "office",
+        },
+      ],
+    );
+
+    expect(displayName(named, "light.lamp", "x")).toBe("Lamp");
+    expect(displayName(named, "switch.socket", "x")).toBe("Socket Power");
+  });
 });

@@ -1036,7 +1036,6 @@ const vacuumAction = (action: string) => (target: Target) =>
 export const Vacuum = {
   start: vacuumAction("start"),
   pause: vacuumAction("pause"),
-  startPause: vacuumAction("start_pause"),
   stop: vacuumAction("stop"),
   returnToBase: vacuumAction("return_to_base"),
   locate: vacuumAction("locate"),
@@ -1825,6 +1824,8 @@ export const GoogleAssistant = {
     onDomain("google_assistant.request_sync", {
       agent_user_id: options?.agentUserId,
     }),
+  // Reloads the YAML configuration and asks Google to sync. Needs an admin token.
+  reload: () => onDomain("google_assistant.reload"),
 };
 
 export const Lovelace = {

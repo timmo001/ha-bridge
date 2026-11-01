@@ -53,7 +53,7 @@ main.pipe(Effect.provide(NodeServices.layer), NodeRuntime.runMain);
 
 ### Targets
 
-Reads, watches, actions and camera snapshots take a target with the same fields as an action's target in Home Assistant: `entity_id`, `device_id`, `area_id`, `floor_id` and `label_id`, each a string or a list. Every value can be an ID or a name; the bridge resolves names to IDs, then Home Assistant decides which entities the target contains. `domain` keeps only entities in that domain. A name that matches nothing or more than one item fails with `TargetError`.
+Reads, watches, actions and camera snapshots take a target with the same fields as an action's target in Home Assistant: `entity_id`, `device_id`, `area_id`, `floor_id` and `label_id`, each a string or a list, and an optional `exclude` object with those same fields. Every value can be an ID or a name; the bridge resolves names to IDs, then Home Assistant decides which entities the target contains and removes the exclusion. `exclude` needs at least one other field and Home Assistant 2026.11 or newer. `domain` keeps only entities in that domain. A name that matches nothing or more than one item fails with `TargetError`.
 
 ### Read entities
 

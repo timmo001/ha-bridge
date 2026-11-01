@@ -60,6 +60,11 @@ FLAGS
   --area string                   Area ID or name; repeat for more
   --floor string                  Floor ID or name; repeat for more
   --label string                  Label ID or name; repeat for more
+  --exclude-entity string         Entity ID or name to leave out; repeat for more
+  --exclude-device string         Device ID or name to leave out; repeat for more
+  --exclude-area string           Area ID or name to leave out; repeat for more
+  --exclude-floor string          Floor ID or name to leave out; repeat for more
+  --exclude-label string          Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -80,13 +85,18 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the light. prefix; repeat for more (optional)
 
 FLAGS
-  --transition string    Transition time in seconds
-  --flash choice         Flash the light (choices: short, long)
-  --entity string        Entity ID or name; repeat for more
-  --device string        Device ID or name; repeat for more
-  --area string          Area ID or name; repeat for more
-  --floor string         Floor ID or name; repeat for more
-  --label string         Label ID or name; repeat for more
+  --transition string        Transition time in seconds
+  --flash choice             Flash the light (choices: short, long)
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -128,6 +138,11 @@ FLAGS
   --area string                   Area ID or name; repeat for more
   --floor string                  Floor ID or name; repeat for more
   --label string                  Label ID or name; repeat for more
+  --exclude-entity string         Entity ID or name to leave out; repeat for more
+  --exclude-device string         Device ID or name to leave out; repeat for more
+  --exclude-area string           Area ID or name to leave out; repeat for more
+  --exclude-floor string          Floor ID or name to leave out; repeat for more
+  --exclude-label string          Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)

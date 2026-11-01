@@ -103,7 +103,7 @@ ha-bridge ffmpeg restart binary_sensor.driveway_motion
 ha-bridge ffmpeg stop
 ```
 
-`google_assistant request-sync` asks Google to sync its devices, for the token's user unless you set `--agent-user-id`.
+`google_assistant request-sync` asks Google to sync its devices, for the token's user unless you set `--agent-user-id`. `google_assistant reload` reloads the YAML configuration and syncs devices. It needs an admin token.
 
 | Command | Home Assistant action |
 | --- | --- |
@@ -120,3 +120,4 @@ ha-bridge ffmpeg stop
 | `cloud remote-connect`, `remote-disconnect` | `cloud.remote_connect`, `remote_disconnect` |
 | `ffmpeg start`, `stop`, `restart` | `ffmpeg.start`, `stop`, `restart` |
 | `google_assistant request-sync` | `google_assistant.request_sync` |
+| `google_assistant reload` | `google_assistant.reload` |

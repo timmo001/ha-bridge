@@ -136,6 +136,41 @@ export const valuesOf = (value: string | ReadonlyArray<string>) =>
 // Replaces names in the target with IDs: an exact ID first, then an entity
 // object ID in `domain`, then a unique case-insensitive name. `domain` also
 // limits entity names to that domain.
+const resolveFields = (
+  target: Pick<Target, TargetField>,
+  context: {
+    readonly registries: Registries;
+    readonly states: ReadonlyMap<string, EntityState>;
+    readonly domain?: string | undefined;
+  },
+) =>
+  Effect.gen(function* () {
+    const resolved: {
+      -readonly [Field in TargetField]?: ReadonlyArray<string>;
+    } = {};
+
+    for (const field of targetFields) {
+      const value = target[field];
+
+      if (value === undefined) {
+        continue;
+      }
+
+      const candidates = candidatesFor(
+        field,
+        context.registries,
+        context.states,
+        context.domain,
+      );
+
+      resolved[field] = yield* Effect.forEach(valuesOf(value), (each) =>
+        resolveValue(field, each, candidates, context.domain),
+      );
+    }
+
+    return resolved;
+  });
+
 export const resolveTarget = Effect.fn("resolveTarget")(function* (
   target: Target,
   context: {
@@ -144,29 +179,17 @@ export const resolveTarget = Effect.fn("resolveTarget")(function* (
     readonly domain?: string | undefined;
   },
 ) {
-  const resolved: { -readonly [Field in TargetField]?: ReadonlyArray<string> } =
-    {};
+  const resolved = yield* resolveFields(target, context);
 
-  for (const field of targetFields) {
-    const value = target[field];
-
-    if (value === undefined) {
-      continue;
-    }
-
-    const candidates = candidatesFor(
-      field,
-      context.registries,
-      context.states,
-      context.domain,
-    );
-
-    resolved[field] = yield* Effect.forEach(valuesOf(value), (each) =>
-      resolveValue(field, each, candidates, context.domain),
-    );
+  if (target.exclude === undefined) {
+    return resolved;
   }
 
-  return resolved;
+  const exclude = yield* resolveFields(target.exclude, context);
+
+  return Object.keys(exclude).length === 0
+    ? resolved
+    : { ...resolved, exclude };
 });
 
 export const isEmptyTarget = (target: Target) =>

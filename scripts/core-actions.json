@@ -235,6 +235,7 @@
   "google_assistant.request_sync": [
     "agent_user_id"
   ],
+  "google_assistant.reload": [],
   "group.reload": [],
   "group.set": [
     "add_entities",
@@ -686,12 +687,8 @@
   "utility_meter.calibrate": [
     "value"
   ],
-  "vacuum.turn_on": [],
-  "vacuum.turn_off": [],
-  "vacuum.toggle": [],
   "vacuum.stop": [],
   "vacuum.locate": [],
-  "vacuum.start_pause": [],
   "vacuum.start": [],
   "vacuum.pause": [],
   "vacuum.return_to_base": [],
@@ -731,9 +728,6 @@
   ],
   "water_heater.turn_on": [],
   "water_heater.turn_off": [],
-  "weather.get_forecast": [
-    "type"
-  ],
   "weather.get_forecasts": [
     "type"
   ],

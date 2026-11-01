@@ -37,3 +37,16 @@ FLAGS
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
+
+## `ha-bridge google_assistant reload`
+
+```text
+DESCRIPTION
+  Reload the Google Assistant YAML configuration and sync devices. Needs an admin token
+
+USAGE
+  ha-bridge google_assistant reload [flags]
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```

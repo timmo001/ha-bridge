@@ -237,12 +237,16 @@ const withBridge = <A, E, R>(
 const failWith = (message: string) =>
   Effect.fail(new CommandError({ message }));
 
-const noTarget = () =>
-  failWith("give at least one entity, device, area, floor or label");
+const noTarget = (target?: Target) =>
+  failWith(
+    target?.exclude === undefined
+      ? "give at least one entity, device, area, floor or label"
+      : "an exclusion needs an entity, device, area, floor or label to exclude from",
+  );
 
 const callAction = Effect.fn("callAction")(function* (action: Action) {
   if (action.target !== undefined && isEmptyTarget(action.target)) {
-    return yield* noTarget();
+    return yield* noTarget(action.target);
   }
 
   const client = yield* BridgeClient;
@@ -266,7 +270,7 @@ const getEntities = Effect.fn("getEntities")(function* (
   domain?: string,
 ) {
   if (isEmptyTarget(target)) {
-    return yield* noTarget();
+    return yield* noTarget(target);
   }
 
   const client = yield* BridgeClient;
@@ -379,7 +383,7 @@ const watchUpdates = (target: Target, domain?: string) =>
   Stream.unwrap(
     Effect.gen(function* () {
       if (isEmptyTarget(target)) {
-        return yield* noTarget();
+        return yield* noTarget(target);
       }
 
       const client = yield* BridgeClient;
@@ -955,7 +959,7 @@ const camera = Command.make("camera").pipe(
           const target = toTarget("camera", input.target);
 
           if (isEmptyTarget(target)) {
-            return yield* noTarget();
+            return yield* noTarget(target);
           }
 
           const client = yield* BridgeClient;
@@ -2705,7 +2709,6 @@ const vacuum = domainCommand("vacuum", undefined, "Vacuum actions", [
   ...simpleCommands("vacuum", [
     ["start", Vacuum.start, "Start cleaning"],
     ["pause", Vacuum.pause, "Pause cleaning"],
-    ["start-pause", Vacuum.startPause, "Start or pause cleaning"],
     ["stop", Vacuum.stop, "Stop cleaning"],
     ["return-to-base", Vacuum.returnToBase, "Go back to the dock"],
     ["locate", Vacuum.locate, "Make the vacuum sound so you can find it"],
@@ -3309,6 +3312,10 @@ const aiTask = domainCommand("ai_task", undefined, "AI task actions", [
 
         const target = toTarget("ai_task", input.target);
 
+        if (isEmptyTarget(target) && target.exclude !== undefined) {
+          return yield* noTarget(target);
+        }
+
         // Without a target, Home Assistant uses the preferred AI task entity.
         const entityId = isEmptyTarget(target)
           ? undefined
@@ -3564,7 +3571,7 @@ const historyCommand = domainCommand(
           const target = toTarget(undefined, input.target);
 
           if (isEmptyTarget(target)) {
-            return yield* noTarget();
+            return yield* noTarget(target);
           }
 
           const range = yield* parseTimeRange(input);
@@ -4325,6 +4332,10 @@ const recorder = domainCommand("recorder", undefined, "Recorder actions", [
       Effect.gen(function* () {
         const target = toTarget(undefined, input.target);
 
+        if (isEmptyTarget(target) && target.exclude !== undefined) {
+          return yield* noTarget(target);
+        }
+
         if (
           isEmptyTarget(target) &&
           input.domains.length === 0 &&
@@ -4809,6 +4820,10 @@ const ffmpegCommand = (
       const target = toTarget("binary_sensor", input.target);
 
       if (isEmptyTarget(target)) {
+        if (target.exclude !== undefined) {
+          return yield* noTarget(target);
+        }
+
         return yield* callAction(toAction());
       }
 
@@ -4854,6 +4869,11 @@ const googleAssistant = domainCommand(
           }),
         ).pipe(withBridge),
     ).pipe(Command.withDescription("Ask Google to sync its devices")),
+    systemCommand(
+      "reload",
+      GoogleAssistant.reload,
+      "Reload the Google Assistant YAML configuration and sync devices. Needs an admin token",
+    ),
   ],
 );
 
@@ -5721,6 +5741,11 @@ const search = Command.make(
     Effect.gen(function* () {
       const query = input.query.join(" ").trim();
       const target = toTarget(undefined, input.target);
+
+      if (isEmptyTarget(target) && target.exclude !== undefined) {
+        return yield* noTarget(target);
+      }
+
       const hasTarget = !isEmptyTarget(target);
       const domain = Option.getOrUndefined(input.domain);
       const deviceClass = Option.getOrUndefined(input.deviceClass);

@@ -39,11 +39,17 @@ export const DeviceRegistry = Schema.Array(
 export interface EntityNamer {
   readonly entityNames: ReadonlyMap<
     string,
-    { readonly deviceId: string; readonly name: string }
+    {
+      readonly deviceId: string;
+      readonly areaId: string;
+      readonly name: string;
+    }
   >;
   readonly deviceNames: ReadonlyMap<string, string>;
   // Child device ID to parent device ID.
   readonly parentDeviceIds: ReadonlyMap<string, string>;
+  // Device ID to its own area, when it has one.
+  readonly deviceAreaIds: ReadonlyMap<string, string>;
 }
 
 export const deviceName = (device: {
@@ -58,7 +64,11 @@ export const entityNamerFrom = (
   entityNames: new Map(
     display.entities.map((entry) => [
       entry.ei,
-      { deviceId: entry.di ?? "", name: entry.en ?? "" },
+      {
+        deviceId: entry.di ?? "",
+        areaId: entry.ai ?? "",
+        name: entry.en ?? "",
+      },
     ]),
   ),
   deviceNames: new Map(
@@ -67,6 +77,11 @@ export const entityNamerFrom = (
   parentDeviceIds: new Map(
     devices.flatMap((device) =>
       device.parent_device_id ? [[device.id, device.parent_device_id]] : [],
+    ),
+  ),
+  deviceAreaIds: new Map(
+    devices.flatMap((device) =>
+      device.area_id ? [[device.id, device.area_id]] : [],
     ),
   ),
 });
@@ -122,8 +137,8 @@ export interface EntityNameParts {
   readonly parentDevice: string | undefined;
 }
 
-// Like the frontend's computeEntityNameList with every part kept, so it
-// ignores `next_name_part`. Undefined when the entity is not in the registry.
+// Every name part, including ones a dashboard leaves out. Undefined when the
+// entity is not in the registry. `displayName` decides which parts to show.
 export const entityNameParts = (
   namer: EntityNamer | undefined,
   entityId: string,
@@ -149,23 +164,52 @@ export const entityNameParts = (
   const parentDevice =
     parentId === undefined ? undefined : namer.deviceNames.get(parentId);
 
-  let entity: string | undefined = entry.name.trim();
-
-  if (entity === "" || entity === device) {
-    entity = undefined;
-  } else if (device !== "") {
-    entity = stripPrefixFromEntityName(entity, device) || entity;
-  }
+  const entity = entry.name.trim();
 
   return {
-    entity,
+    // A name that only repeats the device is the device's name.
+    entity: entity === "" || entity === device ? undefined : entity,
     device: device || undefined,
     parentDevice: parentDevice || undefined,
   };
 };
 
-// The name Home Assistant dashboards show by default: parent device, device
-// and entity name.
+// Home Assistant 2026.11 dashboards follow `next_name_part`. An entity with
+// its own area is named on its own. Otherwise the device name comes first,
+// and a child device without its own area also starts with its parent. An
+// entity with no name of its own still uses the device name.
+const shownParts = (
+  namer: EntityNamer,
+  entityId: string,
+  parts: EntityNameParts,
+) => {
+  const entry = namer.entityNames.get(entityId);
+
+  if (entry === undefined) {
+    return [parts.parentDevice, parts.device, parts.entity];
+  }
+
+  const linksToDevice = entry.areaId === "" && entry.deviceId !== "";
+  const includeDevice = linksToDevice || parts.entity === undefined;
+
+  const includeParent =
+    linksToDevice &&
+    !namer.deviceAreaIds.has(entry.deviceId) &&
+    namer.parentDeviceIds.has(entry.deviceId);
+
+  const entity =
+    includeDevice && parts.entity !== undefined && parts.device !== undefined
+      ? stripPrefixFromEntityName(parts.entity, parts.device) || parts.entity
+      : parts.entity;
+
+  return [
+    includeParent ? parts.parentDevice : undefined,
+    includeDevice ? parts.device : undefined,
+    entity,
+  ];
+};
+
+// The name Home Assistant dashboards show by default.
 export const displayName = (
   namer: EntityNamer | undefined,
   entityId: string,
@@ -173,12 +217,12 @@ export const displayName = (
 ): string => {
   const parts = entityNameParts(namer, entityId);
 
-  if (parts === undefined) {
+  if (parts === undefined || namer === undefined) {
     return fallback;
   }
 
   return (
-    [parts.parentDevice, parts.device, parts.entity]
+    shownParts(namer, entityId, parts)
       .filter((part) => part !== undefined)
       .join(separator) || fallback
   );
