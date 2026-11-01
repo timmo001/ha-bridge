@@ -25,10 +25,6 @@ const builtInTypes = new Set(["system", "helper", "entity"]);
 
 // Actions left out on purpose, with why.
 const ignored = new Map([
-  ["vacuum.turn_on", "listed in services.yaml but never registered"],
-  ["vacuum.turn_off", "listed in services.yaml but never registered"],
-  ["vacuum.toggle", "listed in services.yaml but never registered"],
-  ["weather.get_forecast", "listed in services.yaml but never registered"],
   ["notify.notify", "a legacy notify action, sent with Notify.legacy"],
   [
     "notify.persistent_notification",

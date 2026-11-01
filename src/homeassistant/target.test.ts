@@ -56,6 +56,20 @@ describe("resolveTarget", () => {
     expect(Exit.isFailure(resolve({ entity_id: ["Desk"] }))).toBe(true);
   });
 
+  test("resolves an exclusion the same way as the target", () => {
+    expect(
+      resolve({
+        floor_id: "upstairs",
+        exclude: { area_id: "office", label_id: "evening lights" },
+      }),
+    ).toEqual(
+      Exit.succeed({
+        floor_id: ["upstairs"],
+        exclude: { area_id: ["office"], label_id: ["lights"] },
+      }),
+    );
+  });
+
   test("passes through all, unknown entity IDs and unloaded registries", () => {
     expect(
       resolve({ entity_id: ["all", "light.hidden"], device_id: ["Hall"] }),

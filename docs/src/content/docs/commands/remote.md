@@ -37,12 +37,17 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the remote. prefix; repeat for more (optional)
 
 FLAGS
-  --activity string    Activity, one of the remote's activity_list
-  --entity string      Entity ID or name; repeat for more
-  --device string      Device ID or name; repeat for more
-  --area string        Area ID or name; repeat for more
-  --floor string       Floor ID or name; repeat for more
-  --label string       Label ID or name; repeat for more
+  --activity string          Activity, one of the remote's activity_list
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -63,11 +68,16 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the remote. prefix; repeat for more (optional)
 
 FLAGS
-  --entity string    Entity ID or name; repeat for more
-  --device string    Device ID or name; repeat for more
-  --area string      Area ID or name; repeat for more
-  --floor string     Floor ID or name; repeat for more
-  --label string     Label ID or name; repeat for more
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -88,11 +98,16 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the remote. prefix; repeat for more (optional)
 
 FLAGS
-  --entity string    Entity ID or name; repeat for more
-  --device string    Device ID or name; repeat for more
-  --area string      Area ID or name; repeat for more
-  --floor string     Floor ID or name; repeat for more
-  --label string     Label ID or name; repeat for more
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -111,16 +126,21 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the remote. prefix; repeat for more (optional)
 
 FLAGS
-  --command string          Command; repeat for a sequence
-  --remote-device string    Device the command is for, as the remote's integration names it
-  --num-repeats integer     Times to repeat the commands (default: 1)
-  --delay-secs number       Seconds between commands (default: 0.4)
-  --hold-secs number        Seconds to hold each command (default: 0)
-  --entity string           Entity ID or name; repeat for more
-  --device string           Device ID or name; repeat for more
-  --area string             Area ID or name; repeat for more
-  --floor string            Floor ID or name; repeat for more
-  --label string            Label ID or name; repeat for more
+  --command string           Command; repeat for a sequence
+  --remote-device string     Device the command is for, as the remote's integration names it
+  --num-repeats integer      Times to repeat the commands (default: 1)
+  --delay-secs number        Seconds between commands (default: 0.4)
+  --hold-secs number         Seconds to hold each command (default: 0)
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -139,16 +159,21 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the remote. prefix; repeat for more (optional)
 
 FLAGS
-  --command string          Name for a command to learn; repeat for more
-  --remote-device string    Device the command is for, as the remote's integration names it
-  --command-type choice     Command type (default: ir) (choices: ir, rf)
-  --alternative             Learn an alternative code for the command
-  --timeout integer         Seconds to wait for each command
-  --entity string           Entity ID or name; repeat for more
-  --device string           Device ID or name; repeat for more
-  --area string             Area ID or name; repeat for more
-  --floor string            Floor ID or name; repeat for more
-  --label string            Label ID or name; repeat for more
+  --command string           Name for a command to learn; repeat for more
+  --remote-device string     Device the command is for, as the remote's integration names it
+  --command-type choice      Command type (default: ir) (choices: ir, rf)
+  --alternative              Learn an alternative code for the command
+  --timeout integer          Seconds to wait for each command
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -167,13 +192,18 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the remote. prefix; repeat for more (optional)
 
 FLAGS
-  --command string          Command; repeat for a sequence
-  --remote-device string    Device the command is for, as the remote's integration names it
-  --entity string           Entity ID or name; repeat for more
-  --device string           Device ID or name; repeat for more
-  --area string             Area ID or name; repeat for more
-  --floor string            Floor ID or name; repeat for more
-  --label string            Label ID or name; repeat for more
+  --command string           Command; repeat for a sequence
+  --remote-device string     Device the command is for, as the remote's integration names it
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)

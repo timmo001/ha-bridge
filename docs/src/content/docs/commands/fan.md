@@ -37,13 +37,18 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
-  --percentage integer    Speed from 0 to 100
-  --preset-mode string    Preset mode, one of the fan's preset_modes
-  --entity string         Entity ID or name; repeat for more
-  --device string         Device ID or name; repeat for more
-  --area string           Area ID or name; repeat for more
-  --floor string          Floor ID or name; repeat for more
-  --label string          Label ID or name; repeat for more
+  --percentage integer       Speed from 0 to 100
+  --preset-mode string       Preset mode, one of the fan's preset_modes
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -64,11 +69,16 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
-  --entity string    Entity ID or name; repeat for more
-  --device string    Device ID or name; repeat for more
-  --area string      Area ID or name; repeat for more
-  --floor string     Floor ID or name; repeat for more
-  --label string     Label ID or name; repeat for more
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -89,11 +99,16 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
-  --entity string    Entity ID or name; repeat for more
-  --device string    Device ID or name; repeat for more
-  --area string      Area ID or name; repeat for more
-  --floor string     Floor ID or name; repeat for more
-  --label string     Label ID or name; repeat for more
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -113,11 +128,16 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
-  --entity string    Entity ID or name; repeat for more
-  --device string    Device ID or name; repeat for more
-  --area string      Area ID or name; repeat for more
-  --floor string     Floor ID or name; repeat for more
-  --label string     Label ID or name; repeat for more
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -136,12 +156,17 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
-  --step integer     Percent to change by (default: the fan's own step)
-  --entity string    Entity ID or name; repeat for more
-  --device string    Device ID or name; repeat for more
-  --area string      Area ID or name; repeat for more
-  --floor string     Floor ID or name; repeat for more
-  --label string     Label ID or name; repeat for more
+  --step integer             Percent to change by (default: the fan's own step)
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -160,12 +185,17 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
-  --step integer     Percent to change by (default: the fan's own step)
-  --entity string    Entity ID or name; repeat for more
-  --device string    Device ID or name; repeat for more
-  --area string      Area ID or name; repeat for more
-  --floor string     Floor ID or name; repeat for more
-  --label string     Label ID or name; repeat for more
+  --step integer             Percent to change by (default: the fan's own step)
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -185,11 +215,16 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
-  --entity string    Entity ID or name; repeat for more
-  --device string    Device ID or name; repeat for more
-  --area string      Area ID or name; repeat for more
-  --floor string     Floor ID or name; repeat for more
-  --label string     Label ID or name; repeat for more
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -209,11 +244,16 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
-  --entity string    Entity ID or name; repeat for more
-  --device string    Device ID or name; repeat for more
-  --area string      Area ID or name; repeat for more
-  --floor string     Floor ID or name; repeat for more
-  --label string     Label ID or name; repeat for more
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -233,11 +273,16 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the fan. prefix; repeat for more (optional)
 
 FLAGS
-  --entity string    Entity ID or name; repeat for more
-  --device string    Device ID or name; repeat for more
-  --area string      Area ID or name; repeat for more
-  --floor string     Floor ID or name; repeat for more
-  --label string     Label ID or name; repeat for more
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)

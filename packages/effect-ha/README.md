@@ -71,7 +71,7 @@ Other replies and events have schemas and readers too: `TemplateUpdate` for `ren
 
 ## Actions
 
-Builders take a `Target`, the same fields as an action's target in Home Assistant (`entity_id`, `device_id`, `area_id`, `floor_id` and `label_id`, each a string or a list of IDs). They return a plain `Action` (`{ action, data?, target?, return_response? }`), so you can also write one by hand:
+Builders take a `Target`, the same fields as an action's target in Home Assistant (`entity_id`, `device_id`, `area_id`, `floor_id` and `label_id`, each a string or a list of IDs). `exclude` takes those same fields and leaves them out of the match. It needs Home Assistant 2026.11 or newer, and it needs at least one of the other fields. Builders return a plain `Action` (`{ action, data?, target?, return_response? }`), so you can also write one by hand:
 
 ```ts
 import {

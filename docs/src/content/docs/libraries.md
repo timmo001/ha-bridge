@@ -54,7 +54,7 @@ Calls fail straight away when the bridge isn't running, rather than waiting for 
 | `WatchTrigger({ trigger, variables? })` | A `Stream` of trigger firings, with their variables and context |
 | `TestCondition({ condition, variables? })` and `WatchCondition({ condition })` | Whether the condition passes, or a `Stream` of each change |
 
-A target has the same fields as an action's target in Home Assistant: `entity_id`, `device_id`, `area_id`, `floor_id` and `label_id`. Each takes an ID or a name, and the bridge resolves names to IDs. `domain` keeps only entities in that domain. [The protocol](/using/protocol#rpcs) has the full rules.
+A target has the same fields as an action's target in Home Assistant: `entity_id`, `device_id`, `area_id`, `floor_id` and `label_id`, plus `exclude` with those same fields. Each takes an ID or a name, and the bridge resolves names to IDs. `domain` keeps only entities in that domain. [The protocol](/using/protocol#rpcs) has the full rules.
 
 Entity results are `EntityUpdate`s: the raw `EntityState` plus `name`, the display name the bridge resolved the same way the Home Assistant frontend does.
 

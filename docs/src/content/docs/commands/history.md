@@ -35,17 +35,22 @@ ARGUMENTS
   entity_id... string    Entity ID, such as light.desk; repeat for more (optional)
 
 FLAGS
-  --start string     Start, as an ISO time or a duration before now, such as "2 hours"
-  --end string       End, as an ISO time or a duration before now; now when left out
-  --json             Print JSON
-  --domain string    Only entities in this domain, such as light
-  --no-attributes    Leave out attributes
-  --all-changes      Include changes to attributes only, for entities that leave them out by default
-  --entity string    Entity ID or name; repeat for more
-  --device string    Device ID or name; repeat for more
-  --area string      Area ID or name; repeat for more
-  --floor string     Floor ID or name; repeat for more
-  --label string     Label ID or name; repeat for more
+  --start string             Start, as an ISO time or a duration before now, such as "2 hours"
+  --end string               End, as an ISO time or a duration before now; now when left out
+  --json                     Print JSON
+  --domain string            Only entities in this domain, such as light
+  --no-attributes            Leave out attributes
+  --all-changes              Include changes to attributes only, for entities that leave them out by default
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)

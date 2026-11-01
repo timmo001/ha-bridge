@@ -8,7 +8,6 @@ description: Start, pause and dock vacuums and lawn mowers, and clean areas.
 ```bash
 ha-bridge vacuum start robo
 ha-bridge vacuum pause robo
-ha-bridge vacuum start-pause robo
 ha-bridge vacuum stop robo
 ha-bridge vacuum return-to-base robo
 ha-bridge vacuum locate robo
@@ -41,7 +40,7 @@ ha-bridge lawn_mower dock front
 
 | Command | Home Assistant action |
 | --- | --- |
-| `vacuum start`, `pause`, `start-pause`, `stop` | `vacuum.start`, `pause`, `start_pause`, `stop` |
+| `vacuum start`, `pause`, `stop` | `vacuum.start`, `pause`, `stop` |
 | `vacuum return-to-base`, `locate`, `clean-spot` | `vacuum.return_to_base`, `locate`, `clean_spot` |
 | `vacuum clean-area` | `vacuum.clean_area` |
 | `vacuum fan-speed` | `vacuum.set_fan_speed` |

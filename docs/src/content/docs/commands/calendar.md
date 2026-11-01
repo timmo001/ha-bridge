@@ -35,12 +35,17 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the calendar. prefix; repeat for more (optional)
 
 FLAGS
-  --days integer     Days ahead to read, from now
-  --entity string    Entity ID or name; repeat for more
-  --device string    Device ID or name; repeat for more
-  --area string      Area ID or name; repeat for more
-  --floor string     Floor ID or name; repeat for more
-  --label string     Label ID or name; repeat for more
+  --days integer             Days ahead to read, from now
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -60,17 +65,22 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the calendar. prefix; repeat for more (optional)
 
 FLAGS
-  --start string          Start date (all day) or date and time
-  --end string            End date (exclusive, all day) or date and time
-  --in-days integer       All day, this many days from today
-  --in-weeks integer      All day, this many weeks from today
-  --description string    Description
-  --location string       Location
-  --entity string         Entity ID or name; repeat for more
-  --device string         Device ID or name; repeat for more
-  --area string           Area ID or name; repeat for more
-  --floor string          Floor ID or name; repeat for more
-  --label string          Label ID or name; repeat for more
+  --start string             Start date (all day) or date and time
+  --end string               End date (exclusive, all day) or date and time
+  --in-days integer          All day, this many days from today
+  --in-weeks integer         All day, this many weeks from today
+  --description string       Description
+  --location string          Location
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)

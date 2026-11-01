@@ -22,9 +22,12 @@ ha-bridge cover close --floor Upstairs
 ha-bridge switch turn-on --label Christmas
 ha-bridge light toggle --device "Desk lamp"
 ha-bridge light turn-on --entity "Bedroom lamp"
+ha-bridge light turn-on --floor Downstairs --exclude-area Kitchen
 ```
 
 `--entity` takes an entity ID, an ID without the domain, or the entity's display name in that domain. A name has to match exactly one item, ignoring case, or the command fails and lists the matches. Home Assistant then decides which entities the target contains, so an area includes entities on devices in it.
+
+`--exclude-entity`, `--exclude-device`, `--exclude-area`, `--exclude-floor` and `--exclude-label` leave matches out. They take the same IDs and names as the flags above, and they need something to exclude from. Home Assistant works the exclusion out each time the action runs, so a light added to an excluded area later is left out too. This needs Home Assistant 2026.11 or newer.
 
 Commands that need one entity, such as `script run`, `camera snapshot` and `assist_satellite ask-question`, take the same target and fail unless it matches exactly one. Fixed arguments, such as the position in `cover position 50 office_blind`, come before the entity IDs.
 

@@ -45,6 +45,7 @@ Results far below the best match are dropped. The rest are ranked by score, with
 | `--kind` | Only `entity`, `device`, `area` or `command`; repeat for more |
 | `--domain` | Only entities in this domain, and the devices, areas and commands for it |
 | `--entity`, `--device`, `--area`, `--floor`, `--label` | Only what the [target](/using/reading#targets) refers to, by ID or name; repeat for more |
+| `--exclude-entity`, `--exclude-device`, `--exclude-area`, `--exclude-floor`, `--exclude-label` | Leave that part of the target out; repeat for more |
 | `--device-class` | Only entities with this device class, and their devices and areas |
 
 A target refers to entities, devices and areas the same way Home Assistant expands an action's target: an area includes its devices and their entities, and a floor its areas. Commands have no target or device class, so target flags and `--device-class` leave them out.

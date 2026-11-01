@@ -2,14 +2,27 @@ import { Schema } from "effect";
 
 const Ids = Schema.Union([Schema.String, Schema.Array(Schema.String)]);
 
-// What an action applies to, as in Home Assistant's action targets. Entity
-// actions also take `all` for `entity_id` and `none` for the other fields.
-export const Target = Schema.Struct({
+const idFields = {
   entity_id: Schema.optionalKey(Ids),
   device_id: Schema.optionalKey(Ids),
   area_id: Schema.optionalKey(Ids),
   floor_id: Schema.optionalKey(Ids),
   label_id: Schema.optionalKey(Ids),
+};
+
+// The same keys as a target, without a nested exclusion. Home Assistant
+// rejects an exclude block that contains another one.
+export const TargetIds = Schema.Struct(idFields);
+
+export type TargetIds = typeof TargetIds.Type;
+
+// What an action applies to, as in Home Assistant's action targets. Entity
+// actions also take `all` for `entity_id` and `none` for the other fields.
+// `exclude` removes entities, devices, areas, floors and labels from the
+// match, and needs at least one of the other fields. Home Assistant 2026.11.
+export const Target = Schema.Struct({
+  ...idFields,
+  exclude: Schema.optionalKey(TargetIds),
 });
 
 export type Target = typeof Target.Type;

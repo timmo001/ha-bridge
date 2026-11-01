@@ -35,12 +35,17 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the todo. prefix; repeat for more (optional)
 
 FLAGS
-  --status choice    Only items with this status; repeat for both (choices: needs_action, completed)
-  --entity string    Entity ID or name; repeat for more
-  --device string    Device ID or name; repeat for more
-  --area string      Area ID or name; repeat for more
-  --floor string     Floor ID or name; repeat for more
-  --label string     Label ID or name; repeat for more
+  --status choice            Only items with this status; repeat for both (choices: needs_action, completed)
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -60,14 +65,19 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the todo. prefix; repeat for more (optional)
 
 FLAGS
-  --due-date string        Due date as YYYY-MM-DD
-  --due-datetime string    Due date and time, such as "2026-10-01 18:30"
-  --description string     Description
-  --entity string          Entity ID or name; repeat for more
-  --device string          Device ID or name; repeat for more
-  --area string            Area ID or name; repeat for more
-  --floor string           Floor ID or name; repeat for more
-  --label string           Label ID or name; repeat for more
+  --due-date string          Due date as YYYY-MM-DD
+  --due-datetime string      Due date and time, such as "2026-10-01 18:30"
+  --description string       Description
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -87,16 +97,21 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the todo. prefix; repeat for more (optional)
 
 FLAGS
-  --rename string          New name
-  --status choice          New status (choices: needs_action, completed)
-  --due-date string        Due date as YYYY-MM-DD
-  --due-datetime string    Due date and time, such as "2026-10-01 18:30"
-  --description string     Description
-  --entity string          Entity ID or name; repeat for more
-  --device string          Device ID or name; repeat for more
-  --area string            Area ID or name; repeat for more
-  --floor string           Floor ID or name; repeat for more
-  --label string           Label ID or name; repeat for more
+  --rename string            New name
+  --status choice            New status (choices: needs_action, completed)
+  --due-date string          Due date as YYYY-MM-DD
+  --due-datetime string      Due date and time, such as "2026-10-01 18:30"
+  --description string       Description
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -115,12 +130,17 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the todo. prefix; repeat for more (optional)
 
 FLAGS
-  --item string      Item name or UID; repeat for more
-  --entity string    Entity ID or name; repeat for more
-  --device string    Device ID or name; repeat for more
-  --area string      Area ID or name; repeat for more
-  --floor string     Floor ID or name; repeat for more
-  --label string     Label ID or name; repeat for more
+  --item string              Item name or UID; repeat for more
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
@@ -139,11 +159,16 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the todo. prefix; repeat for more (optional)
 
 FLAGS
-  --entity string    Entity ID or name; repeat for more
-  --device string    Device ID or name; repeat for more
-  --area string      Area ID or name; repeat for more
-  --floor string     Floor ID or name; repeat for more
-  --label string     Label ID or name; repeat for more
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
 
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)

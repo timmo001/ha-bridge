@@ -16,14 +16,16 @@ Both take a target, like an action's target in Home Assistant. Give entity IDs a
 | `--area` | Every entity in an area, including those on devices in it |
 | `--floor` | Every entity in the floor's areas |
 | `--label` | Every entity, device and area with the label |
+| `--exclude-entity`, `--exclude-device`, `--exclude-area`, `--exclude-floor`, `--exclude-label` | Leave that entity, device, area, floor or label out of the match |
 
 ```bash
 ha-bridge get light.office sensor.office_temperature --json
 ha-bridge watch --area Office --domain light --json
 ha-bridge get --label "Evening lights" --field state --field name
+ha-bridge get --floor Downstairs --exclude-area Kitchen --domain light
 ```
 
-Home Assistant decides what a target contains, the same way it does for actions. `--domain` keeps only entities in that domain. A name has to match exactly one item, ignoring case, or the command fails and lists the matches.
+Home Assistant decides what a target contains, the same way it does for actions, then removes anything the exclude flags name. An exclusion needs an entity ID or one of the other flags, and Home Assistant 2026.11 or newer. `--domain` keeps only entities in that domain. A name has to match exactly one item, ignoring case, or the command fails and lists the matches.
 
 ## Output
 

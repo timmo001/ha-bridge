@@ -80,7 +80,11 @@ describe("searchItems", () => {
   });
 
   test("prefers an entity's own area over its device's", () => {
-    expect(byId("light.lamp")).toMatchObject({ area: "Office" });
+    expect(byId("light.lamp")).toMatchObject({
+      area: "Office",
+      name: "Lamp",
+      device: "Kitchen plug",
+    });
   });
 
   test("falls back to the entity ID without a registry entry or name", () => {
