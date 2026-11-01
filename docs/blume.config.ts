@@ -95,11 +95,5 @@ export default defineConfig(
       { from: "/reference/protocol", to: "/using/protocol" },
       { from: "/reference/commands/:slug*", to: "/commands/:slug*" },
     ],
-    theme: {
-      accent: {
-        light: "#0277bd",
-        dark: "#03a9f4",
-      },
-    },
   }),
 );
