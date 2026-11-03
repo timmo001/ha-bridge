@@ -63,7 +63,7 @@ Commands that need one entity, such as `script run`, `camera snapshot` and `assi
 | [Media players](/actions/media-players) | `media_player` | `mp` | Playback, volume, sources, grouping and browsing |
 | [Vacuums and lawn mowers](/actions/vacuums) | `vacuum`, `lawn_mower` | None | Start, pause, dock and clean areas |
 | [Alarm panels](/actions/alarms) | `alarm_control_panel` | `alarm` | Arm, disarm and trigger |
-| [Updates](/actions/updates) | `update` | None | Install, skip and clear skipped |
+| [Updates](/actions/updates) | `update` | None | List, check, install, skip and clear skipped |
 | [Notifications and speech](/actions/notifications) | `notify`, `persistent_notification`, `tts` | `pn` | Send notifications and speak messages |
 | [To-do lists](/actions/todo-lists) | `todo` | None | Read, add, change and remove items |
 | [Calendars and weather](/actions/calendars) | `calendar`, `weather` | None | Read and add events, read forecasts |

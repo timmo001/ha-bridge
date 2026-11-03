@@ -109,6 +109,10 @@ export interface HomeAssistantService {
   readonly watchEntities: (
     request: TargetRequest,
   ) => Stream.Stream<EntityUpdate, TargetError>;
+  // Every entity in the domain, such as update, with its name.
+  readonly domainEntities: (
+    domain: string,
+  ) => Effect.Effect<ReadonlyArray<EntityUpdate>, HomeAssistantError>;
   readonly callAction: (
     action: Action,
   ) => Effect.Effect<Schema.Json | null, HomeAssistantError | TargetError>;
@@ -638,6 +642,19 @@ export class HomeAssistant extends Context.Service<
         return yield* Effect.forEach(knownStates(entityIds), withName);
       });
 
+      const domainEntities = Effect.fn("HomeAssistant.domainEntities")(
+        function* (domain: string) {
+          yield* connected;
+
+          return yield* Effect.forEach(
+            Array.from(states.values()).filter((state) =>
+              isEntityIdIn(domain)(state.entity_id),
+            ),
+            withName,
+          );
+        },
+      );
+
       const watchEntities = (request: TargetRequest) =>
         Stream.unwrap(
           Effect.gen(function* () {
@@ -1152,6 +1169,7 @@ export class HomeAssistant extends Context.Service<
       return HomeAssistant.of({
         getEntities,
         watchEntities,
+        domainEntities,
         callAction,
         getConfig,
         cameraSnapshot: snapshot,

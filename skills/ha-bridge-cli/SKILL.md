@@ -1,6 +1,6 @@
 ---
 name: ha-bridge-cli
-description: Control and read Home Assistant from the shell, scripts and status bars with the ha-bridge CLI. Use for calling actions, reading or watching state and events, --bar-json output, templates, searching entities, automation and script configs, reading Home Assistant's logs to diagnose or confirm a fix, or connecting an app to a bridge. Not for changing ha-bridge itself.
+description: Control and read Home Assistant from the shell, scripts and status bars with the ha-bridge CLI. Use for calling actions, reading or watching state and events, --bar-json output, templates, searching entities, automation and script configs, listing and checking updates, reading Home Assistant's logs to diagnose or confirm a fix, or connecting an app to a bridge. Not for changing ha-bridge itself.
 license: Apache-2.0
 compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve, normally the ha-bridge.service user unit on a desktop, or started by the app inside a Home Assistant app). The docs-ha-bridge MCP server is optional.
 ---
@@ -19,6 +19,7 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 - Ask before actions with real-world effects the user didn't request, such as unlocking, opening covers or garage doors, disarming alarms, restarting Home Assistant or running scripts.
 - Ask before `system_log clear` or changing log levels with `logger`. Clearing throws away the evidence a diagnosis needs, and debug levels flood the log.
 - Ask before creating, updating or deleting an automation or script the user didn't ask you to change.
+- Ask before `update install` on anything the user didn't name. `update list`, `update get` and `update check` only read or refresh, so use them freely; `update check` can take up to two minutes with a Supervisor.
 - For how Home Assistant itself behaves, and for writing automations and scripts the current way, use the `home-assistant` skill alongside this one.
 
 ## Find the command
@@ -39,6 +40,7 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 | Events, triggers and conditions                      | `/using/events`                                |
 | History and logbook                                  | `/using/history`                               |
 | Logs, Core's errors and log search                   | `/using/logs`                                  |
+| Updates: list, check, release notes, install         | `/actions/updates`                             |
 | Searching                                            | `/using/search`                                |
 | Connecting an app or another language                | `/libraries`, `/using/protocol`                |
 | Socket path, config and the user service             | `/configuration`, `/running`                   |

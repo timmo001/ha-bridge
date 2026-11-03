@@ -152,6 +152,8 @@ import {
   type EntityUpdate,
   type SearchMatch,
   type SearchResults,
+  type UpdateDetails,
+  type UpdateStatus,
 } from "@timmo001/effect-ha-bridge";
 import { serve as serveBridge } from "./bridge/Server.js";
 import {
@@ -171,7 +173,12 @@ import {
   templateBar,
   templateText,
 } from "./cli/output.js";
-import { targetConfig, targetFlags, toTarget } from "./cli/target.js";
+import {
+  targetConfig,
+  type TargetInput,
+  targetFlags,
+  toTarget,
+} from "./cli/target.js";
 import { BridgeConfig } from "./config/Config.js";
 import {
   invalidInputNumberMessage,
@@ -2812,7 +2819,173 @@ const alarm = domainCommand(
   ]),
 );
 
+const updateJsonFlag = Flag.Boolean("json").pipe(
+  Flag.withDescription("Print as JSON"),
+  Flag.withDefault(false),
+);
+
+const updateFailure = (action: string) => (error: HomeAssistantError) =>
+  failWith(`could not ${action}: ${error.message}`);
+
+// Every update entity without a target. Exclusions alone leave out nothing.
+const optionalUpdateTarget = (input: TargetInput) => {
+  const target = toTarget("update", input);
+
+  if (!isEmptyTarget(target)) {
+    return Effect.succeed(target);
+  }
+
+  return target.exclude === undefined ? Effect.undefined : noTarget(target);
+};
+
+// The installed version, then the latest when it differs.
+const updateVersions = (update: UpdateStatus) =>
+  update.latest_version === null ||
+  update.latest_version === update.installed_version
+    ? (update.installed_version ?? "")
+    : `${update.installed_version ?? "?"} -> ${update.latest_version}`;
+
+const updateDetailLines = (update: UpdateDetails) => {
+  const fields: ReadonlyArray<readonly [string, string | null]> = [
+    ["Title", update.title],
+    ["Integration", update.integration],
+    ["State", update.in_progress ? "installing" : update.state],
+    ["Installed", update.installed_version],
+    ["Latest", update.latest_version],
+    ["Skipped", update.skipped_version],
+    ["Progress", update.update_percentage?.toString() ?? null],
+    ["Auto update", update.auto_update ? "on" : null],
+    ["Features", update.features.join(", ") || null],
+    ["Release", update.release_url],
+    ["Summary", update.release_summary],
+  ];
+
+  return [
+    `${update.name} (${update.entity_id})`,
+    ...fields.flatMap(([label, value]) =>
+      value === null ? [] : [`${label}: ${value}`],
+    ),
+    ...(update.release_notes === null
+      ? []
+      : ["", "Release notes:", update.release_notes]),
+  ];
+};
+
 const update = domainCommand("update", undefined, "Update actions", [
+  Command.make(
+    "list",
+    {
+      available: Flag.Boolean("available").pipe(
+        Flag.withDescription(
+          "Only those with a newer version waiting that isn't skipped",
+        ),
+        Flag.withDefault(false),
+      ),
+      json: updateJsonFlag,
+      target: targetConfig("update"),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const client = yield* BridgeClient;
+        const target = yield* optionalUpdateTarget(input.target);
+
+        const updates = yield* client
+          .GetUpdates({ target, available: input.available })
+          .pipe(
+            Effect.catchTag(
+              "HomeAssistantError",
+              updateFailure("list updates"),
+            ),
+          );
+
+        yield* input.json
+          ? Console.log(JSON.stringify(updates))
+          : Effect.forEach(updates, (item) =>
+              Console.log(
+                [
+                  item.entity_id,
+                  item.name,
+                  item.in_progress ? "installing" : item.state,
+                  updateVersions(item),
+                ].join("\t"),
+              ),
+            );
+      }).pipe(withBridge),
+  ).pipe(
+    Command.withAlias("ls"),
+    Command.withDescription(
+      "List every update Home Assistant offers, or the target's: entity ID, name, state and versions",
+    ),
+  ),
+  Command.make(
+    "get",
+    { json: updateJsonFlag, target: targetConfig("update") },
+    (input) =>
+      Effect.gen(function* () {
+        const target = toTarget("update", input.target);
+
+        if (isEmptyTarget(target)) {
+          return yield* noTarget(target);
+        }
+
+        const client = yield* BridgeClient;
+
+        const details = yield* client
+          .GetUpdate({ target })
+          .pipe(
+            Effect.catchTag(
+              "HomeAssistantError",
+              updateFailure("read the update"),
+            ),
+          );
+
+        yield* Console.log(
+          input.json
+            ? JSON.stringify(details)
+            : updateDetailLines(details).join("\n"),
+        );
+      }).pipe(withBridge),
+  ).pipe(
+    Command.withDescription(
+      "Show one update in full, with its integration and release notes",
+    ),
+  ),
+  Command.make(
+    "check",
+    { json: updateJsonFlag, target: targetConfig("update") },
+    (input) =>
+      Effect.gen(function* () {
+        const client = yield* BridgeClient;
+        const target = yield* optionalUpdateTarget(input.target);
+
+        const result = yield* client
+          .CheckUpdates({ target })
+          .pipe(
+            Effect.catchTag(
+              "HomeAssistantError",
+              updateFailure("check for updates"),
+            ),
+          );
+
+        const supervisor = {
+          checked:
+            "The Supervisor checked for updates and reloaded the app store",
+          "no-supervisor": "There's no Supervisor to check",
+          "not-admin":
+            "The Supervisor wasn't asked: the bridge's token isn't an admin's",
+        }[result.supervisor];
+
+        yield* Console.log(
+          input.json
+            ? JSON.stringify(result)
+            : `${supervisor}.\nAsked ${result.entities.length} update ${result.entities.length === 1 ? "entity" : "entities"} to check again; list them in a few seconds to see what changed.`,
+        );
+      }).pipe(withBridge),
+  ).pipe(
+    Command.withDescription(
+      "Check for updates, as Settings > Updates does: the Supervisor first, with an admin token, then each update entity, or the target's",
+    ),
+  ),
   Command.make(
     "install",
     {

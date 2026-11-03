@@ -50,6 +50,14 @@ import {
 } from "./Log.js";
 import { SearchEmpty, SearchRequest, SearchResults } from "./Search.js";
 import { TargetError, TargetRequest } from "./Target.js";
+import {
+  CheckUpdatesRequest,
+  UpdateDetails,
+  UpdateRequest,
+  UpdatesCheck,
+  UpdatesRequest,
+  UpdateStatus,
+} from "./Updates.js";
 
 const TargetFailure = Schema.Union([HomeAssistantError, TargetError]);
 
@@ -242,5 +250,25 @@ export class BridgeRpcs extends RpcGroup.make(
     payload: SearchRequest,
     success: SearchResults,
     error: Schema.Union([SearchEmpty, HomeAssistantError, TargetError]),
+  }),
+  // Every update Home Assistant offers, or those the target refers to, by
+  // name.
+  Rpc.make("GetUpdates", {
+    payload: UpdatesRequest,
+    success: Schema.Array(UpdateStatus),
+    error: TargetFailure,
+  }),
+  // One update with its integration and release notes.
+  Rpc.make("GetUpdate", {
+    payload: UpdateRequest,
+    success: UpdateDetails,
+    error: TargetFailure,
+  }),
+  // Asks the Supervisor, then each update entity, to check for new
+  // versions, as Settings > Updates > Check for updates does.
+  Rpc.make("CheckUpdates", {
+    payload: CheckUpdatesRequest,
+    success: UpdatesCheck,
+    error: TargetFailure,
   }),
 ) {}
