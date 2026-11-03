@@ -29,3 +29,5 @@ export * from "./Registry.js";
 export * from "./Target.js";
 
 export * from "./Template.js";
+
+export * from "./Updates.js";

@@ -99,14 +99,15 @@ export const restRequest = (
     requireOk(path, response),
   );
 
-// A GET from the Supervisor API, such as host/logs, that fails unless the
-// Supervisor answers OK.
+// A request to the Supervisor API, such as a GET from host/logs, that fails
+// unless the Supervisor answers OK.
 export const supervisorRequest = (
   options: SupervisorOptions,
   path: string,
   request: HttpClientRequest.Options.NoUrl = {},
+  method: "GET" | "POST" = "GET",
 ) =>
   Effect.flatMap(
-    send(options.token, "GET", supervisorUrl(options, path), path, request),
+    send(options.token, method, supervisorUrl(options, path), path, request),
     (response) => requireOk(path, response),
   );

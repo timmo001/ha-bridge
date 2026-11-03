@@ -82,7 +82,16 @@ export type HomeAssistantCommand =
       // admin token for almost every endpoint.
       readonly type: "supervisor/api";
       readonly endpoint: string;
-      readonly method: "get";
+      readonly method: "get" | "post";
+      // Seconds Core waits for the Supervisor, 10 when left out; null
+      // waits as long as it takes.
+      readonly timeout?: number | null | undefined;
+    }
+  | {
+      // An update entity's release notes, as Markdown. Only for entities
+      // that support them.
+      readonly type: "update/release_notes";
+      readonly entity_id: string;
     }
   | {
       readonly type: "fire_event";
