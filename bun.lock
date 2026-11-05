@@ -33,7 +33,7 @@
         "effect": "4.1.2",
       },
       "peerDependencies": {
-        "effect": "4.1.2",
+        "effect": "^4.1.2",
       },
     },
     "packages/effect-ha": {
@@ -43,7 +43,7 @@
         "effect": "4.1.2",
       },
       "peerDependencies": {
-        "effect": "4.1.2",
+        "effect": "^4.1.2",
       },
     },
   },
