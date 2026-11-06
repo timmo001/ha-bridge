@@ -77,9 +77,7 @@ export const toTarget = (
   });
 
   const exclude = present({
-    // Same as `--entity`: object IDs gain their domain during resolution.
-    // Prefixing a name here makes "Nursery" into "light.Nursery", which
-    // matches nothing.
+    // As `--entity`: the bridge adds the domain to object IDs, so names stay.
     entity_id: input.excludeEntity,
     device_id: input.excludeDevice,
     area_id: input.excludeArea,
