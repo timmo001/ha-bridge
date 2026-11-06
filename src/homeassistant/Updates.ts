@@ -143,24 +143,25 @@ export class Updates extends Context.Service<Updates, UpdatesService>()(
         const current = yield* homeAssistant.session;
 
         // Notes are optional. Home Assistant refuses them without an admin
-        // token and when the entity is unavailable; either must leave the
-        // rest of the update readable.
+        // token and when the entity is unavailable or not loaded; either must
+        // leave the rest of the update readable. Notes it does send must still
+        // decode.
         return yield* current
           .request({
             type: "update/release_notes",
             entity_id: status.entity_id,
           })
           .pipe(
-            Effect.flatMap((result) =>
-              decodeReleaseNotes(result).pipe(
-                Effect.mapError(decodeFailure("release notes")),
-              ),
-            ),
             Effect.catchTag("HomeAssistantError", (error) =>
               Effect.logDebug(
                 `No release notes for ${status.entity_id}`,
                 error.message,
               ).pipe(Effect.as(null)),
+            ),
+            Effect.flatMap((result) =>
+              decodeReleaseNotes(result).pipe(
+                Effect.mapError(decodeFailure("release notes")),
+              ),
             ),
           );
       });
