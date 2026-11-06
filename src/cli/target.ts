@@ -77,7 +77,10 @@ export const toTarget = (
   });
 
   const exclude = present({
-    entity_id: input.excludeEntity.map((id) => withDomain(domain, id)),
+    // Same as `--entity`: object IDs gain their domain during resolution.
+    // Prefixing a name here makes "Nursery" into "light.Nursery", which
+    // matches nothing.
+    entity_id: input.excludeEntity,
     device_id: input.excludeDevice,
     area_id: input.excludeArea,
     floor_id: input.excludeFloor,
