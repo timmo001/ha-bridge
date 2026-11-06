@@ -56,6 +56,25 @@ describe("resolveTarget", () => {
     expect(Exit.isFailure(resolve({ entity_id: ["Desk"] }))).toBe(true);
   });
 
+  test("resolves an excluded entity name within the domain", () => {
+    expect(
+      resolve({ area_id: "office", exclude: { entity_id: "Desk" } }, "light"),
+    ).toEqual(
+      Exit.succeed({
+        area_id: ["office"],
+        exclude: { entity_id: ["light.desk"] },
+      }),
+    );
+    expect(
+      resolve({ entity_id: "all", exclude: { entity_id: "desk" } }, "light"),
+    ).toEqual(
+      Exit.succeed({
+        entity_id: ["all"],
+        exclude: { entity_id: ["light.desk"] },
+      }),
+    );
+  });
+
   test("resolves an exclusion the same way as the target", () => {
     expect(
       resolve({
