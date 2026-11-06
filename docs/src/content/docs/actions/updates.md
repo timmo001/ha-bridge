@@ -22,6 +22,8 @@ update.esphome_kitchen  Kitchen Firmware  on  2026.9.0 -> 2026.10.0
 ha-bridge update get home_assistant_core_update
 ```
 
+Release notes need an admin token and an available entity. Without either, `update get` shows the rest without them.
+
 `update check` checks for new versions now rather than waiting for each integration's next poll, as Settings > Updates > Check for updates does. With a Supervisor and an admin token, it has the Supervisor check for new versions of Core, the OS, itself and its plugins and reload the app store first, which can take up to two minutes. Then it asks every update entity to check again, or only those a target matches. Run `update list` a few seconds later to see what changed.
 
 `--json` prints the bridge's [protocol](/using/protocol#rpcs) result for each.
