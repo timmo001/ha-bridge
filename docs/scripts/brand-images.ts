@@ -6,8 +6,8 @@ const written = await writeBrandImages({
   title: "HA Bridge",
   tagline: ["One shared Home Assistant connection,", "served to local apps."],
   site: "ha-bridge.timmo.dev",
-  background: "#18181b",
-  accent: "#03a9f4",
+  background: "#1c1c1c",
+  accent: "#18bcf2",
   outputs: {
     socialPreview: "../.github/social-preview.png",
     logo: "public/logo.png",
