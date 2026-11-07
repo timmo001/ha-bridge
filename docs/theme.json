@@ -1,0 +1,20 @@
+{
+  "kind": "solved",
+  "id": "ha-bridge",
+  "name": "HA Bridge",
+  "description": "Home Assistant's blue on its dark card gray, in Bridge's style.",
+  "background": "#1c1c1c",
+  "accent": "#18bcf2",
+  "style": {
+    "font": "Inter",
+    "mono": "JetBrains Mono",
+    "radius": { "panel": 12, "control": 8, "chip": 999 },
+    "border": { "width": 1, "strength": "soft" },
+    "weights": { "regular": 400, "strong": 600 },
+    "density": "normal",
+    "capitals": false,
+    "link": { "color": "accent", "underline": "thin" },
+    "surfaceAccent": "none",
+    "rows": "cards"
+  }
+}
