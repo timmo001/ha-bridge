@@ -101,6 +101,7 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`universal`](/commands/universal) | None |
 | [`zone`](/commands/zone) | None |
 | [`search`](/commands/search) | None |
+| [`agent`](/commands/agent) | None |
 
 ## Global flags
 
@@ -214,4 +215,5 @@ SUBCOMMANDS
   universal           Universal media player actions
   zone                Zone actions
   search              Search Home Assistant entities, devices and areas, and ha-bridge commands
+  agent               The Code Mode tools the OpenCode plugin registers
 ```

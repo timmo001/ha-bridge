@@ -91,5 +91,6 @@
   "/commands/trend",
   "/commands/universal",
   "/commands/zone",
-  "/commands/search"
+  "/commands/search",
+  "/commands/agent"
 ]

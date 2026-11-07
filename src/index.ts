@@ -155,6 +155,7 @@ import {
   type UpdateDetails,
   type UpdateStatus,
 } from "@timmo001/effect-ha-bridge";
+import { agentToolNames, callAgentTool, manifest } from "./agent/tools.js";
 import { serve as serveBridge } from "./bridge/Server.js";
 import {
   invalidAnswerOptionMessage,
@@ -6069,8 +6070,60 @@ const search = Command.make(
   ),
 );
 
+const agentTools = Command.make(
+  "tools",
+  {
+    json: Flag.Boolean("json").pipe(
+      Flag.withDescription("Print as JSON (the only format)"),
+      Flag.withDefault(true),
+    ),
+  },
+  () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+
+      const available = yield* socketPath.pipe(
+        Effect.flatMap((path) => fs.exists(path)),
+        Effect.orElseSucceed(() => false),
+      );
+
+      yield* Console.log(JSON.stringify(manifest(available), null, 2));
+    }),
+).pipe(
+  Command.withDescription(
+    "Print the Code Mode tools as JSON, and whether the bridge's socket exists",
+  ),
+);
+
+const agentCall = Command.make(
+  "call",
+  {
+    tool: Argument.Literals("tool", agentToolNames).pipe(
+      Argument.withDescription("The tool to run, from ha-bridge agent tools"),
+    ),
+  },
+  (input) =>
+    Effect.gen(function* () {
+      const text = yield* Effect.tryPromise({
+        try: () => Bun.stdin.text(),
+        catch: () => new CommandError({ message: "could not read stdin" }),
+      });
+
+      yield* Console.log(yield* callAgentTool(input.tool, text));
+    }).pipe(withBridge),
+).pipe(
+  Command.withDescription(
+    "Run a Code Mode tool with its input as JSON on stdin and print its result as JSON",
+  ),
+);
+
+const agent = Command.make("agent").pipe(
+  Command.withDescription("The Code Mode tools the OpenCode plugin registers"),
+  Command.withSubcommands([agentTools, agentCall]),
+);
+
 haBridge.pipe(
-  Command.withSubcommands([...commands, search]),
+  Command.withSubcommands([...commands, search, agent]),
   Command.run({ version: packageJson.version }),
   Effect.catchCause(reportCliCause),
   Effect.provide(
