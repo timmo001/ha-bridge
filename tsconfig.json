@@ -21,6 +21,5 @@
     ]
   },
   "include": ["src", "packages/*/src", "scripts"],
-  // The OpenCode plugin pins OpenCode's Effect, so it's checked on its own.
   "exclude": ["packages/opencode"]
 }
