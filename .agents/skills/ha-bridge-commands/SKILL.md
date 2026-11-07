@@ -1,6 +1,6 @@
 ---
 name: ha-bridge-commands
-description: Add or change ha-bridge CLI commands, bridge RPCs and watcher or bar JSON output. Use when editing src/index.ts, src/bridge/Server.ts, src/homeassistant/HomeAssistant.ts, src/cli/output.ts or packages/client/src/Rpcs.ts, or when exposing a new Home Assistant action, read or watch to local clients.
+description: Add or change ha-bridge CLI commands, bridge RPCs, Code Mode tools and watcher or bar JSON output. Use when editing src/index.ts, src/bridge/Server.ts, src/homeassistant/HomeAssistant.ts, src/cli/output.ts, src/agent/tools.ts, packages/client/src/Rpcs.ts or packages/opencode, or when exposing a new Home Assistant action, read or watch to local clients or agents.
 license: Apache-2.0
 compatibility: Requires mise and Bun from the ha-bridge repository root.
 ---
@@ -21,6 +21,7 @@ Add a new RPC only when the operation is not an action: a new read, a stream, or
 3. `src/homeassistant/HomeAssistant.ts`: a method on `HomeAssistantService`. Go through `connected` so it fails with "not connected" instead of hanging while the bridge reconnects. Reads and watches serve from the `states` cache and `changes` PubSub rather than asking Home Assistant per request.
 4. `src/bridge/Server.ts`: the handler in `Handlers`. TypeScript fails until every RPC has one.
 5. `src/index.ts`: the command.
+6. `src/agent/tools.ts`: a Code Mode tool, when agents should have it. The OpenCode plugin in `packages/opencode` reads this table through `ha-bridge agent tools`, so the plugin itself needs no change. Give writes a `resource` input key so "always allow" covers one action rather than the whole tool.
 
 ## CLI conventions
 

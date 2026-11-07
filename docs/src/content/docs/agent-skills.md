@@ -35,6 +35,18 @@ It's the reference half of the pair: `ha-bridge-cli` does the reading, testing a
 
 This site serves a skill that points agents at these docs rather than what they remember, at [/.well-known/agent-skills/home-assistant-bridge/SKILL.md](https://ha-bridge.timmo.dev/.well-known/agent-skills/home-assistant-bridge/SKILL.md). It lists every page and the ways to read them: any page as Markdown by adding `.md` to its URL, [llms.txt](https://ha-bridge.timmo.dev/llms.txt), and the MCP server at `https://ha-bridge.timmo.dev/mcp`, with `search_docs` and `get_page`.
 
+## OpenCode plugin
+
+The OpenCode plugin in `packages/opencode` adds an `ha-bridge` Code Mode namespace: typed tools for reading entities, history, logs and configs, rendering templates, testing conditions, searching, and calling actions. Load it from the repository in your OpenCode config:
+
+```json
+{
+  "plugins": ["github:timmo001/ha-bridge#main::path:packages/opencode"]
+}
+```
+
+It reads its tools from `ha-bridge agent tools --json` and runs each with `ha-bridge agent call`, so they always match the `ha-bridge` on your `PATH`. It needs a [running bridge](/running), and leaves the namespace out when the bridge's socket isn't there. Writes, such as `call_action`, ask first, and "always allow" covers one action, event type or config domain.
+
 ## Working on ha-bridge
 
 The repository has its own skills for changing ha-bridge, in `.agents/skills`: adding commands and RPCs, the docs, the `@timmo001/effect-ha` library, releases and reviews. Agents working in a checkout pick them up from there.

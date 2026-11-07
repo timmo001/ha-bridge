@@ -12,7 +12,7 @@
     "build": "bun build src/index.ts --compile --minify --bytecode --format=esm --keep-names --no-compile-autoload-dotenv --no-compile-autoload-bunfig --outfile dist/ha-bridge",
     "test": "bun test --pass-with-no-tests",
     "lint": "oxlint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p packages/opencode",
     "format": "prettier --write \"src/**/*.ts\" \"packages/*/src/**/*.ts\" \"scripts/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"packages/*/src/**/*.ts\" \"scripts/**/*.ts\"",
     "check": "bun run --parallel --no-exit-on-error lint typecheck format:check",
