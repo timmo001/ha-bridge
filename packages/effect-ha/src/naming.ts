@@ -130,12 +130,14 @@ export const stripPrefixFromEntityName = (
   return "";
 };
 
-export interface EntityNameParts {
-  // Undefined when the entity is named after its device.
-  readonly entity: string | undefined;
-  readonly device: string | undefined;
-  readonly parentDevice: string | undefined;
-}
+// `entity` is undefined when the entity is named after its device.
+export const EntityNameParts = Schema.Struct({
+  entity: Schema.UndefinedOr(Schema.String),
+  device: Schema.UndefinedOr(Schema.String),
+  parentDevice: Schema.UndefinedOr(Schema.String),
+});
+
+export type EntityNameParts = typeof EntityNameParts.Type;
 
 // Every name part, including ones a dashboard leaves out. Undefined when the
 // entity is not in the registry. `displayName` decides which parts to show.

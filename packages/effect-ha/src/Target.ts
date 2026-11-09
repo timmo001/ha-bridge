@@ -54,7 +54,9 @@ export type ExtractedTarget = typeof ExtractedTarget.Type;
 
 // `extract_from_target` options. `primaryEntitiesOnly` leaves out config and
 // diagnostic entities reached indirectly, and defaults to true like Core.
-export interface ExtractTargetOptions {
-  readonly expandGroup?: boolean;
-  readonly primaryEntitiesOnly?: boolean;
-}
+export const ExtractTargetOptions = Schema.Struct({
+  expandGroup: Schema.optionalKey(Schema.Boolean),
+  primaryEntitiesOnly: Schema.optionalKey(Schema.Boolean),
+});
+
+export type ExtractTargetOptions = typeof ExtractTargetOptions.Type;

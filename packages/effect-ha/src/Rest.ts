@@ -6,18 +6,23 @@ import {
 } from "effect/http";
 import { HomeAssistantError } from "./HomeAssistantError.js";
 
-export interface RestOptions {
-  readonly url: string;
-  readonly token: Redacted.Redacted;
-}
+export const RestOptions = Schema.Struct({
+  url: Schema.String,
+  token: Schema.Redacted(Schema.String),
+});
+
+export type RestOptions = typeof RestOptions.Type;
 
 // Where Supervisor requests go: through Core's proxy at /api/hassio/ with a
 // Home Assistant token, or with `direct`, straight to the Supervisor API at
 // `url` (http://supervisor) with a Home Assistant app's token. Core's proxy
 // refuses apps, so they need the direct route.
-export interface SupervisorOptions extends RestOptions {
-  readonly direct?: boolean | undefined;
-}
+export const SupervisorOptions = Schema.Struct({
+  ...RestOptions.fields,
+  direct: Schema.optional(Schema.Boolean),
+});
+
+export type SupervisorOptions = typeof SupervisorOptions.Type;
 
 const decodeMessage = Schema.decodeUnknownEffect(
   Schema.fromJsonString(Schema.Struct({ message: Schema.String })),

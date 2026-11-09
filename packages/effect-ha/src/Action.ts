@@ -185,9 +185,11 @@ export const InputNumber = {
 };
 
 // `speed` must be one of the cover's `supported_speeds`.
-export interface CoverMoveOptions {
-  readonly speed?: string;
-}
+export const CoverMoveOptions = Schema.Struct({
+  speed: Schema.optionalKey(Schema.String),
+});
+
+export type CoverMoveOptions = typeof CoverMoveOptions.Type;
 
 export const Cover = {
   open: (target: Target, options?: CoverMoveOptions) =>
@@ -404,10 +406,12 @@ export const AssistSatellite = {
 
 // `camera.record` options. Core records 30 seconds by default, and `lookback`
 // adds seconds from before the call when the stream keeps them.
-export interface CameraRecordOptions {
-  readonly duration?: number;
-  readonly lookback?: number;
-}
+export const CameraRecordOptions = Schema.Struct({
+  duration: Schema.optionalKey(Schema.Finite),
+  lookback: Schema.optionalKey(Schema.Finite),
+});
+
+export type CameraRecordOptions = typeof CameraRecordOptions.Type;
 
 // `snapshot` and `record` write on the Home Assistant host, to a path in
 // `allowlist_external_dirs`. `filename` is a template, so it can use values
@@ -450,9 +454,11 @@ export const InputButton = {
 };
 
 // `code` is the lock's code, when it needs one.
-export interface LockOptions {
-  readonly code?: string;
-}
+export const LockOptions = Schema.Struct({
+  code: Schema.optionalKey(Schema.String),
+});
+
+export type LockOptions = typeof LockOptions.Type;
 
 export const Lock = {
   lock: (target: Target, options?: LockOptions) =>
@@ -538,9 +544,11 @@ export const Remote = {
 
 // `select_next` and `select_previous` wrap round from the end by default;
 // `cycle: false` stops there instead.
-export interface SelectStepOptions {
-  readonly cycle?: boolean;
-}
+export const SelectStepOptions = Schema.Struct({
+  cycle: Schema.optionalKey(Schema.Boolean),
+});
+
+export type SelectStepOptions = typeof SelectStepOptions.Type;
 
 const selectable = (domain: string) => ({
   selectOption: (target: Target, option: string) =>
@@ -725,9 +733,11 @@ export const SceneCreateData = SceneCreateFields.check(
 export type SceneCreateData = typeof SceneCreateData.Type;
 
 // `transition` is in seconds, for entities that support it.
-export interface SceneTransitionOptions {
-  readonly transition?: number;
-}
+export const SceneTransitionOptions = Schema.Struct({
+  transition: Schema.optionalKey(Schema.Finite),
+});
+
+export type SceneTransitionOptions = typeof SceneTransitionOptions.Type;
 
 export const Scene = {
   turnOn: (target: Target, options?: SceneTransitionOptions) =>
@@ -962,10 +972,12 @@ export const MediaPlayerPlayMediaData = Schema.Struct({
 export type MediaPlayerPlayMediaData = typeof MediaPlayerPlayMediaData.Type;
 
 // Where to browse or search, from a previous `browse_media` response.
-export interface MediaLocation {
-  readonly mediaContentType?: string;
-  readonly mediaContentId?: string;
-}
+export const MediaLocation = Schema.Struct({
+  mediaContentType: Schema.optionalKey(Schema.String),
+  mediaContentId: Schema.optionalKey(Schema.String),
+});
+
+export type MediaLocation = typeof MediaLocation.Type;
 
 const mediaLocation = (location?: MediaLocation) => ({
   media_content_type: location?.mediaContentType,
@@ -1093,10 +1105,12 @@ export const Update = {
   clearSkipped: (target: Target) => onTarget("update.clear_skipped", target),
 };
 
-export interface NotifyMessage {
-  readonly message: string;
-  readonly title?: string;
-}
+export const NotifyMessage = Schema.Struct({
+  message: Schema.String,
+  title: Schema.optionalKey(Schema.String),
+});
+
+export type NotifyMessage = typeof NotifyMessage.Type;
 
 export const Notify = {
   // Sends to a notify entity.
@@ -1125,11 +1139,13 @@ export const PersistentNotification = {
   dismissAll: () => onDomain("persistent_notification.dismiss_all"),
 };
 
-export interface TtsSpeakOptions {
-  readonly language?: string;
-  readonly cache?: boolean;
-  readonly options?: Readonly<Record<string, Schema.Json>>;
-}
+export const TtsSpeakOptions = Schema.Struct({
+  language: Schema.optionalKey(Schema.String),
+  cache: Schema.optionalKey(Schema.Boolean),
+  options: Schema.optionalKey(Schema.Record(Schema.String, Schema.Json)),
+});
+
+export type TtsSpeakOptions = typeof TtsSpeakOptions.Type;
 
 export const Tts = {
   // Speaks `message` with a TTS entity on a media player.
@@ -1449,13 +1465,25 @@ export type RecorderPurgeData = typeof RecorderPurgeData.Type;
 
 // What `recorder.purge_entities` removes: entities from `target`, whole
 // domains, or entity ID globs such as `sensor.weather_*`. Set at least one.
-export interface RecorderPurgeEntitiesOptions {
-  readonly target?: Target;
-  readonly domains?: ReadonlyArray<string>;
-  readonly entityGlobs?: ReadonlyArray<string>;
-  // Keeps this many days of history; Core removes all of it by default.
-  readonly keepDays?: number;
-}
+// `keepDays` keeps that many days of history; Core removes all of it by
+// default.
+const RecorderPurgeEntitiesFields = Schema.Struct({
+  target: Schema.optionalKey(Target),
+  domains: Schema.optionalKey(Schema.Array(Schema.String)),
+  entityGlobs: Schema.optionalKey(Schema.Array(Schema.String)),
+  keepDays: Schema.optionalKey(Days),
+});
+
+export const RecorderPurgeEntitiesOptions = RecorderPurgeEntitiesFields.check(
+  atLeastOne<typeof RecorderPurgeEntitiesFields.Type>([
+    "target",
+    "domains",
+    "entityGlobs",
+  ]),
+);
+
+export type RecorderPurgeEntitiesOptions =
+  typeof RecorderPurgeEntitiesOptions.Type;
 
 export const StatisticsPeriod = Schema.Literals([
   "5minute",

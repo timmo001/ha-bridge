@@ -41,10 +41,12 @@ export const logSourceName = (source: LogSource) =>
 
 // The journal cursor that `followSupervisorLog` resumes from, and how many
 // entries after it were read.
-export interface LogPosition {
-  readonly cursor: string;
-  readonly read: number;
-}
+export const LogPosition = Schema.Struct({
+  cursor: Schema.String,
+  read: Schema.Int,
+});
+
+export type LogPosition = typeof LogPosition.Type;
 
 // The Supervisor's limit, which `follow` asks for so it never stops.
 const journalLinesMax = "18446744073709551615";

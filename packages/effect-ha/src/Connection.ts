@@ -13,13 +13,17 @@ import { Socket } from "effect/socket";
 import type { Action } from "./Action.js";
 import { HomeAssistantConfig } from "./HomeAssistantConfig.js";
 import { HomeAssistantError } from "./HomeAssistantError.js";
-import type { ConditionRequest, TriggerRequest } from "./Automation.js";
-import type { FireEventRequest } from "./Event.js";
-import type { TemplateRequest } from "./Template.js";
+import {
+  ConditionRequest,
+  TriggerRequest,
+  WatchConditionRequest,
+} from "./Automation.js";
+import { FireEventRequest, WatchEventsRequest } from "./Event.js";
+import { TemplateRequest } from "./Template.js";
 import {
   ExtractedTarget,
   type ExtractTargetOptions,
-  type Target,
+  Target,
 } from "./Target.js";
 
 const AuthMessage = Schema.Struct({
@@ -48,137 +52,152 @@ const decodeMessage = Schema.decodeUnknownEffect(
   ),
 );
 
-// Supported requests; `request` adds the message id.
-export type HomeAssistantCommand =
-  | {
-      readonly type:
-        | "get_states"
-        | "get_config"
-        | "config/entity_registry/list_for_display"
-        | "config/device_registry/list"
-        | "config/area_registry/list"
-        | "config/floor_registry/list"
-        | "config/label_registry/list"
-        | "auth/current_user"
-        // Every action, by domain, with its fields.
-        | "get_services"
-        // Needs an admin token.
-        | "system_log/list";
-    }
-  | { readonly type: "unsubscribe_events"; readonly subscription: number }
-  | {
-      // The config an automation or script was loaded from, wherever it's
-      // defined, as `{config}`. Needs an admin token.
-      readonly type: "automation/config" | "script/config";
-      readonly entity_id: string;
-    }
-  | {
-      // One entity's registry entry, including its unique ID.
-      readonly type: "config/entity_registry/get";
-      readonly entity_id: string;
-    }
-  | {
-      // A Supervisor API call answering JSON, such as /addons. Needs an
-      // admin token for almost every endpoint.
-      readonly type: "supervisor/api";
-      readonly endpoint: string;
-      readonly method: "get" | "post";
-      // Seconds Core waits for the Supervisor, 10 when left out; null
-      // waits as long as it takes.
-      readonly timeout?: number | null | undefined;
-    }
-  | {
-      // An update entity's release notes, as Markdown. Only for entities
-      // that support them.
-      readonly type: "update/release_notes";
-      readonly entity_id: string;
-    }
-  | {
-      readonly type: "fire_event";
-      readonly event_type: string;
-      readonly event_data?: FireEventRequest["event_data"] | undefined;
-    }
-  | {
-      readonly type: "history/history_during_period";
-      // ISO times.
-      readonly start_time: string;
-      readonly end_time?: string | undefined;
-      readonly entity_ids: ReadonlyArray<string>;
-      readonly no_attributes?: boolean | undefined;
-      readonly significant_changes_only?: boolean | undefined;
-    }
-  | ({ readonly type: "logbook/get_events" } & LogbookQuery)
-  | {
-      readonly type: "test_condition";
-      readonly condition: ConditionRequest["condition"];
-      readonly variables?: ConditionRequest["variables"] | undefined;
-    }
-  | {
-      // Checks each part as the automation editor does, without saving.
-      readonly type: "validate_config";
-      readonly triggers?: Schema.Json | undefined;
-      readonly conditions?: Schema.Json | undefined;
-      readonly actions?: Schema.Json | undefined;
-    }
-  | {
-      readonly type: "extract_from_target";
-      readonly target: Target;
-      readonly expand_group?: boolean | undefined;
-      readonly primary_entities_only?: boolean | undefined;
-    }
-  | {
-      readonly type: "call_service";
-      readonly domain: string;
-      readonly service: string;
-      // Undefined fields are left out when the message is serialised.
-      readonly service_data?: Action["data"] | undefined;
-      readonly target?: Action["target"] | undefined;
-      readonly return_response?: boolean | undefined;
-    };
-
-// Requests that stream events until they are unsubscribed.
-export type HomeAssistantSubscription =
-  | {
-      readonly type: "subscribe_events";
-      // Every event when left out; needs an admin token for most types.
-      readonly event_type?: string | undefined;
-    }
-  | {
-      readonly type: "render_template";
-      readonly template: string;
-      readonly variables?: TemplateRequest["variables"] | undefined;
-      readonly strict?: boolean | undefined;
-      readonly timeout?: number | undefined;
-      // Sends render errors and warnings as events.
-      readonly report_errors?: boolean | undefined;
-    }
-  | ({ readonly type: "logbook/event_stream" } & LogbookQuery)
-  | {
-      readonly type: "subscribe_trigger";
-      readonly trigger: TriggerRequest["trigger"];
-      readonly variables?: TriggerRequest["variables"] | undefined;
-    }
-  | {
-      // Checked every second; an event is sent only when the result changes.
-      readonly type: "subscribe_condition";
-      readonly condition: ConditionRequest["condition"];
-    }
-  | {
-      // Core's log as it's written, starting with the end of the log file:
-      // its last 100 lines, or an integration's last 5000. Each event is a
-      // list of records. Needs an admin token and Core 2026.11 or newer.
-      readonly type: "system_log/subscribe_raw";
-      readonly integration?: string | undefined;
-    };
-
 // Logbook entries between ISO times, for some entities and devices, or all
 // of them when both are left out.
-export interface LogbookQuery {
-  readonly start_time: string;
-  readonly end_time?: string | undefined;
-  readonly entity_ids?: ReadonlyArray<string> | undefined;
-  readonly device_ids?: ReadonlyArray<string> | undefined;
-}
+export const LogbookQuery = Schema.Struct({
+  start_time: Schema.String,
+  end_time: Schema.optional(Schema.String),
+  entity_ids: Schema.optional(Schema.Array(Schema.String)),
+  device_ids: Schema.optional(Schema.Array(Schema.String)),
+});
+
+export type LogbookQuery = typeof LogbookQuery.Type;
+
+const OptionalJson = Schema.optional(Schema.Json);
+
+// Supported requests; `request` adds the message id.
+export const HomeAssistantCommand = Schema.Union([
+  Schema.Struct({
+    type: Schema.Literals([
+      "get_states",
+      "get_config",
+      "config/entity_registry/list_for_display",
+      "config/device_registry/list",
+      "config/area_registry/list",
+      "config/floor_registry/list",
+      "config/label_registry/list",
+      "auth/current_user",
+      // Every action, by domain, with its fields.
+      "get_services",
+      // Needs an admin token.
+      "system_log/list",
+    ]),
+  }),
+  Schema.Struct({
+    type: Schema.Literal("unsubscribe_events"),
+    subscription: Schema.Finite,
+  }),
+  // The config an automation or script was loaded from, wherever it's
+  // defined, as `{config}`. Needs an admin token.
+  Schema.Struct({
+    type: Schema.Literals(["automation/config", "script/config"]),
+    entity_id: Schema.String,
+  }),
+  // One entity's registry entry, including its unique ID.
+  Schema.Struct({
+    type: Schema.Literal("config/entity_registry/get"),
+    entity_id: Schema.String,
+  }),
+  // A Supervisor API call answering JSON, such as /addons. Needs an admin
+  // token for almost every endpoint.
+  Schema.Struct({
+    type: Schema.Literal("supervisor/api"),
+    endpoint: Schema.String,
+    method: Schema.Literals(["get", "post"]),
+    // Seconds Core waits for the Supervisor, 10 when left out; null waits
+    // as long as it takes.
+    timeout: Schema.optional(Schema.NullOr(Schema.Finite)),
+  }),
+  // An update entity's release notes, as Markdown. Only for entities that
+  // support them.
+  Schema.Struct({
+    type: Schema.Literal("update/release_notes"),
+    entity_id: Schema.String,
+  }),
+  Schema.Struct({
+    type: Schema.Literal("fire_event"),
+    ...FireEventRequest.fields,
+  }),
+  Schema.Struct({
+    type: Schema.Literal("history/history_during_period"),
+    // ISO times.
+    start_time: Schema.String,
+    end_time: Schema.optional(Schema.String),
+    entity_ids: Schema.Array(Schema.String),
+    no_attributes: Schema.optional(Schema.Boolean),
+    significant_changes_only: Schema.optional(Schema.Boolean),
+  }),
+  Schema.Struct({
+    type: Schema.Literal("logbook/get_events"),
+    ...LogbookQuery.fields,
+  }),
+  Schema.Struct({
+    type: Schema.Literal("test_condition"),
+    ...ConditionRequest.fields,
+  }),
+  // Checks each part as the automation editor does, without saving.
+  Schema.Struct({
+    type: Schema.Literal("validate_config"),
+    triggers: OptionalJson,
+    conditions: OptionalJson,
+    actions: OptionalJson,
+  }),
+  Schema.Struct({
+    type: Schema.Literal("extract_from_target"),
+    target: Target,
+    expand_group: Schema.optional(Schema.Boolean),
+    primary_entities_only: Schema.optional(Schema.Boolean),
+  }),
+  // Undefined fields are left out when the message is serialised.
+  Schema.Struct({
+    type: Schema.Literal("call_service"),
+    domain: Schema.String,
+    service: Schema.String,
+    service_data: Schema.optional(Schema.Record(Schema.String, Schema.Json)),
+    target: Schema.optional(Target),
+    return_response: Schema.optional(Schema.Boolean),
+  }),
+]);
+
+export type HomeAssistantCommand = typeof HomeAssistantCommand.Type;
+
+// Requests that stream events until they are unsubscribed.
+export const HomeAssistantSubscription = Schema.Union([
+  // Every event when `event_type` is left out; needs an admin token for
+  // most types.
+  Schema.Struct({
+    type: Schema.Literal("subscribe_events"),
+    ...WatchEventsRequest.fields,
+  }),
+  Schema.Struct({
+    type: Schema.Literal("render_template"),
+    ...TemplateRequest.fields,
+    // Sends render errors and warnings as events.
+    report_errors: Schema.optional(Schema.Boolean),
+  }),
+  Schema.Struct({
+    type: Schema.Literal("logbook/event_stream"),
+    ...LogbookQuery.fields,
+  }),
+  Schema.Struct({
+    type: Schema.Literal("subscribe_trigger"),
+    ...TriggerRequest.fields,
+  }),
+  // Checked every second; an event is sent only when the result changes.
+  Schema.Struct({
+    type: Schema.Literal("subscribe_condition"),
+    ...WatchConditionRequest.fields,
+  }),
+  // Core's log as it's written, starting with the end of the log file: its
+  // last 100 lines, or an integration's last 5000. Each event is a list of
+  // records. Needs an admin token and Core 2026.11 or newer.
+  Schema.Struct({
+    type: Schema.Literal("system_log/subscribe_raw"),
+    integration: Schema.optional(Schema.String),
+  }),
+]);
+
+export type HomeAssistantSubscription = typeof HomeAssistantSubscription.Type;
 
 type OutgoingMessage =
   | ((HomeAssistantCommand | HomeAssistantSubscription) & {
