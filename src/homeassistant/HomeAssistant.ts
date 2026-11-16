@@ -547,12 +547,16 @@ export class HomeAssistant extends Context.Service<
       );
 
       const connected = SubscriptionRef.get(session).pipe(
-        Effect.flatMap(Effect.fromOption),
-        Effect.mapError(
-          () =>
-            new HomeAssistantError({
-              message: "the bridge is not connected to Home Assistant",
-            }),
+        Effect.flatMap(
+          Option.match({
+            onNone: () =>
+              Effect.fail(
+                new HomeAssistantError({
+                  message: "the bridge is not connected to Home Assistant",
+                }),
+              ),
+            onSome: Effect.succeed,
+          }),
         ),
       );
 
