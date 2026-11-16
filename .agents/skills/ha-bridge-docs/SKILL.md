@@ -36,4 +36,4 @@ bunx markdownlint-cli2
 
 ## Deployment
 
-Cloudflare Workers Builds deploys `main` from the `docs` root directory with `bun run build` and `bun run deploy`, as `docs/README.md` describes. Don't edit the generated `docs/.blume/` runtime.
+The Deploy docs workflow deploys `main` through the Alchemy stack in `docs/alchemy.run.ts` (`mise run docs:deploy`), as `docs/README.md` describes. Run `mise run docs:plan` to see what a deploy would change. Don't edit the generated `docs/.blume/` runtime.
