@@ -170,7 +170,3 @@ const snapshot = yield* cameraSnapshot(
 `EntityState` is the schema for a state object. `friendlyName` and `stateWithUnit` format one for display. `entityNamerFrom` builds names the way Home Assistant dashboards do (parent device, device and entity name) from the entity and device registries, and `entityNameParts` returns those parts separately. `AreaRegistry`, `FloorRegistry` and `LabelRegistry` decode `config/area_registry/list`, `config/floor_registry/list` and `config/label_registry/list`.
 
 Failures use `HomeAssistantError`.
-
-## Licence
-
-Apache 2.0. See [LICENSE](https://github.com/timmo001/ha-bridge/blob/main/LICENSE).

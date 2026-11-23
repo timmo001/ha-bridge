@@ -145,7 +145,3 @@ const frontDoor = Effect.gen(function* () {
 ## Errors
 
 Calls fail with `RpcClientError` when the bridge isn't reachable rather than waiting for it to come back. Long-running watchers exit, so run them under a supervisor (such as systemd) that restarts them.
-
-## Licence
-
-Apache 2.0. See [LICENSE](https://github.com/timmo001/ha-bridge/blob/main/LICENSE).
