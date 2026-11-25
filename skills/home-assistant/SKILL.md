@@ -1,6 +1,6 @@
 ---
 name: home-assistant
-description: Look up how Home Assistant behaves in its docs and source, and write automations and scripts the current way, preferring purpose-specific triggers, conditions and actions such as light.turned_on over templates. Use when explaining why an automation ran, how an integration, trigger, condition, action or entity state works, or when writing or changing an automation or script.
+description: Look up how Home Assistant behaves in its docs and source, write automations and scripts the current way, preferring purpose-specific triggers, conditions and actions such as light.turned_on over templates, and organise what you add with labels, categories and areas. Use when explaining why an automation ran, how an integration, trigger, condition, action or entity state works, when writing or changing an automation, script or helper, or when adding or organising devices and entities.
 license: Apache-2.0
 compatibility: Needs search or fetch tools for the docs. Reading and changing a live Home Assistant needs the ha-bridge-cli skill and a running bridge.
 ---
@@ -90,3 +90,23 @@ conditions:
 - `automation config update` and `script config update` replace the whole config. Start from `config get`, change what's needed, and keep the `id` and `alias`.
 - Only automations in `automations.yaml` and scripts in `scripts.yaml` can be changed this way. Ones in `configuration.yaml` or packages have to be edited in their files.
 - When an automation picks between two sets of actions, use `if`, `then` and `else` rather than `choose`, as it's easier to read. Keep `choose` for three or more.
+
+## Labels, categories and areas
+
+An automation, script, helper or device you add or change isn't finished until it's organised: labels and areas make it something triggers, actions, dashboards and searches can target, and categories keep the settings lists readable. The `ha-bridge-cli` skill has the commands.
+
+- Areas say where something is. A device has one and its entities follow it unless given their own. Automations, scripts and helpers take one too, for the room or machine they're about.
+- Labels say what something is for, across rooms. Devices, entities, areas, automations, scripts and helpers can each have several.
+- Categories group automations, scripts, scenes and helpers in their settings lists, one category per item. Each of those has its own set, so the automations' `Lighting` and the scripts' `Lighting` are different categories.
+
+Follow the home's own scheme:
+
+- Before picking, list the labels and the categories for the item's kind, and read how a similar item is organised. Reuse what's there. When nothing fits, propose a new label or category and ask before creating it.
+- Put a label on the device when it fits the whole device. Its entities get the device's labels in targets and searches, so don't copy it onto each one. A smart plug on a kettle has `Appliances`, `Energy` and `Drinks` on the device.
+- Label an entity on its own when it belongs somewhere its device doesn't. A computer's System Bridge device is labelled `Desktop`, and its power usage and energy sensors also get `Energy`, so they sit with the home's other electricity sensors without the whole computer counting as energy. The same goes for a power or energy sensor in any large integration whose device is about something else, such as a printer, a server or a TV.
+- Judge by what the entity measures, not its device class alone. A `power` binary sensor says whether something is on, and a phone's battery power or calories burned aren't the home's electricity.
+- Give every automation and script a category, the labels for what it touches and why, and an area when it's about one place. An automation that lights a sign while the desktop is in a call has the area `Desktop`, the category `Computers` and the labels `Work`, `Desktop` and `Notification`; one that restores lights after a reconnect has the area `House`, the category `Lighting` and the labels `HA Health` and `Lighting - Other`.
+- Helpers get an area and labels like any entity, and a category when the home uses helper categories.
+- When a new device or integration appears, go through its entities: give the device its area and labels, and label the entities that belong elsewhere, such as its power and energy sensors.
+- Show the area, labels and category in the change you put up for approval, alongside the config, and apply them in the same change. Offer to organise other items you find unlabelled rather than relabelling the home unasked.
+- Target by label where a set of things shares a purpose: `target: label_id: energy` covers everything with that label, including what's added later, where a list of entities goes stale.
