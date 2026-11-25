@@ -10,6 +10,8 @@ export * from "./History.js";
 
 export * from "./Log.js";
 
+export * from "./Registry.js";
+
 export * from "./Rpcs.js";
 
 export * from "./Search.js";

@@ -15,6 +15,7 @@ import { Socket, SocketServer } from "effect/socket";
 import { HomeAssistant } from "../homeassistant/HomeAssistant.js";
 import { EntityConfigs } from "../homeassistant/EntityConfigs.js";
 import { HomeAssistantLogs } from "../homeassistant/Logs.js";
+import { Registry } from "../homeassistant/Registry.js";
 import { Updates } from "../homeassistant/Updates.js";
 import { BridgeRpcs } from "@timmo001/effect-ha-bridge";
 
@@ -24,6 +25,7 @@ const Handlers = BridgeRpcs.toLayer(
     const logs = yield* HomeAssistantLogs;
     const entityConfigs = yield* EntityConfigs;
     const updates = yield* Updates;
+    const registry = yield* Registry;
 
     return BridgeRpcs.of({
       GetEntities: (request) => homeAssistant.getEntities(request),
@@ -57,6 +59,18 @@ const Handlers = BridgeRpcs.toLayer(
       GetUpdates: (request) => updates.list(request),
       GetUpdate: (request) => updates.get(request),
       CheckUpdates: (request) => updates.check(request),
+      GetRegistryEntries: (request) => registry.entries(request),
+      GetLabels: () => registry.labels,
+      CreateLabel: (request) => registry.createLabel(request),
+      UpdateLabel: (request) => registry.updateLabel(request),
+      DeleteLabel: (request) => registry.deleteLabel(request),
+      ChangeLabels: (request) => registry.changeLabels(request),
+      GetCategories: (request) => registry.categories(request),
+      CreateCategory: (request) => registry.createCategory(request),
+      UpdateCategory: (request) => registry.updateCategory(request),
+      DeleteCategory: (request) => registry.deleteCategory(request),
+      SetCategory: (request) => registry.setCategory(request),
+      SetDeviceArea: (request) => registry.setDeviceArea(request),
     });
   }),
 );
@@ -205,6 +219,7 @@ export const serve = (socketPath: string) =>
               HomeAssistantLogs.layer,
               EntityConfigs.layer,
               Updates.layer,
+              Registry.layer,
             ).pipe(
               Layer.provideMerge(HomeAssistant.layer),
               Layer.provide(FetchHttpClient.layer),

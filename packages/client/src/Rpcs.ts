@@ -3,6 +3,8 @@ import { Schema } from "effect";
 import {
   Action,
   CameraSnapshot,
+  Category,
+  Label,
   HomeAssistantConfig,
   HomeAssistantError,
   Target,
@@ -48,6 +50,20 @@ import {
   SystemLogRequest,
   WatchLogRequest,
 } from "./Log.js";
+import {
+  CategoriesRequest,
+  CategoryRequest,
+  ChangeLabelsRequest,
+  CreateCategoryRequest,
+  CreateLabelRequest,
+  LabelRequest,
+  RegistryEntry,
+  RegistryItems,
+  SetCategoryRequest,
+  SetDeviceAreaRequest,
+  UpdateCategoryRequest,
+  UpdateLabelRequest,
+} from "./Registry.js";
 import { SearchEmpty, SearchRequest, SearchResults } from "./Search.js";
 import { TargetError, TargetRequest } from "./Target.js";
 import {
@@ -269,6 +285,77 @@ export class BridgeRpcs extends RpcGroup.make(
   Rpc.make("CheckUpdates", {
     payload: CheckUpdatesRequest,
     success: UpdatesCheck,
+    error: TargetFailure,
+  }),
+  // The labels, categories and area of entities, devices and areas, read
+  // from Home Assistant rather than the bridge's cache.
+  Rpc.make("GetRegistryEntries", {
+    payload: RegistryItems,
+    success: Schema.Array(RegistryEntry),
+    error: TargetFailure,
+  }),
+  // Every label, by name.
+  Rpc.make("GetLabels", {
+    success: Schema.Array(Label),
+    error: HomeAssistantError,
+  }),
+  // Home Assistant makes the new label's ID from its name. Writes to the
+  // registries need an admin token.
+  Rpc.make("CreateLabel", {
+    payload: CreateLabelRequest,
+    success: Label,
+    error: HomeAssistantError,
+  }),
+  Rpc.make("UpdateLabel", {
+    payload: UpdateLabelRequest,
+    success: Label,
+    error: TargetFailure,
+  }),
+  // Also takes the label off everything that has it.
+  Rpc.make("DeleteLabel", {
+    payload: LabelRequest,
+    error: TargetFailure,
+  }),
+  // Adds and removes labels on entities, devices and areas, keeping their
+  // other labels. Succeeds with each item as it is afterwards.
+  Rpc.make("ChangeLabels", {
+    payload: ChangeLabelsRequest,
+    success: Schema.Array(RegistryEntry),
+    error: TargetFailure,
+  }),
+  // A scope's categories, by name.
+  Rpc.make("GetCategories", {
+    payload: CategoriesRequest,
+    success: Schema.Array(Category),
+    error: HomeAssistantError,
+  }),
+  Rpc.make("CreateCategory", {
+    payload: CreateCategoryRequest,
+    success: Category,
+    error: HomeAssistantError,
+  }),
+  Rpc.make("UpdateCategory", {
+    payload: UpdateCategoryRequest,
+    success: Category,
+    error: TargetFailure,
+  }),
+  // Also takes every entity out of the category.
+  Rpc.make("DeleteCategory", {
+    payload: CategoryRequest,
+    error: TargetFailure,
+  }),
+  // Puts entities in a category, or takes them out of one. Succeeds with
+  // each entity as it is afterwards.
+  Rpc.make("SetCategory", {
+    payload: SetCategoryRequest,
+    success: Schema.Array(RegistryEntry),
+    error: TargetFailure,
+  }),
+  // Moves devices to an area, or out of theirs. Succeeds with each device
+  // as it is afterwards.
+  Rpc.make("SetDeviceArea", {
+    payload: SetDeviceAreaRequest,
+    success: Schema.Array(RegistryEntry),
     error: TargetFailure,
   }),
 ) {}

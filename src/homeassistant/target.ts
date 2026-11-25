@@ -13,7 +13,7 @@ import type { Registries } from "./registries.js";
 
 // What each target field can be resolved against. `undefined` means the
 // registry hasn't loaded, so values pass through as IDs.
-interface Candidate {
+export interface Candidate {
   readonly id: string;
   readonly name: string;
 }
@@ -78,23 +78,21 @@ const candidatesFor = (
   }
 };
 
-const resolveValue = (
-  field: TargetField,
+// The ID a value names among the candidates: an exact ID first, or
+// `alternateId`, then a unique case-insensitive name. A value that matches
+// nothing fails, unless `unmatched` lets it through as it is.
+export const resolveCandidate = (
+  kind: string,
   value: string,
-  candidates: ReadonlyArray<Candidate> | undefined,
-  domain: string | undefined,
+  candidates: ReadonlyArray<Candidate>,
+  options: {
+    readonly alternateId?: string | undefined;
+    readonly unmatched?: ((value: string) => boolean) | undefined;
+  } = {},
 ): Effect.Effect<string, TargetError> => {
-  if (candidates === undefined || passthrough.has(value)) {
-    return Effect.succeed(value);
-  }
-
-  // An entity's object ID counts as its ID within the domain.
-  const objectId =
-    field === "entity_id" && domain !== undefined
-      ? `${domain}.${value}`
-      : undefined;
-
-  const byId = candidates.find(({ id }) => id === value || id === objectId);
+  const byId = candidates.find(
+    ({ id }) => id === value || id === options.alternateId,
+  );
 
   if (byId !== undefined) {
     return Effect.succeed(byId.id);
@@ -109,8 +107,6 @@ const resolveValue = (
     return Effect.succeed(only.id);
   }
 
-  const kind = kinds[field];
-
   if (named.length > 1) {
     return Effect.fail(
       new TargetError({
@@ -119,15 +115,38 @@ const resolveValue = (
     );
   }
 
-  // Entities without a state, such as disabled ones, are left to Home
-  // Assistant.
-  if (field === "entity_id" && entityIdPattern.test(value)) {
+  if (options.unmatched?.(value) === true) {
     return Effect.succeed(value);
   }
 
   return Effect.fail(
     new TargetError({ message: `No ${kind} matches "${value}"` }),
   );
+};
+
+const resolveValue = (
+  field: TargetField,
+  value: string,
+  candidates: ReadonlyArray<Candidate> | undefined,
+  domain: string | undefined,
+): Effect.Effect<string, TargetError> => {
+  if (candidates === undefined || passthrough.has(value)) {
+    return Effect.succeed(value);
+  }
+
+  return resolveCandidate(kinds[field], value, candidates, {
+    // An entity's object ID counts as its ID within the domain.
+    alternateId:
+      field === "entity_id" && domain !== undefined
+        ? `${domain}.${value}`
+        : undefined,
+    // Entities without a state, such as disabled ones, are left to Home
+    // Assistant.
+    unmatched:
+      field === "entity_id"
+        ? (unmatched) => entityIdPattern.test(unmatched)
+        : undefined,
+  });
 };
 
 export const valuesOf = (value: string | ReadonlyArray<string>) =>
