@@ -167,6 +167,6 @@ const snapshot = yield* cameraSnapshot(
 
 ## Entities
 
-`EntityState` is the schema for a state object. `friendlyName` and `stateWithUnit` format one for display. `entityNamerFrom` builds names the way Home Assistant dashboards do (parent device, device and entity name) from the entity and device registries, and `entityNameParts` returns those parts separately. `AreaRegistry`, `FloorRegistry` and `LabelRegistry` decode `config/area_registry/list`, `config/floor_registry/list` and `config/label_registry/list`.
+`EntityState` is the schema for a state object. `friendlyName` and `stateWithUnit` format one for display. `entityNamerFrom` builds names the way Home Assistant dashboards do (parent device, device and entity name) from the entity and device registries, and `entityNameParts` returns those parts separately. `AreaRegistry`, `FloorRegistry` and `LabelRegistry` decode `config/area_registry/list`, `config/floor_registry/list` and `config/label_registry/list`. `Label` and `Category` are one label or category in full, and `EntityRegistryEntry`, `DeviceRegistryEntry` and `AreaRegistryEntry` hold the labels, categories and areas of registry entries. `HomeAssistantCommand` includes the label and category registry commands and the entity, device and area registry updates.
 
 Failures use `HomeAssistantError`.

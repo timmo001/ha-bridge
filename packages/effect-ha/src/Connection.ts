@@ -98,6 +98,84 @@ export const HomeAssistantCommand = Schema.Union([
     type: Schema.Literal("config/entity_registry/get"),
     entity_id: Schema.String,
   }),
+  // Registry entries keyed by entity ID, null for each one Home Assistant
+  // doesn't have.
+  Schema.Struct({
+    type: Schema.Literal("config/entity_registry/get_entries"),
+    entity_ids: Schema.Array(Schema.String),
+  }),
+  // Changes an entity's registry entry as `{entity_entry}`. `labels`
+  // replaces them all, and Home Assistant drops IDs it doesn't have.
+  // `categories` only changes the scopes it names; null takes the entity
+  // out of that scope's category. Needs an admin token.
+  Schema.Struct({
+    type: Schema.Literal("config/entity_registry/update"),
+    entity_id: Schema.String,
+    labels: Schema.optional(Schema.Array(Schema.String)),
+    categories: Schema.optional(
+      Schema.Record(Schema.String, Schema.NullOr(Schema.String)),
+    ),
+  }),
+  // Changes a device's registry entry. null clears its area; `labels`
+  // replaces them all. Needs an admin token.
+  Schema.Struct({
+    type: Schema.Literal("config/device_registry/update"),
+    device_id: Schema.String,
+    area_id: Schema.optional(Schema.NullOr(Schema.String)),
+    labels: Schema.optional(Schema.Array(Schema.String)),
+  }),
+  // Changes an area's labels, replacing them all. Needs an admin token.
+  Schema.Struct({
+    type: Schema.Literal("config/area_registry/update"),
+    area_id: Schema.String,
+    labels: Schema.optional(Schema.Array(Schema.String)),
+  }),
+  // Home Assistant makes the label's ID from its name. Writes need an
+  // admin token.
+  Schema.Struct({
+    type: Schema.Literal("config/label_registry/create"),
+    name: Schema.String,
+    icon: Schema.optional(Schema.NullOr(Schema.String)),
+    color: Schema.optional(Schema.NullOr(Schema.String)),
+    description: Schema.optional(Schema.NullOr(Schema.String)),
+  }),
+  Schema.Struct({
+    type: Schema.Literal("config/label_registry/update"),
+    label_id: Schema.String,
+    name: Schema.optional(Schema.String),
+    icon: Schema.optional(Schema.NullOr(Schema.String)),
+    color: Schema.optional(Schema.NullOr(Schema.String)),
+    description: Schema.optional(Schema.NullOr(Schema.String)),
+  }),
+  // Also takes the label off everything that has it.
+  Schema.Struct({
+    type: Schema.Literal("config/label_registry/delete"),
+    label_id: Schema.String,
+  }),
+  // A scope's categories, such as automation's.
+  Schema.Struct({
+    type: Schema.Literal("config/category_registry/list"),
+    scope: Schema.String,
+  }),
+  Schema.Struct({
+    type: Schema.Literal("config/category_registry/create"),
+    scope: Schema.String,
+    name: Schema.String,
+    icon: Schema.optional(Schema.NullOr(Schema.String)),
+  }),
+  Schema.Struct({
+    type: Schema.Literal("config/category_registry/update"),
+    scope: Schema.String,
+    category_id: Schema.String,
+    name: Schema.optional(Schema.String),
+    icon: Schema.optional(Schema.NullOr(Schema.String)),
+  }),
+  // Also takes the category off every entity in it.
+  Schema.Struct({
+    type: Schema.Literal("config/category_registry/delete"),
+    scope: Schema.String,
+    category_id: Schema.String,
+  }),
   // A Supervisor API call answering JSON, such as /addons. Needs an admin
   // token for almost every endpoint.
   Schema.Struct({
