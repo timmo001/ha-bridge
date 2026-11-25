@@ -17,8 +17,8 @@ The socket is at the [socket path](/configuration#socket-path), in a directory o
 | `GetConfig` | `null` | Home Assistant's config, such as `time_zone`, `location_name` and `version` |
 | `CameraSnapshot` | `{ "target": Target }` | `{ "contentType": string, "data": string }`, with the image bytes base64-encoded in `data` |
 | `Search` | `{ "query"?: string, "target"?: Target, "kinds"?: ("entity" \| "device" \| "area")[], "domain"?: string, "deviceClass"?: string, "limit"?: number, "offset"?: number }` | `{ "results": SearchMatch[], "total": number, "unavailable": string[] }` |
-| `RenderTemplate` | `{ "template": string, "variables"?: object, "strict"?: boolean, "timeout"?: number }` | `{ "result": Json, "warnings": string[] }`, the first render |
-| `WatchTemplate` | `{ "template": string, "variables"?: object, "strict"?: boolean, "timeout"?: number }` | A stream of renders, each `{ "result": Json }` or `{ "error": string, "level": string }`, rendering again after reconnects |
+| `RenderTemplate` | `{ "template": string, "variables"?: object, "strict"?: boolean, "timeout"?: number }` | `{ "result": Json, "warnings": string[] }`, the first render. `timeout` is in seconds: 5 when it's missing, and never more than 30 |
+| `WatchTemplate` | `{ "template": string, "variables"?: object, "strict"?: boolean, "timeout"?: number }` | A stream of renders, each `{ "result": Json }` or `{ "error": string, "level": string }`, rendering again after reconnects. `timeout` works as for `RenderTemplate` |
 | `WatchEvents` | `{ "event_type"?: string }` | A stream of events, each with `event_type`, `data`, `origin`, `time_fired` and `context` |
 | `FireEvent` | `{ "event_type": string, "event_data"?: object }` | Nothing |
 | `GetHistory` | `{ "target": Target, "domain"?: string, "start_time": string, "end_time"?: string, "no_attributes"?: boolean, "all_changes"?: boolean }` | An object keyed by entity ID, each a list of `{ "state", "attributes"?, "last_changed", "last_updated" }` |

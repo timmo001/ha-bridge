@@ -5101,7 +5101,7 @@ const templateConfig = {
   ),
   timeout: optionalFlag(
     Flag.Finite("timeout"),
-    "Seconds the first render may take",
+    "Seconds Home Assistant may spend on the first render, 5 by default and 30 at most",
   ),
   json: Flag.Boolean("json").pipe(
     Flag.withDescription("Print each result as JSON"),

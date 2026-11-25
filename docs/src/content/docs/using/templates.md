@@ -14,7 +14,7 @@ Home Assistant parses results that read as numbers, lists or objects. Text print
 
 ## Variables, strict mode and timeouts
 
-`--variables` passes a JSON object that the template can read. `--strict` makes an undefined variable an error instead of an empty value, and `--timeout` sets how many seconds the first render may take:
+`--variables` passes a JSON object that the template can read. `--strict` makes an undefined variable an error instead of an empty value, and `--timeout` sets how many seconds Home Assistant may spend on the first render:
 
 ```bash
 ha-bridge template render "{{ room }} is {{ states('sensor.' ~ room ~ '_temperature') }}" \
@@ -22,6 +22,8 @@ ha-bridge template render "{{ room }} is {{ states('sensor.' ~ room ~ '_temperat
 ```
 
 Warnings, such as an undefined variable outside strict mode, go to stderr. `template render` exits with an error when the template fails to render. `template watch` logs render errors and keeps watching, and renders again after the bridge reconnects.
+
+Home Assistant renders templates on its main thread, so a slow one stops it doing anything else, and long enough to trip the Supervisor's watchdog restarts Home Assistant. The bridge sends every template with a timeout to prevent that: 5 seconds unless `--timeout` asks for more, and never more than 30. Home Assistant first renders the template in a background thread and refuses it with "Exceeded maximum execution time" if it runs over, before it can block anything. When that happens, narrow the template rather than raising the timeout: looking things up for every entity in a loop over `states` (`device_id`, `integration_entities` and the like) is the usual cause, and `search` or `registry get` answer most of those questions without a template.
 
 ## Bar JSON
 

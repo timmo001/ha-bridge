@@ -14,8 +14,25 @@ import {
 import { FetchHttpClient } from "effect/http";
 import { Socket } from "effect/socket";
 import { BridgeConfig } from "../config/Config.js";
-import { HomeAssistant } from "./HomeAssistant.js";
+import { HomeAssistant, templateTimeout } from "./HomeAssistant.js";
 import { HomeAssistantLogs } from "./Logs.js";
+
+describe("templateTimeout", () => {
+  test("defaults to 5 seconds when none is asked for", () => {
+    expect(templateTimeout(undefined)).toBe(5);
+  });
+
+  test("can't be turned off", () => {
+    expect(templateTimeout(0)).toBe(5);
+    expect(templateTimeout(-1)).toBe(5);
+    expect(templateTimeout(Number.NaN)).toBe(5);
+  });
+
+  test("keeps a timeout up to 30 seconds and caps longer ones", () => {
+    expect(templateTimeout(12)).toBe(12);
+    expect(templateTimeout(120)).toBe(30);
+  });
+});
 
 // Past the sliding state pubsub's 4096 slots, so a full snapshot cannot be
 // delivered to a watcher that is already subscribed.

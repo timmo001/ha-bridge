@@ -268,13 +268,41 @@ const decodeActionDescriptions = decodeWith(
   "actions",
 );
 
+/** Seconds Home Assistant may spend on a template's first render by default. */
+export const defaultTemplateTimeout = 5;
+
+/** The most seconds a client may give a template's first render. */
+export const maxTemplateTimeout = 30;
+
+/**
+ * The timeout every template is sent with. With one, Home Assistant renders
+ * the template first in a worker thread and refuses it if that takes longer,
+ * so a slow template can't block its event loop and trip the Supervisor's
+ * watchdog. Clients can raise it up to {@link maxTemplateTimeout} but never
+ * turn it off.
+ */
+export const templateTimeout = (requested: number | undefined) =>
+  requested === undefined || !(requested > 0)
+    ? defaultTemplateTimeout
+    : Math.min(requested, maxTemplateTimeout);
+
 const templateSubscription = (
   request: TemplateRequest,
 ): HomeAssistantSubscription => ({
   type: "render_template",
   ...request,
+  timeout: templateTimeout(request.timeout),
   report_errors: true,
 });
+
+// Home Assistant refuses a template that runs past its timeout with only the
+// limit, so say what to do about it.
+const explainTemplateTimeout = (error: HomeAssistantError) =>
+  error.message.startsWith("Exceeded maximum execution time")
+    ? new HomeAssistantError({
+        message: `${error.message}: the template is too slow for Home Assistant to render without blocking it. Narrow it instead, such as by not looking things up for every entity in a loop over states`,
+      })
+    : error;
 
 const decodeCurrentUser = decodeWith(
   Schema.decodeUnknownEffect(CurrentUser),
@@ -758,9 +786,9 @@ export class HomeAssistant extends Context.Service<
           // Home Assistant can report the same warning more than once.
           const warnings = new Set<string>();
 
-          const events = yield* current.subscribe(
-            templateSubscription(request),
-          );
+          const events = yield* current
+            .subscribe(templateSubscription(request))
+            .pipe(Effect.mapError(explainTemplateTimeout));
 
           const rendered = yield* events.pipe(
             Stream.mapEffect(decodeTemplateUpdate),

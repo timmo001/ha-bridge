@@ -39,7 +39,7 @@ ARGUMENTS
 FLAGS
   --variables string    Variables as a JSON object, such as '{"room":"office"}'
   --strict              Fail on undefined variables
-  --timeout number      Seconds the first render may take
+  --timeout number      Seconds Home Assistant may spend on the first render, 5 by default and 30 at most
   --json                Print each result as JSON
   --bar-json            Print one bar JSON object per result, taking text, tooltip and class from an object result
 
@@ -64,7 +64,7 @@ ARGUMENTS
 FLAGS
   --variables string    Variables as a JSON object, such as '{"room":"office"}'
   --strict              Fail on undefined variables
-  --timeout number      Seconds the first render may take
+  --timeout number      Seconds Home Assistant may spend on the first render, 5 by default and 30 at most
   --json                Print each result as JSON
   --bar-json            Print one bar JSON object per result, taking text, tooltip and class from an object result
 

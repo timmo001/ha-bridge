@@ -294,12 +294,14 @@ export const agentTools: ReadonlyArray<AgentTool> = [
   }),
   tool({
     name: "render_template",
-    description: "Render a Jinja template in Home Assistant.",
+    description:
+      "Render a Jinja template in Home Assistant. Templates run on Home Assistant's main thread, so one over its timeout (5 seconds by default, 30 at most) is refused: narrow it rather than raising the timeout, and use search or get_registry_entries instead of looking things up for every entity in a loop.",
     access: "read",
     input: Schema.Struct({
       template: Schema.String,
       variables: Schema.optionalKey(JsonObject),
       strict: Schema.optionalKey(Schema.Boolean),
+      timeout: Schema.optionalKey(Schema.Finite),
     }),
     output: TemplateRender,
     run: (input) => withBridge((bridge) => bridge.RenderTemplate(input)),
