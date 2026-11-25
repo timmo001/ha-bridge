@@ -61,6 +61,14 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 - Watchers exit with status 1 when the bridge restarts or can't be reached. Run them under something that restarts them, such as a bar's restart interval or a systemd unit with `Restart=on-failure`.
 - For output the flags can't express, use `template watch --bar-json`.
 
+## Templates
+
+Home Assistant renders templates on its main thread. While one runs, nothing else in Home Assistant does, and a long enough stall makes the Supervisor's watchdog restart it.
+
+- Keep templates small. Never look something up for every entity in a loop over `states`, such as `device_id`, `integration_entities`, `area_name` or `labels` called once per entity. Answer those questions with `search` (it reads the bridge's cache, not Home Assistant) or `registry get` instead.
+- The bridge sends every template with a timeout, 5 seconds unless `--timeout` (or the tool's `timeout`) asks for more, and never more than 30. Home Assistant refuses one that runs over with "Exceeded maximum execution time". Treat that as "narrow the template", not "raise the timeout".
+- After a template times out, don't send another heavy one straight after: check Home Assistant is still answering (a quick `get` of one entity) first.
+
 ## Automation and script configs
 
 `ha-bridge automation config` and `ha-bridge script config` read and write them as Home Assistant's editors do, and need an admin token.
