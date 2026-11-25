@@ -121,7 +121,7 @@ export default Plugin.define({
         draft.namespace({
           name: namespace,
           description:
-            "Home Assistant through the ha-bridge socket: read entities, history, logbook, logs, updates and automation or script configs, render templates, test conditions, search, check for updates, and call actions or fire events. Targets take entity_id, device_id, area_id, floor_id or label_id.",
+            "Home Assistant through the ha-bridge socket: read entities, history, logbook, logs, updates and automation or script configs, render templates, test conditions, search, check for updates, call actions or fire events, and manage labels, categories and device areas. Targets take entity_id, device_id, area_id, floor_id or label_id.",
         });
 
         for (const tool of manifest.success.tools) {

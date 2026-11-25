@@ -150,6 +150,8 @@ import {
   type WatchLogRequest,
   resolveSocketPath,
   type EntityUpdate,
+  type RegistryEntry,
+  type TargetError,
   type SearchMatch,
   type SearchResults,
   type UpdateDetails,
@@ -5755,6 +5757,549 @@ const get = Command.make(
   ),
 );
 
+// A name with its ID, or the ID alone when it has no name.
+const named = (name: string | null, id: string) =>
+  name === null || name === id ? id : `${name} (${id})`;
+
+const registryEntryText = (entry: RegistryEntry) => {
+  const lines = [`${entry.kind} ${named(entry.name, entry.id)}`];
+
+  if (entry.area !== undefined) {
+    lines.push(
+      `  area: ${entry.area === null ? "none" : named(entry.area.name, entry.area.area_id)}`,
+    );
+  }
+
+  if (entry.device_id !== undefined && entry.device_id !== null) {
+    lines.push(`  device: ${entry.device_id}`);
+  }
+
+  lines.push(
+    `  labels: ${
+      entry.labels.length === 0
+        ? "none"
+        : entry.labels
+            .map((label) => named(label.name, label.label_id))
+            .join(", ")
+    }`,
+  );
+
+  if (entry.categories !== undefined) {
+    lines.push(
+      ...(entry.categories.length === 0
+        ? ["  categories: none"]
+        : entry.categories.map(
+            (category) =>
+              `  category in ${category.scope}: ${named(category.name, category.category_id)}`,
+          )),
+    );
+  }
+
+  return lines.join("\n");
+};
+
+const registryJsonFlag = Flag.Boolean("json").pipe(
+  Flag.withDescription("Print as JSON"),
+  Flag.withDefault(false),
+);
+
+// What a label or device area change applies to. Nothing is expanded, so an
+// area is the area itself, not what's in it.
+const registryItemFlags = {
+  entity: Flag.String("entity").pipe(
+    Flag.withDescription(
+      "Entity ID, such as automation.morning; repeat for more",
+    ),
+    Flag.atLeast(0),
+  ),
+  device: Flag.String("device").pipe(
+    Flag.withDescription("Device ID or name; repeat for more"),
+    Flag.atLeast(0),
+  ),
+  area: Flag.String("area").pipe(
+    Flag.withDescription("Area ID or name; repeat for more"),
+    Flag.atLeast(0),
+  ),
+};
+
+const registryItems = (input: {
+  readonly entity: ReadonlyArray<string>;
+  readonly device: ReadonlyArray<string>;
+  readonly area: ReadonlyArray<string>;
+}) => ({
+  entity_id: input.entity,
+  device_id: input.device,
+  area_id: input.area,
+});
+
+const couldNot = (action: string) => (error: HomeAssistantError) =>
+  failWith(`could not ${action}: ${error.message}`);
+
+const registryFailures = (action: string) => ({
+  HomeAssistantError: couldNot(action),
+  TargetError: (error: TargetError) => failWith(error.message),
+});
+
+// Prints changed items as JSON with --json; otherwise says nothing, as other
+// writes do.
+const printEntries = (entries: ReadonlyArray<RegistryEntry>, json: boolean) =>
+  json ? Console.log(JSON.stringify(entries)) : Effect.void;
+
+// An empty value clears the field.
+const clearableFlag = (name: string, description: string) =>
+  Flag.String(name).pipe(
+    Flag.withDescription(`${description}; an empty value clears it`),
+    Flag.optional,
+    Flag.map(Option.map((value) => (value === "" ? null : value))),
+  );
+
+const labelFieldFlags = {
+  icon: clearableFlag("icon", "Icon, such as mdi:lightbulb"),
+  color: clearableFlag(
+    "color",
+    "Colour: a theme colour, such as indigo or light-blue, or a hex colour, such as #ff0000",
+  ),
+  description: clearableFlag("description", "Description"),
+};
+
+const labelArgument = Argument.String("label").pipe(
+  Argument.withDescription("Label ID or name"),
+);
+
+const changeLabelsCommand = (name: "add" | "remove") =>
+  Command.make(
+    name,
+    {
+      labels: Argument.String("label").pipe(
+        Argument.withDescription("Label ID or name; repeat for more"),
+        Argument.atLeast(1),
+      ),
+      ...registryItemFlags,
+      json: registryJsonFlag,
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const client = yield* BridgeClient;
+
+        const entries = yield* client
+          .ChangeLabels({
+            ...registryItems(input),
+            [name]: input.labels,
+          })
+          .pipe(Effect.catchTags(registryFailures(`${name} labels`)));
+
+        yield* printEntries(entries, input.json);
+      }).pipe(withBridge),
+  ).pipe(
+    Command.withDescription(
+      name === "add"
+        ? "Add labels to entities, devices and areas, keeping the labels they have. --json prints each item afterwards"
+        : "Remove labels from entities, devices and areas, keeping their other labels. --json prints each item afterwards",
+    ),
+  );
+
+const label = domainCommand(
+  "label",
+  undefined,
+  "Labels: list, create, change and delete them, and add them to or remove them from entities, devices and areas. Changes need an admin token",
+  [
+    Command.make("list", { json: registryJsonFlag }, (input) =>
+      Effect.gen(function* () {
+        const client = yield* BridgeClient;
+
+        const labels = yield* client
+          .GetLabels()
+          .pipe(Effect.catchTag("HomeAssistantError", couldNot("read labels")));
+
+        if (input.json) {
+          yield* Console.log(JSON.stringify(labels));
+
+          return;
+        }
+
+        yield* Effect.forEach(
+          labels,
+          (entry) =>
+            Console.log(
+              entry.description === null || entry.description === ""
+                ? named(entry.name, entry.label_id)
+                : `${named(entry.name, entry.label_id)}: ${entry.description}`,
+            ),
+          { discard: true },
+        );
+      }).pipe(withBridge),
+    ).pipe(
+      Command.withAlias("ls"),
+      Command.withDescription("List every label by name, with its ID"),
+    ),
+    Command.make(
+      "create",
+      {
+        name: Argument.String("name").pipe(
+          Argument.withDescription("The new label's name"),
+        ),
+        ...labelFieldFlags,
+        json: registryJsonFlag,
+      },
+      (input) =>
+        Effect.gen(function* () {
+          const client = yield* BridgeClient;
+
+          const created = yield* client
+            .CreateLabel({
+              name: input.name,
+              ...setFields({
+                icon: input.icon,
+                color: input.color,
+                description: input.description,
+              }),
+            })
+            .pipe(
+              Effect.catchTag(
+                "HomeAssistantError",
+                couldNot("create the label"),
+              ),
+            );
+
+          yield* Console.log(
+            input.json ? JSON.stringify(created) : created.label_id,
+          );
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Create a label and print its ID, which Home Assistant makes from its name",
+      ),
+    ),
+    Command.make(
+      "update",
+      {
+        label: labelArgument,
+        name: optionalFlag(Flag.String("name"), "New name"),
+        ...labelFieldFlags,
+        json: registryJsonFlag,
+      },
+      (input) =>
+        Effect.gen(function* () {
+          const client = yield* BridgeClient;
+
+          const updated = yield* client
+            .UpdateLabel({
+              label: input.label,
+              ...setFields({
+                name: input.name,
+                icon: input.icon,
+                color: input.color,
+                description: input.description,
+              }),
+            })
+            .pipe(Effect.catchTags(registryFailures("update the label")));
+
+          if (input.json) {
+            yield* Console.log(JSON.stringify(updated));
+          }
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Change a label's name, icon, colour or description, leaving the rest. Its ID stays the same",
+      ),
+    ),
+    Command.make("delete", { label: labelArgument }, (input) =>
+      Effect.gen(function* () {
+        const client = yield* BridgeClient;
+
+        yield* client
+          .DeleteLabel({ label: input.label })
+          .pipe(Effect.catchTags(registryFailures("delete the label")));
+      }).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Delete a label, taking it off everything that has it",
+      ),
+    ),
+    changeLabelsCommand("add"),
+    changeLabelsCommand("remove"),
+  ],
+);
+
+const scopeArgument = Argument.String("scope").pipe(
+  Argument.withDescription(
+    "The category scope: automation, script, scene or helpers in Home Assistant's own pages",
+  ),
+);
+
+const categoryArgument = Argument.String("category").pipe(
+  Argument.withDescription("Category ID or name"),
+);
+
+const categoryEntitiesArgument = Argument.String("entity_id").pipe(
+  Argument.withDescription(
+    "Entity ID, such as automation.morning; repeat for more",
+  ),
+  Argument.atLeast(1),
+);
+
+const categoryScopeFlag = optionalFlag(
+  Flag.String("scope"),
+  "The category scope, such as helpers (default: the entity's domain for automations, scripts and scenes)",
+);
+
+const category = domainCommand(
+  "category",
+  undefined,
+  "Categories of automations, scripts, scenes and helpers: list, create, change and delete them, and put entities in them. Changes need an admin token",
+  [
+    Command.make(
+      "list",
+      { scope: scopeArgument, json: registryJsonFlag },
+      (input) =>
+        Effect.gen(function* () {
+          const client = yield* BridgeClient;
+
+          const categories = yield* client
+            .GetCategories({ scope: input.scope })
+            .pipe(
+              Effect.catchTag(
+                "HomeAssistantError",
+                couldNot(`read ${input.scope} categories`),
+              ),
+            );
+
+          if (input.json) {
+            yield* Console.log(JSON.stringify(categories));
+
+            return;
+          }
+
+          yield* Effect.forEach(
+            categories,
+            (entry) => Console.log(named(entry.name, entry.category_id)),
+            { discard: true },
+          );
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withAlias("ls"),
+      Command.withDescription(
+        "List a scope's categories by name, with their IDs",
+      ),
+    ),
+    Command.make(
+      "create",
+      {
+        scope: scopeArgument,
+        name: Argument.String("name").pipe(
+          Argument.withDescription("The new category's name"),
+        ),
+        icon: optionalFlag(Flag.String("icon"), "Icon, such as mdi:lightbulb"),
+        json: registryJsonFlag,
+      },
+      (input) =>
+        Effect.gen(function* () {
+          const client = yield* BridgeClient;
+
+          const created = yield* client
+            .CreateCategory({
+              scope: input.scope,
+              name: input.name,
+              ...setFields({ icon: input.icon }),
+            })
+            .pipe(
+              Effect.catchTag(
+                "HomeAssistantError",
+                couldNot("create the category"),
+              ),
+            );
+
+          yield* Console.log(
+            input.json ? JSON.stringify(created) : created.category_id,
+          );
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withDescription("Create a category in a scope and print its ID"),
+    ),
+    Command.make(
+      "update",
+      {
+        scope: scopeArgument,
+        category: categoryArgument,
+        name: optionalFlag(Flag.String("name"), "New name"),
+        icon: clearableFlag("icon", "Icon, such as mdi:lightbulb"),
+        json: registryJsonFlag,
+      },
+      (input) =>
+        Effect.gen(function* () {
+          const client = yield* BridgeClient;
+
+          const updated = yield* client
+            .UpdateCategory({
+              scope: input.scope,
+              category: input.category,
+              ...setFields({ name: input.name, icon: input.icon }),
+            })
+            .pipe(Effect.catchTags(registryFailures("update the category")));
+
+          if (input.json) {
+            yield* Console.log(JSON.stringify(updated));
+          }
+        }).pipe(withBridge),
+    ).pipe(Command.withDescription("Rename a category or change its icon")),
+    Command.make(
+      "delete",
+      { scope: scopeArgument, category: categoryArgument },
+      (input) =>
+        Effect.gen(function* () {
+          const client = yield* BridgeClient;
+
+          yield* client
+            .DeleteCategory({ scope: input.scope, category: input.category })
+            .pipe(Effect.catchTags(registryFailures("delete the category")));
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Delete a category, taking every entity out of it",
+      ),
+    ),
+    Command.make(
+      "set",
+      {
+        scope: categoryScopeFlag,
+        json: registryJsonFlag,
+        category: categoryArgument,
+        entities: categoryEntitiesArgument,
+      },
+      (input) =>
+        Effect.gen(function* () {
+          const client = yield* BridgeClient;
+
+          const entries = yield* client
+            .SetCategory({
+              entity_id: input.entities,
+              scope: Option.getOrUndefined(input.scope),
+              category: input.category,
+            })
+            .pipe(Effect.catchTags(registryFailures("set the category")));
+
+          yield* printEntries(entries, input.json);
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Put entities in a category, moving them from any other in the same scope. --json prints each entity afterwards",
+      ),
+    ),
+    Command.make(
+      "clear",
+      {
+        scope: categoryScopeFlag,
+        json: registryJsonFlag,
+        entities: categoryEntitiesArgument,
+      },
+      (input) =>
+        Effect.gen(function* () {
+          const client = yield* BridgeClient;
+
+          const entries = yield* client
+            .SetCategory({
+              entity_id: input.entities,
+              scope: Option.getOrUndefined(input.scope),
+              category: null,
+            })
+            .pipe(Effect.catchTags(registryFailures("clear the category")));
+
+          yield* printEntries(entries, input.json);
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Take entities out of their category in the scope. --json prints each entity afterwards",
+      ),
+    ),
+  ],
+);
+
+const deviceArgument = Argument.String("device").pipe(
+  Argument.withDescription("Device ID or name; repeat for more"),
+  Argument.atLeast(1),
+);
+
+const device = domainCommand(
+  "device",
+  undefined,
+  "Device registry changes. They need an admin token",
+  [
+    Command.make(
+      "set-area",
+      {
+        json: registryJsonFlag,
+        area: Argument.String("area").pipe(
+          Argument.withDescription("Area ID or name"),
+        ),
+        devices: deviceArgument,
+      },
+      (input) =>
+        Effect.gen(function* () {
+          const client = yield* BridgeClient;
+
+          const entries = yield* client
+            .SetDeviceArea({ device_id: input.devices, area: input.area })
+            .pipe(Effect.catchTags(registryFailures("set the area")));
+
+          yield* printEntries(entries, input.json);
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Move devices to an area. Their entities without an area of their own follow. --json prints each device afterwards",
+      ),
+    ),
+    Command.make(
+      "clear-area",
+      { json: registryJsonFlag, devices: deviceArgument },
+      (input) =>
+        Effect.gen(function* () {
+          const client = yield* BridgeClient;
+
+          const entries = yield* client
+            .SetDeviceArea({ device_id: input.devices, area: null })
+            .pipe(Effect.catchTags(registryFailures("clear the area")));
+
+          yield* printEntries(entries, input.json);
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Take devices out of their area. --json prints each device afterwards",
+      ),
+    ),
+  ],
+);
+
+const registry = domainCommand(
+  "registry",
+  undefined,
+  "Read what Home Assistant's registries hold about entities, devices and areas",
+  [
+    Command.make(
+      "get",
+      { ...registryItemFlags, json: registryJsonFlag },
+      (input) =>
+        Effect.gen(function* () {
+          const client = yield* BridgeClient;
+
+          const entries = yield* client
+            .GetRegistryEntries(registryItems(input))
+            .pipe(Effect.catchTags(registryFailures("read the registries")));
+
+          yield* Console.log(
+            input.json
+              ? JSON.stringify(entries)
+              : entries.map(registryEntryText).join("\n"),
+          );
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withAlias("g"),
+      Command.withDescription(
+        "Print the labels and area of entities, devices and areas, and each entity's device and categories",
+      ),
+    ),
+  ],
+);
+
 const reportCliCause = (cause: Cause.Cause<unknown>) => {
   if (Cause.hasInterruptsOnly(cause)) {
     return Effect.failCause(cause);
@@ -5866,6 +6411,10 @@ const commands = [
   triggerCommand,
   conditionCommand,
   historyCommand,
+  label,
+  category,
+  device,
+  registry,
   ...yamlReloadCommands,
 ] as const;
 

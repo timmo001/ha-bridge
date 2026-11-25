@@ -63,6 +63,7 @@ export default defineConfig(
           items: [
             "/using/reading",
             "/using/search",
+            "/using/registries",
             "/using/templates",
             "/using/events",
             "/using/history",

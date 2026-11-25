@@ -86,6 +86,10 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`trigger`](/commands/trigger) | None |
 | [`condition`](/commands/condition) | None |
 | [`history`](/commands/history) | None |
+| [`label`](/commands/label) | None |
+| [`category`](/commands/category) | None |
+| [`device`](/commands/device) | None |
+| [`registry`](/commands/registry) | None |
 | [`bayesian`](/commands/bayesian) | None |
 | [`command_line`](/commands/command-line) | None |
 | [`derivative`](/commands/derivative) | None |
@@ -200,6 +204,10 @@ SUBCOMMANDS
   trigger             Listen for automation triggers
   condition           Check automation conditions
   history             Read recorded entity history
+  label               Labels: list, create, change and delete them, and add them to or remove them from entities, devices and areas. Changes need an admin token
+  category            Categories of automations, scripts, scenes and helpers: list, create, change and delete them, and put entities in them. Changes need an admin token
+  device              Device registry changes. They need an admin token
+  registry            Read what Home Assistant's registries hold about entities, devices and areas
   bayesian            Bayesian sensor actions
   command_line        Command line actions
   derivative          Derivative sensor actions

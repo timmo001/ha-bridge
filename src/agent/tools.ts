@@ -5,21 +5,35 @@
  * tools always match it.
  */
 import {
+  Category,
   ConditionRequest,
   ConditionResult,
   FireEventRequest,
   History,
   HomeAssistantConfig,
   HomeAssistantEvent,
+  Label,
   LogbookEntry,
   SystemLogEntry,
   TemplateRender,
 } from "@timmo001/effect-ha";
 import {
   BridgeClient,
+  CategoriesRequest,
+  CategoryRequest,
+  ChangeLabelsRequest,
   CheckUpdatesRequest,
   ConfigValidation,
+  CreateCategoryRequest,
   CreateEntityConfigRequest,
+  CreateLabelRequest,
+  LabelRequest,
+  RegistryEntry,
+  RegistryItems,
+  SetCategoryRequest,
+  SetDeviceAreaRequest,
+  UpdateCategoryRequest,
+  UpdateLabelRequest,
   EntityConfig,
   EntityConfigRequest,
   EntityUpdate,
@@ -489,6 +503,116 @@ export const agentTools: ReadonlyArray<AgentTool> = [
     input: EntityConfigRequest,
     output: SavedEntityConfig,
     run: (input) => withBridge((bridge) => bridge.DeleteEntityConfig(input)),
+  }),
+  tool({
+    name: "get_registry_entries",
+    description:
+      "Read the labels and area of entities (by entity ID), devices and areas (by ID or name), and each entity's device and categories, with their names. Nothing is expanded: an area is the area itself.",
+    access: "read",
+    input: RegistryItems,
+    output: Schema.Array(RegistryEntry),
+    run: (input) => withBridge((bridge) => bridge.GetRegistryEntries(input)),
+  }),
+  tool({
+    name: "get_labels",
+    description:
+      "List every label with its ID, name, icon, colour and description.",
+    access: "read",
+    input: NoInput,
+    output: Schema.Array(Label),
+    run: () => withBridge((bridge) => bridge.GetLabels()),
+  }),
+  tool({
+    name: "get_categories",
+    description:
+      "List a scope's categories: automation, script, scene or helpers.",
+    access: "read",
+    input: CategoriesRequest,
+    output: Schema.Array(Category),
+    run: (input) => withBridge((bridge) => bridge.GetCategories(input)),
+  }),
+  tool({
+    name: "change_labels",
+    description:
+      "Add and remove labels, by ID or name, on entities, devices and areas, keeping their other labels. Returns each item afterwards.",
+    access: "write",
+    input: ChangeLabelsRequest,
+    output: Schema.Array(RegistryEntry),
+    run: (input) => withBridge((bridge) => bridge.ChangeLabels(input)),
+  }),
+  tool({
+    name: "set_category",
+    description:
+      "Put entities in a category by ID or name, or take them out with null. The scope defaults to the domain for automations, scripts and scenes; helpers need scope helpers. Returns each entity afterwards.",
+    access: "write",
+    resource: "scope",
+    input: SetCategoryRequest,
+    output: Schema.Array(RegistryEntry),
+    run: (input) => withBridge((bridge) => bridge.SetCategory(input)),
+  }),
+  tool({
+    name: "set_device_area",
+    description:
+      "Move devices, by ID or name, to an area by ID or name, or out of theirs with null. Returns each device afterwards.",
+    access: "write",
+    input: SetDeviceAreaRequest,
+    output: Schema.Array(RegistryEntry),
+    run: (input) => withBridge((bridge) => bridge.SetDeviceArea(input)),
+  }),
+  tool({
+    name: "create_label",
+    description:
+      "Create a label. color is a theme colour, such as indigo, or a hex colour. Home Assistant makes its ID from the name.",
+    access: "write",
+    input: CreateLabelRequest,
+    output: Label,
+    run: (input) => withBridge((bridge) => bridge.CreateLabel(input)),
+  }),
+  tool({
+    name: "update_label",
+    description:
+      "Change a label's name, icon, colour or description; null clears one. Its ID stays the same.",
+    access: "write",
+    input: UpdateLabelRequest,
+    output: Label,
+    run: (input) => withBridge((bridge) => bridge.UpdateLabel(input)),
+  }),
+  tool({
+    name: "delete_label",
+    description: "Delete a label, taking it off everything that has it.",
+    access: "write",
+    input: LabelRequest,
+    output: Ok,
+    run: (input) =>
+      withBridge((bridge) => bridge.DeleteLabel(input)).pipe(Effect.as(ok)),
+  }),
+  tool({
+    name: "create_category",
+    description: "Create a category in a scope, such as automation.",
+    access: "write",
+    resource: "scope",
+    input: CreateCategoryRequest,
+    output: Category,
+    run: (input) => withBridge((bridge) => bridge.CreateCategory(input)),
+  }),
+  tool({
+    name: "update_category",
+    description: "Rename a category or change its icon; null clears the icon.",
+    access: "write",
+    resource: "scope",
+    input: UpdateCategoryRequest,
+    output: Category,
+    run: (input) => withBridge((bridge) => bridge.UpdateCategory(input)),
+  }),
+  tool({
+    name: "delete_category",
+    description: "Delete a category, taking every entity out of it.",
+    access: "write",
+    resource: "scope",
+    input: CategoryRequest,
+    output: Ok,
+    run: (input) =>
+      withBridge((bridge) => bridge.DeleteCategory(input)).pipe(Effect.as(ok)),
   }),
 ];
 

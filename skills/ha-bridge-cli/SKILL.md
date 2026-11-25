@@ -1,13 +1,13 @@
 ---
 name: ha-bridge-cli
-description: Control and read Home Assistant from the shell, scripts and status bars with the ha-bridge CLI. Use for calling actions, reading or watching state and events, --bar-json output, templates, searching entities, automation and script configs, listing and checking updates, reading Home Assistant's logs to diagnose or confirm a fix, or connecting an app to a bridge. Not for changing ha-bridge itself.
+description: Control and read Home Assistant from the shell, scripts and status bars with the ha-bridge CLI. Use for calling actions, reading or watching state and events, --bar-json output, templates, searching entities, automation and script configs, labels, categories and device areas, listing and checking updates, reading Home Assistant's logs to diagnose or confirm a fix, or connecting an app to a bridge. Not for changing ha-bridge itself.
 license: Apache-2.0
 compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve, normally the ha-bridge.service user unit on a desktop, or started by the app inside a Home Assistant app). The docs-ha-bridge MCP server is optional.
 ---
 
 # ha-bridge CLI
 
-`ha-bridge` keeps one Home Assistant connection per machine and serves it on a Unix socket. Every command except `serve` and `setup` is a small client of that socket. When the agent has an `ha-bridge` Code Mode namespace, prefer its tools for the operations it covers (reading state, search, templates, history, logs, configs, calling actions); the rules below still apply.
+`ha-bridge` keeps one Home Assistant connection per machine and serves it on a Unix socket. Every command except `serve` and `setup` is a small client of that socket. When the agent has an `ha-bridge` Code Mode namespace, prefer its tools for the operations it covers (reading state, search, templates, history, logs, configs, labels and categories, calling actions); the rules below still apply.
 
 ## Rules
 
@@ -19,6 +19,7 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 - Ask before actions with real-world effects the user didn't request, such as unlocking, opening covers or garage doors, disarming alarms, restarting Home Assistant or running scripts.
 - Ask before `system_log clear` or changing log levels with `logger`. Clearing throws away the evidence a diagnosis needs, and debug levels flood the log.
 - Ask before creating, updating or deleting an automation or script the user didn't ask you to change.
+- Ask before deleting a label or category: it comes off everything that has it. Adding and removing labels, setting categories and moving devices only change what you name.
 - Ask before `update install` on anything the user didn't name. `update list`, `update get` and `update check` only read or refresh, so use them freely; `update check` can take up to two minutes with a Supervisor.
 - For how Home Assistant itself behaves, and for writing automations and scripts the current way, use the `home-assistant` skill alongside this one.
 
@@ -42,6 +43,7 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 | Logs, Core's errors and log search                   | `/using/logs`                                  |
 | Updates: list, check, release notes, install         | `/actions/updates`                             |
 | Searching                                            | `/using/search`                                |
+| Labels, categories and device areas                  | `/using/registries`                            |
 | Connecting an app or another language                | `/libraries`, `/using/protocol`                |
 | Socket path, config and the user service             | `/configuration`, `/running`                   |
 
@@ -69,6 +71,16 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 - Try triggers and conditions before saving: `trigger watch '<trigger>'` and `condition test '<condition>'`.
 - When writing or changing a config, use Home Assistant's built-in triggers, conditions and actions before templates. The `home-assistant` skill covers which ones exist.
 - Only automations in `automations.yaml` and scripts in `scripts.yaml` can be changed. Others exit 1 saying so; edit them where they're defined.
+
+## Labels, categories and device areas
+
+`ha-bridge label`, `category`, `device` and `registry` organise Home Assistant through its registries, without Spook. Changes need an admin token.
+
+- `registry get --entity <entity_id> --device <device> --area <area> --json` shows what an item has: its labels, area, and an entity's device and categories, with names.
+- `label add <label...>` and `label remove <label...>` take `--entity`, `--device` and `--area`, repeated, and keep every other label the items have. Don't build the full list yourself.
+- `category set <category> <entity_id...>` and `category clear <entity_id...>` work out the scope from automations, scripts and scenes; helpers need `--scope helpers`.
+- `device set-area <area> <device...>` and `device clear-area <device...>` move devices; their entities without their own area follow.
+- Labels, categories, devices and areas take an ID or a unique name; entities take entity IDs. Find them with `label list`, `category list <scope>` and `search`.
 
 ## Logs for diagnosing and fixing
 
