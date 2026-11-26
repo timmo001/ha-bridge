@@ -1,6 +1,6 @@
 ---
 name: ha-bridge-cli
-description: Control and read Home Assistant from the shell, scripts and status bars with the ha-bridge CLI. Use for calling actions, reading or watching state and events, --bar-json output, templates, searching entities, automation and script configs, labels, categories and device areas, listing and checking updates, reading Home Assistant's logs to diagnose or confirm a fix, or connecting an app to a bridge. Not for changing ha-bridge itself.
+description: Control and read Home Assistant from the shell, scripts and status bars with the ha-bridge CLI. Use for calling actions, reading or watching state and events, --bar-json output, templates, searching entities, automation and script configs, labels, categories and areas, listing and checking updates, reading Home Assistant's logs to diagnose or confirm a fix, or connecting an app to a bridge. Not for changing ha-bridge itself.
 license: Apache-2.0
 compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve, normally the ha-bridge.service user unit on a desktop, or started by the app inside a Home Assistant app). The docs-ha-bridge MCP server is optional.
 ---
@@ -43,7 +43,7 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 | Logs, Core's errors and log search                   | `/using/logs`                                  |
 | Updates: list, check, release notes, install         | `/actions/updates`                             |
 | Searching                                            | `/using/search`                                |
-| Labels, categories and device areas                  | `/using/registries`                            |
+| Labels, categories and areas                  | `/using/registries`                            |
 | Connecting an app or another language                | `/libraries`, `/using/protocol`                |
 | Socket path, config and the user service             | `/configuration`, `/running`                   |
 
@@ -78,10 +78,10 @@ Home Assistant renders templates on its main thread. While one runs, nothing els
 - Before saving, run `validate -f <file>`. Saving only catches what Home Assistant's schema rejects; `validate` also lists the entities, actions, devices, areas, floors and labels the config names that don't exist, which Spook would otherwise flag after saving. It exits 1 on any problem, and doesn't need an admin token.
 - Try triggers and conditions before saving: `trigger watch '<trigger>'` and `condition test '<condition>'`.
 - When writing or changing a config, use Home Assistant's built-in triggers, conditions and actions before templates. The `home-assistant` skill covers which ones exist.
-- A new automation or script isn't done when `create` succeeds: give it its labels, category and area too (see Labels, categories and device areas below).
+- A new automation or script isn't done when `create` succeeds: give it its labels, category and area too (see Labels, categories and areas below).
 - Only automations in `automations.yaml` and scripts in `scripts.yaml` can be changed. Others exit 1 saying so; edit them where they're defined.
 
-## Labels, categories and device areas
+## Labels, categories and areas
 
 `ha-bridge label`, `category`, `device` and `registry` organise Home Assistant through its registries, without Spook. Changes need an admin token.
 
@@ -89,9 +89,9 @@ Home Assistant renders templates on its main thread. While one runs, nothing els
 - `label add <label...>` and `label remove <label...>` take `--entity`, `--device` and `--area`, repeated, and keep every other label the items have. Don't build the full list yourself.
 - `category set <category> <entity_id...>` and `category clear <entity_id...>` work out the scope from automations, scripts and scenes; helpers need `--scope helpers`.
 - `device set-area <area> <device...>` and `device clear-area <device...>` move devices; their entities without their own area follow.
+- `entity set-area <area> <entity_id...>` gives entities, automations, scripts and helpers an area of their own; `entity clear-area <entity_id...>` takes it away, so a device entity follows its device again.
 - Labels, categories, devices and areas take an ID or a unique name; entities take entity IDs. Find them with `label list`, `category list <scope>` and `search`.
-- Organise what you create in the same change, as the `home-assistant` skill describes. `automation config create` prints the config's ID, not the entity ID, so find the entity with `search <a distinctive word from its alias> --domain automation`, then run `label add <label...> --entity automation.<object_id>` and `category set <category> automation.<object_id>`. Scripts work the same way.
-- ha-bridge can only set a device's area, not an entity's, automation's or script's. When one of those needs an area, tell the user which to set in its settings in Home Assistant.
+- Organise what you create in the same change, as the `home-assistant` skill describes. `automation config create` prints the config's ID, not the entity ID, so find the entity with `search <a distinctive word from its alias> --domain automation`, then run `label add <label...> --entity automation.<object_id>`, `category set <category> automation.<object_id>` and `entity set-area <area> automation.<object_id>`. Scripts work the same way.
 - To find entities missing a label, compare a search for what they are with a search for the label, such as `search --kind entity --device-class power --json` (and `--device-class energy`) against `search --kind entity --label energy --json`. A label search also matches labels an entity gets from its device, so anything only in the first list has the label neither way. `--exclude-label` needs a target to exclude from, so it can't do this alone.
 
 ## Logs for diagnosing and fixing
