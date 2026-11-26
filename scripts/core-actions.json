@@ -256,7 +256,8 @@
     "addon"
   ],
   "hassio.addon_stdin": [
-    "addon"
+    "addon",
+    "input"
   ],
   "hassio.addon_stop": [
     "addon"
@@ -548,6 +549,12 @@
     "types",
     "units"
   ],
+  "recorder.get_history": [
+    "allow_truncation",
+    "end_time",
+    "entity_id",
+    "start_time"
+  ],
   "remote.turn_on": [
     "activity"
   ],
@@ -639,6 +646,36 @@
     "duration"
   ],
   "timer.reload": [],
+  "timer_list.create_timer": [
+    "duration",
+    "name"
+  ],
+  "timer_list.pause_timer": [
+    "timer_id"
+  ],
+  "timer_list.unpause_timer": [
+    "timer_id"
+  ],
+  "timer_list.cancel_timer": [
+    "timer_id"
+  ],
+  "timer_list.finish_timer": [
+    "timer_id"
+  ],
+  "timer_list.add_time": [
+    "duration",
+    "timer_id"
+  ],
+  "timer_list.subtract_time": [
+    "duration",
+    "timer_id"
+  ],
+  "timer_list.remove_timer": [
+    "timer_id"
+  ],
+  "timer_list.get_timers": [
+    "status"
+  ],
   "todo.get_items": [
     "status"
   ],
@@ -675,7 +712,9 @@
     "message",
     "options"
   ],
-  "tts.clear_cache": [],
+  "tts.clear_cache": [
+    "days"
+  ],
   "universal.reload": [],
   "update.install": [
     "backup",

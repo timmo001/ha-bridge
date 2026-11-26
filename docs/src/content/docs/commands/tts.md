@@ -64,6 +64,9 @@ DESCRIPTION
 USAGE
   ha-bridge tts clear-cache [flags]
 
+FLAGS
+  --days integer    Only clear audio older than this many days, from 1 to 3650 (default: all of it)
+
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```

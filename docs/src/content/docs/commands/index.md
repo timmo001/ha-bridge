@@ -41,6 +41,7 @@ Each command has its own page with its help, as `ha-bridge <command> --help` pri
 | [`automation`](/commands/automation) | None |
 | [`scene`](/commands/scene) | None |
 | [`timer`](/commands/timer) | None |
+| [`timer_list`](/commands/timer-list) | None |
 | [`schedule`](/commands/schedule) | None |
 | [`group`](/commands/group) | None |
 | [`homeassistant`](/commands/homeassistant) | None |
@@ -160,6 +161,7 @@ SUBCOMMANDS
   automation          Automation actions
   scene               Scene actions
   timer               Timer actions
+  timer_list          Timer list actions: lists that each hold many timers
   schedule            Schedule actions
   group               Group actions
   homeassistant       Home Assistant actions

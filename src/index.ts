@@ -85,6 +85,8 @@ import {
   Weather,
   WaterHeater,
   Timer,
+  TimerList,
+  TimerListStatus,
   Alert,
   Backup,
   BackupFolder,
@@ -107,6 +109,7 @@ import {
   Logbook,
   LoggerActions,
   Recorder,
+  RecorderGetHistoryData,
   RecorderGetStatisticsData,
   RecorderPurgeData,
   StatisticType,
@@ -2060,6 +2063,137 @@ const timer = domainCommand("timer", undefined, "Timer actions", [
   reloadCommand("timer", Timer.reload),
 ]);
 
+const timerIdArgument = Argument.String("timer_id").pipe(
+  Argument.withDescription("Timer ID, from create or get"),
+);
+
+const timerListDurationArgument = (description: string) =>
+  Argument.String("duration").pipe(Argument.withDescription(description));
+
+// A timer list action on one timer, by ID.
+const timerListTimerCommand = (
+  name: string,
+  toAction: (target: Target, timerId: string) => Action,
+  description: string,
+) =>
+  Command.make(
+    name,
+    { timerId: timerIdArgument, target: targetConfig("timer_list") },
+    (input) =>
+      callAction(
+        toAction(toTarget("timer_list", input.target), input.timerId),
+      ).pipe(withBridge),
+  ).pipe(Command.withDescription(description));
+
+// Adds or takes away time from one timer.
+const timerListTimeCommand = (
+  name: string,
+  toAction: (
+    target: Target,
+    timerId: string,
+    duration: DurationValue,
+  ) => Action,
+  description: string,
+) =>
+  Command.make(
+    name,
+    {
+      timerId: timerIdArgument,
+      duration: timerListDurationArgument("Seconds or HH:MM:SS"),
+      target: targetConfig("timer_list"),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const duration = yield* parseDuration(input.duration);
+
+        yield* callAction(
+          toAction(
+            toTarget("timer_list", input.target),
+            input.timerId,
+            duration,
+          ),
+        );
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription(description));
+
+const timerList = domainCommand(
+  "timer_list",
+  undefined,
+  "Timer list actions: lists that each hold many timers",
+  [
+    Command.make(
+      "create",
+      {
+        duration: timerListDurationArgument("Seconds or HH:MM:SS"),
+        name: optionalFlag(Flag.String("name"), "Name, such as Pasta"),
+        target: targetConfig("timer_list"),
+      },
+      (input) =>
+        Effect.gen(function* () {
+          const duration = yield* parseDuration(input.duration);
+
+          yield* printResponse(
+            TimerList.createTimer(
+              toTarget("timer_list", input.target),
+              duration,
+              Option.getOrUndefined(input.name),
+            ),
+          );
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Start a new timer and print its timer_id as JSON, keyed by entity ID",
+      ),
+    ),
+    Command.make(
+      "get",
+      {
+        status: Flag.Literals("status", TimerListStatus.literals).pipe(
+          Flag.withDescription(
+            "Only timers with this status; repeat for more (default: all)",
+          ),
+          Flag.atLeast(0),
+        ),
+        target: targetConfig("timer_list"),
+      },
+      (input) =>
+        printResponse(
+          TimerList.getTimers(
+            toTarget("timer_list", input.target),
+            input.status.length > 0 ? input.status : undefined,
+          ),
+        ).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Print each list's timers as JSON, keyed by entity ID",
+      ),
+    ),
+    timerListTimerCommand("pause", TimerList.pauseTimer, "Pause a timer"),
+    timerListTimerCommand(
+      "unpause",
+      TimerList.unpauseTimer,
+      "Start a paused timer again",
+    ),
+    timerListTimerCommand("cancel", TimerList.cancelTimer, "Cancel a timer"),
+    timerListTimerCommand(
+      "finish",
+      TimerList.finishTimer,
+      "Finish a timer now",
+    ),
+    timerListTimeCommand("add-time", TimerList.addTime, "Add time to a timer"),
+    timerListTimeCommand(
+      "subtract-time",
+      TimerList.subtractTime,
+      "Take time off a timer",
+    ),
+    timerListTimerCommand(
+      "remove",
+      TimerList.removeTimer,
+      "Remove a timer from the list",
+    ),
+  ],
+);
+
 const schedule = domainCommand("schedule", undefined, "Schedule actions", [
   Command.make("get", { target: targetConfig("schedule") }, (input) =>
     Effect.gen(function* () {
@@ -3157,7 +3291,25 @@ const tts = domainCommand("tts", undefined, "Text-to-speech actions", [
         );
       }).pipe(withBridge),
   ).pipe(Command.withDescription("Speak a message on a media player")),
-  systemCommand("clear-cache", Tts.clearCache, "Clear the speech cache"),
+  Command.make(
+    "clear-cache",
+    {
+      days: optionalFlag(
+        Flag.Int("days"),
+        "Only clear audio older than this many days, from 1 to 3650 (default: all of it)",
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const days = Option.getOrUndefined(input.days);
+
+        if (days !== undefined && (days < 1 || days > 3650)) {
+          return yield* failWith("days must be from 1 to 3650");
+        }
+
+        yield* callAction(Tts.clearCache(days));
+      }).pipe(withBridge),
+  ).pipe(Command.withDescription("Clear the speech cache")),
 ]);
 
 const todoStatusFlag = Flag.Literals("status", ["needs_action", "completed"]);
@@ -4460,6 +4612,8 @@ const decodeGetStatistics = Schema.decodeUnknownEffect(
   RecorderGetStatisticsData,
 );
 
+const decodeGetHistory = Schema.decodeUnknownEffect(RecorderGetHistoryData);
+
 const recorder = domainCommand("recorder", undefined, "Recorder actions", [
   Command.make(
     "purge",
@@ -4598,6 +4752,52 @@ const recorder = domainCommand("recorder", undefined, "Recorder actions", [
   ).pipe(
     Command.withDescription(
       "Print long-term statistics as JSON, keyed by statistic ID",
+    ),
+  ),
+  Command.make(
+    "history",
+    {
+      startTime: Argument.String("start").pipe(
+        Argument.withDescription(
+          "Start, such as 2026-10-01 00:00, in Home Assistant's time zone",
+        ),
+      ),
+      entityIds: Argument.String("entity_id").pipe(
+        Argument.withDescription("Entity ID; repeat for up to 100"),
+        Argument.atLeast(1),
+      ),
+      endTime: optionalFlag(Flag.String("end"), "End (default: now)"),
+      allowTruncation: Flag.Boolean("allow-truncation").pipe(
+        Flag.withDescription(
+          "Keep the first 1000 changes of an entity with more, rather than failing",
+        ),
+      ),
+    },
+    (input) =>
+      Effect.gen(function* () {
+        const data = yield* decodeData(
+          "history request",
+          decodeGetHistory({
+            start_time: input.startTime,
+            entity_id: input.entityIds,
+            allow_truncation: input.allowTruncation,
+            ...setFields({ end_time: input.endTime }),
+          }),
+        );
+
+        const response = yield* callAction(Recorder.getHistory(data));
+
+        const history = yield* Recorder.historyFrom(response).pipe(
+          Effect.mapError(
+            (error) => new CommandError({ message: error.message }),
+          ),
+        );
+
+        yield* printJson(history);
+      }).pipe(withBridge),
+  ).pipe(
+    Command.withDescription(
+      "Print each entity's states and when it held them as JSON, from the recorder, without attributes",
     ),
   ),
 ]);
@@ -6416,6 +6616,7 @@ const commands = [
   automation,
   scene,
   timer,
+  timerList,
   schedule,
   group,
   homeAssistant,

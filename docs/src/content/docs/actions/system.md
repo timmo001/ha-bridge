@@ -62,6 +62,18 @@ ha-bridge recorder statistics "2026-10-01 00:00" sensor.energy_consumption \
 
 The periods are `5minute`, `hour`, `day`, `week`, `month` and `year`, and the types are `change`, `last_reset`, `max`, `mean`, `min`, `state` and `sum`. Rows only have the types that have a value.
 
+`recorder history` prints each entity's states from the recorder as JSON, with when it held each one, merging repeats and leaving out attributes (Home Assistant 2026.12 or newer). The start comes first, then up to 100 entity IDs:
+
+```bash
+ha-bridge recorder history "2026-10-01 00:00" climate.hallway --end "2026-10-02 00:00"
+```
+
+```json
+{"history":{"climate.hallway":[{"start":"2026-09-30T23:00:00+00:00","end":"2026-10-01T06:30:00+00:00","state":"off"},{"start":"2026-10-01T06:30:00+00:00","end":"2026-10-01T23:00:00+00:00","state":"heat"}]}}
+```
+
+Home Assistant refuses an entity with more than 1000 changes in the window. `--allow-truncation` keeps its first 1000 instead and lists it under `truncated`. For attributes, or entities beyond the recorder's own, use [`history get`](/using/history).
+
 ## Themes
 
 `frontend set-theme` sets the default theme. `--name-dark` sets the default in dark mode, and `--mode` makes `--name` set the default for that mode only. The theme `none` goes back to Home Assistant's own:
@@ -113,6 +125,7 @@ ha-bridge ffmpeg stop
 | `recorder purge`, `purge-entities` | `recorder.purge`, `purge_entities` |
 | `recorder enable`, `disable` | `recorder.enable`, `disable` |
 | `recorder statistics` | `recorder.get_statistics` |
+| `recorder history` | `recorder.get_history` |
 | `frontend set-theme`, `reload-themes` | `frontend.set_theme`, `reload_themes` |
 | `lovelace reload-resources` | `lovelace.reload_resources` |
 | `backup create`, `create-automatic` | `backup.create`, `create_automatic` |

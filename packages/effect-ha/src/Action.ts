@@ -777,6 +777,54 @@ export const Timer = {
   reload: reload("timer"),
 };
 
+export const TimerListStatus = Schema.Literals([
+  "active",
+  "paused",
+  "finished",
+  "cancelled",
+]);
+
+export type TimerListStatus = typeof TimerListStatus.Type;
+
+// A timer list entity holds many timers, each with its own ID. Durations are
+// positive; `subtractTime` shortens a timer.
+export const TimerList = {
+  // Starts a new timer and responds with its `timer_id`, keyed by entity ID.
+  createTimer: (
+    target: Target,
+    duration: DurationValue,
+    name?: string,
+  ): Action => ({
+    ...onTarget("timer_list.create_timer", target, { duration, name }),
+    return_response: true,
+  }),
+  pauseTimer: (target: Target, timerId: string) =>
+    onTarget("timer_list.pause_timer", target, { timer_id: timerId }),
+  unpauseTimer: (target: Target, timerId: string) =>
+    onTarget("timer_list.unpause_timer", target, { timer_id: timerId }),
+  cancelTimer: (target: Target, timerId: string) =>
+    onTarget("timer_list.cancel_timer", target, { timer_id: timerId }),
+  finishTimer: (target: Target, timerId: string) =>
+    onTarget("timer_list.finish_timer", target, { timer_id: timerId }),
+  addTime: (target: Target, timerId: string, duration: DurationValue) =>
+    onTarget("timer_list.add_time", target, { timer_id: timerId, duration }),
+  subtractTime: (target: Target, timerId: string, duration: DurationValue) =>
+    onTarget("timer_list.subtract_time", target, {
+      timer_id: timerId,
+      duration,
+    }),
+  removeTimer: (target: Target, timerId: string) =>
+    onTarget("timer_list.remove_timer", target, { timer_id: timerId }),
+  // Responds with each entity's timers, optionally only those with `status`.
+  getTimers: (
+    target: Target,
+    status?: ReadonlyArray<TimerListStatus>,
+  ): Action => ({
+    ...onTarget("timer_list.get_timers", target, { status }),
+    return_response: true,
+  }),
+};
+
 const ScheduleBlock = Schema.Struct({
   from: Schema.String,
   to: Schema.String,
@@ -1162,7 +1210,8 @@ export const Tts = {
       cache: options?.cache,
       options: options?.options,
     }),
-  clearCache: () => onDomain("tts.clear_cache"),
+  // Clears the speech cache, or only what's older than `days` (1 to 3650).
+  clearCache: (days?: number) => onDomain("tts.clear_cache", { days }),
 };
 
 export type TodoStatus = "needs_action" | "completed";
@@ -1543,6 +1592,42 @@ const decodeStatisticsResponse = Schema.decodeUnknownEffect(
   }),
 );
 
+// `recorder.get_history` data: up to 100 entities. Home Assistant refuses an
+// entity with more than 1000 changes in the window unless
+// `allow_truncation` is set, which returns the first 1000 instead.
+export const RecorderGetHistoryData = Schema.Struct({
+  start_time: DateTimeString,
+  end_time: Schema.optionalKey(DateTimeString),
+  entity_id: Schema.Array(Schema.String).check(
+    Schema.isMinLength(1),
+    Schema.isMaxLength(100),
+  ),
+  allow_truncation: Schema.optionalKey(Schema.Boolean),
+});
+
+export type RecorderGetHistoryData = typeof RecorderGetHistoryData.Type;
+
+// One state an entity held, from `start` to `end`, as UTC ISO 8601. Repeats
+// of the same state are merged, without attributes.
+export const HistoryPeriod = Schema.Struct({
+  start: Schema.String,
+  end: Schema.String,
+  state: Schema.String,
+});
+
+export type HistoryPeriod = typeof HistoryPeriod.Type;
+
+// Each entity's periods, keyed by entity ID. `truncated` lists the entities
+// cut off at 1000 changes, and is only there with `allow_truncation`.
+export const RecorderHistory = Schema.Struct({
+  history: Schema.Record(Schema.String, Schema.Array(HistoryPeriod)),
+  truncated: Schema.optionalKey(Schema.Array(Schema.String)),
+});
+
+export type RecorderHistory = typeof RecorderHistory.Type;
+
+const decodeHistoryResponse = Schema.decodeUnknownEffect(RecorderHistory);
+
 export const Recorder = {
   purge: (data?: RecorderPurgeData) => onDomain("recorder.purge", data),
   purgeEntities: (options: RecorderPurgeEntitiesOptions): Action => {
@@ -1573,6 +1658,20 @@ export const Recorder = {
         (error) =>
           new HomeAssistantError({
             message: `decode statistics: ${error.message}`,
+          }),
+      ),
+    ),
+  getHistory: (data: RecorderGetHistoryData): Action => ({
+    ...onDomain("recorder.get_history", data),
+    return_response: true,
+  }),
+  // Reads a `recorder.get_history` response.
+  historyFrom: (response: Schema.Json | null) =>
+    decodeHistoryResponse(response).pipe(
+      Effect.mapError(
+        (error) =>
+          new HomeAssistantError({
+            message: `decode history: ${error.message}`,
           }),
       ),
     ),

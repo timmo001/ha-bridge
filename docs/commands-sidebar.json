@@ -32,6 +32,7 @@
   "/commands/automation",
   "/commands/scene",
   "/commands/timer",
+  "/commands/timer-list",
   "/commands/schedule",
   "/commands/group",
   "/commands/homeassistant",

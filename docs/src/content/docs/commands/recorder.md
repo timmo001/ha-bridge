@@ -119,3 +119,24 @@ FLAGS
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
+
+## `ha-bridge recorder history`
+
+```text
+DESCRIPTION
+  Print each entity's states and when it held them as JSON, from the recorder, without attributes
+
+USAGE
+  ha-bridge recorder history [flags] <start> <entity_id...>
+
+ARGUMENTS
+  start string           Start, such as 2026-10-01 00:00, in Home Assistant's time zone
+  entity_id... string    Entity ID; repeat for up to 100
+
+FLAGS
+  --end string          End (default: now)
+  --allow-truncation    Keep the first 1000 changes of an entity with more, rather than failing
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```

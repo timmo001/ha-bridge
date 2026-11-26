@@ -1,6 +1,6 @@
 ---
 title: Timers and schedules
-description: Start, pause, change and finish timers, and read schedules.
+description: Start, pause, change and finish timers and the timers in timer lists, and read schedules.
 ---
 
 ## Timers
@@ -21,6 +21,20 @@ ha-bridge timer finish tea
 ha-bridge timer change 60 tea
 ha-bridge timer change -- -00:01:00 tea
 ```
+
+## Timer lists
+
+A timer list holds many timers at once, each with its own ID, such as the timers a voice assistant sets (Home Assistant 2026.12 or newer). `create` starts one and prints its `timer_id`, keyed by entity ID, and `get` prints the list's timers. The other commands take a timer ID first:
+
+```bash
+ha-bridge timer_list create 00:08:00 --name Pasta kitchen_timers
+ha-bridge timer_list get --status active kitchen_timers
+ha-bridge timer_list add-time 01J8ABCDEF0123456789ABCDE 60 kitchen_timers
+ha-bridge timer_list pause 01J8ABCDEF0123456789ABCDE kitchen_timers
+ha-bridge timer_list remove 01J8ABCDEF0123456789ABCDE kitchen_timers
+```
+
+`--status` takes `active`, `paused`, `finished` or `cancelled`; repeat it for more. `subtract-time` takes time off a timer, and `unpause`, `cancel` and `finish` do what they say.
 
 ## Schedules
 
@@ -44,7 +58,10 @@ ha-bridge schedule get heating
 | `timer finish` | `timer.finish` |
 | `timer change` | `timer.change` |
 | `timer reload` | `timer.reload` |
+| `timer_list create`, `get` | `timer_list.create_timer`, `get_timers` |
+| `timer_list pause`, `unpause`, `cancel`, `finish`, `remove` | `timer_list.pause_timer`, `unpause_timer`, `cancel_timer`, `finish_timer`, `remove_timer` |
+| `timer_list add-time`, `subtract-time` | `timer_list.add_time`, `subtract_time` |
 | `schedule get` | `schedule.get_schedule` |
 | `schedule reload` | `schedule.reload` |
 
-See [`ha-bridge timer`](/commands/timer) and [`ha-bridge schedule`](/commands/schedule) for every argument and flag.
+See [`ha-bridge timer`](/commands/timer), [`ha-bridge timer_list`](/commands/timer-list) and [`ha-bridge schedule`](/commands/schedule) for every argument and flag.

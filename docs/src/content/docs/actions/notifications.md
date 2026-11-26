@@ -32,7 +32,7 @@ ha-bridge tts speak "Good morning" piper --media-player kitchen --language en-GB
 ha-bridge tts clear-cache
 ```
 
-`--no-cache` skips caching the audio.
+`--no-cache` skips caching the audio. `clear-cache --days 30` only clears audio older than 30 days (Home Assistant 2026.12 or newer).
 
 | Command | Home Assistant action |
 | --- | --- |

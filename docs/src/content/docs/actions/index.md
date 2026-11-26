@@ -56,7 +56,7 @@ Commands that need one entity, such as `script run`, `camera snapshot` and `assi
 | [Scripts](/actions/scripts) | `script` | None | Start, stop or run and wait for a response |
 | [Automations](/actions/automations) | `automation` | None | On, off, trigger and reload |
 | [Scenes](/actions/scenes) | `scene` | None | Activate, apply states, create and delete |
-| [Timers and schedules](/actions/timers) | `timer`, `schedule` | None | Start, pause and change timers, read schedules |
+| [Timers and schedules](/actions/timers) | `timer`, `timer_list`, `schedule` | None | Start, pause and change timers and timer lists, read schedules |
 | [Groups](/actions/groups) | `group` | None | Create, change and remove groups |
 | [Fans](/actions/fans) | `fan` | None | On, off, speed, preset, oscillation and direction |
 | [Humidifiers and water heaters](/actions/humidifiers) | `humidifier`, `water_heater` | None | On, off, modes, humidity and temperature |
