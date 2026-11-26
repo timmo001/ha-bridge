@@ -169,3 +169,61 @@ FLAGS
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
+
+## `ha-bridge humidifier increase-humidity`
+
+```text
+DESCRIPTION
+  Raise the target humidity by a step
+
+USAGE
+  ha-bridge humidifier increase-humidity [flags] [<entity_id...>]
+
+ARGUMENTS
+  entity_id... string    Entity ID, with or without the humidifier. prefix; repeat for more (optional)
+
+FLAGS
+  --step number              Percent to change by (default: the entity's target_humidity_step, else 1)
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```
+
+## `ha-bridge humidifier decrease-humidity`
+
+```text
+DESCRIPTION
+  Lower the target humidity by a step
+
+USAGE
+  ha-bridge humidifier decrease-humidity [flags] [<entity_id...>]
+
+ARGUMENTS
+  entity_id... string    Entity ID, with or without the humidifier. prefix; repeat for more (optional)
+
+FLAGS
+  --step number              Percent to change by (default: the entity's target_humidity_step, else 1)
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```

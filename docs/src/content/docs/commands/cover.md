@@ -198,6 +198,64 @@ INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
+## `ha-bridge cover increase-position`
+
+```text
+DESCRIPTION
+  Raise the position by a step
+
+USAGE
+  ha-bridge cover increase-position [flags] [<entity_id...>]
+
+ARGUMENTS
+  entity_id... string    Entity ID, with or without the cover. prefix; repeat for more (optional)
+
+FLAGS
+  --step number              Percent to move by (default: 10)
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```
+
+## `ha-bridge cover decrease-position`
+
+```text
+DESCRIPTION
+  Lower the position by a step
+
+USAGE
+  ha-bridge cover decrease-position [flags] [<entity_id...>]
+
+ARGUMENTS
+  entity_id... string    Entity ID, with or without the cover. prefix; repeat for more (optional)
+
+FLAGS
+  --step number              Percent to move by (default: 10)
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```
+
 ## `ha-bridge cover open-tilt`
 
 ```text
@@ -324,6 +382,64 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the cover. prefix; repeat for more (optional)
 
 FLAGS
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```
+
+## `ha-bridge cover increase-tilt`
+
+```text
+DESCRIPTION
+  Raise the tilt position by a step
+
+USAGE
+  ha-bridge cover increase-tilt [flags] [<entity_id...>]
+
+ARGUMENTS
+  entity_id... string    Entity ID, with or without the cover. prefix; repeat for more (optional)
+
+FLAGS
+  --step number              Percent to tilt by (default: 10)
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```
+
+## `ha-bridge cover decrease-tilt`
+
+```text
+DESCRIPTION
+  Lower the tilt position by a step
+
+USAGE
+  ha-bridge cover decrease-tilt [flags] [<entity_id...>]
+
+ARGUMENTS
+  entity_id... string    Entity ID, with or without the cover. prefix; repeat for more (optional)
+
+FLAGS
+  --step number              Percent to tilt by (default: 10)
   --entity string            Entity ID or name; repeat for more
   --device string            Device ID or name; repeat for more
   --area string              Area ID or name; repeat for more

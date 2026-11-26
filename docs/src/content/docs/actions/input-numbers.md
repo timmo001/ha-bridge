@@ -11,6 +11,12 @@ ha-bridge input_number decrement target_temperature
 ha-bridge input_number set-value 23.5 target_temperature
 ```
 
+`increment` and `decrement` take `--step` to change by another amount. The bridge then sets the new value from the current one, within the helper's `min` and `max`; see [Stepping a value](/actions#stepping-a-value):
+
+```bash
+ha-bridge input_number increment --step 2 target_temperature
+```
+
 `reload` reloads input numbers from YAML. It acts on the whole domain, so it takes no name:
 
 ```bash
@@ -19,8 +25,8 @@ ha-bridge input_number reload
 
 | Command | Home Assistant action |
 | --- | --- |
-| `input_number increment` | `input_number.increment` |
-| `input_number decrement` | `input_number.decrement` |
+| `input_number increment` | `input_number.increment`, or `input_number.set_value` with `--step` |
+| `input_number decrement` | `input_number.decrement`, or `input_number.set_value` with `--step` |
 | `input_number set-value` | `input_number.set_value` |
 | `input_number reload` | `input_number.reload` |
 

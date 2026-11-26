@@ -13,7 +13,11 @@ ha-bridge humidifier mode sleep bedroom
 ha-bridge humidifier humidity 45 bedroom
 ```
 
-The mode is one of the humidifier's `available_modes`.
+The mode is one of the humidifier's `available_modes`. `increase-humidity` and `decrease-humidity` change the target humidity by `--step`, else the entity's `target_humidity_step`, else 1, within its `min_humidity` and `max_humidity`. Quick steps add up; see [Stepping a value](/actions#stepping-a-value):
+
+```bash
+ha-bridge humidifier increase-humidity --step 5 bedroom
+```
 
 ## Water heaters
 
@@ -26,15 +30,21 @@ ha-bridge water_heater operation-mode eco tank
 ha-bridge water_heater away-mode on tank
 ```
 
-The temperature is in the entity's unit, and the operation mode is one of its `operation_list`.
+The temperature is in the entity's unit, and the operation mode is one of its `operation_list`. `increase-temperature` and `decrease-temperature` change the target temperature by `--step`, else the entity's `target_temp_step`, else 0.5 °C or 1 °F, within its `min_temp` and `max_temp`:
+
+```bash
+ha-bridge water_heater increase-temperature tank
+```
 
 | Command | Home Assistant action |
 | --- | --- |
 | `humidifier turn-on`, `turn-off`, `toggle` | `humidifier.turn_on`, `turn_off`, `toggle` |
 | `humidifier mode` | `humidifier.set_mode` |
 | `humidifier humidity` | `humidifier.set_humidity` |
+| `humidifier increase-humidity`, `decrease-humidity` | `humidifier.set_humidity`, from the current target |
 | `water_heater turn-on`, `turn-off` | `water_heater.turn_on`, `turn_off` |
 | `water_heater temperature` | `water_heater.set_temperature` |
+| `water_heater increase-temperature`, `decrease-temperature` | `water_heater.set_temperature`, from the current target |
 | `water_heater operation-mode` | `water_heater.set_operation_mode` |
 | `water_heater away-mode` | `water_heater.set_away_mode` |
 

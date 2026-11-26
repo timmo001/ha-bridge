@@ -147,3 +147,61 @@ FLAGS
 INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
+
+## `ha-bridge light increase-brightness`
+
+```text
+DESCRIPTION
+  Raise the brightness by a step
+
+USAGE
+  ha-bridge light increase-brightness [flags] [<entity_id...>]
+
+ARGUMENTS
+  entity_id... string    Entity ID, with or without the light. prefix; repeat for more (optional)
+
+FLAGS
+  --step number              Percent to change by (default: 10); 0 turns the light off
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```
+
+## `ha-bridge light decrease-brightness`
+
+```text
+DESCRIPTION
+  Lower the brightness by a step
+
+USAGE
+  ha-bridge light decrease-brightness [flags] [<entity_id...>]
+
+ARGUMENTS
+  entity_id... string    Entity ID, with or without the light. prefix; repeat for more (optional)
+
+FLAGS
+  --step number              Percent to change by (default: 10); 0 turns the light off
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```

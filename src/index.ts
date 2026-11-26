@@ -157,6 +157,8 @@ import {
   type TargetError,
   type SearchMatch,
   type SearchResults,
+  type StepRequest,
+  type StepSetting,
   type UpdateDetails,
   type UpdateStatus,
 } from "@timmo001/effect-ha-bridge";
@@ -392,6 +394,96 @@ const percentArgument = Argument.String("position").pipe(
   Argument.withDescription("Position from 0 to 100"),
 );
 
+// The bridge works out each entity's new value, so quick steps build on each
+// other even when the entity reports its value late.
+const stepValue = Effect.fn("stepValue")(function* (request: StepRequest) {
+  if (isEmptyTarget(request.target)) {
+    return yield* noTarget(request.target);
+  }
+
+  if (request.step !== undefined && !(request.step > 0)) {
+    return yield* failWith("--step must be more than 0");
+  }
+
+  const client = yield* BridgeClient;
+
+  yield* client
+    .Step(request)
+    .pipe(
+      Effect.catchTag("HomeAssistantError", (error) =>
+        failWith(`could not step ${request.setting}: ${error.message}`),
+      ),
+    );
+});
+
+const stepFlag = (description: string) =>
+  optionalFlag(Flag.Finite("step"), description);
+
+const stepRequest = (
+  target: Target,
+  setting: StepSetting,
+  direction: StepRequest["direction"],
+  step: Option.Option<number>,
+): StepRequest =>
+  Option.match(step, {
+    onNone: () => ({ target, setting, direction }),
+    onSome: (size) => ({ target, setting, direction, step: size }),
+  });
+
+// Raise and lower commands for a number Home Assistant has no step action
+// for, built from its current value and its set action.
+const stepCommands = (
+  domain: string,
+  setting: StepSetting,
+  names: Readonly<Record<StepRequest["direction"], string>>,
+  label: string,
+  stepDescription: string,
+) =>
+  (["increase", "decrease"] as const).map((direction) =>
+    Command.make(
+      names[direction],
+      { step: stepFlag(stepDescription), target: targetConfig(domain) },
+      (input) =>
+        stepValue(
+          stepRequest(
+            toTarget(domain, input.target),
+            setting,
+            direction,
+            input.step,
+          ),
+        ).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        `${direction === "increase" ? "Raise" : "Lower"} the ${label} by a step`,
+      ),
+    ),
+  );
+
+// A Home Assistant step action, which steps by the entity's own size, or
+// the bridge's stepping when --step gives another size.
+const nativeStepCommand = (
+  domain: string,
+  setting: StepSetting,
+  name: string,
+  direction: StepRequest["direction"],
+  toAction: (target: Target) => Action,
+  description: string,
+  stepDescription: string,
+) =>
+  Command.make(
+    name,
+    { step: stepFlag(stepDescription), target: targetConfig(domain) },
+    (input) => {
+      const target = toTarget(domain, input.target);
+
+      return (
+        Option.isNone(input.step)
+          ? callAction(toAction(target))
+          : stepValue(stepRequest(target, setting, direction, input.step))
+      ).pipe(Effect.asVoid, withBridge);
+    },
+  ).pipe(Command.withDescription(description));
+
 const watchUpdates = (target: Target, domain?: string) =>
   Stream.unwrap(
     Effect.gen(function* () {
@@ -599,17 +691,23 @@ const inputNumber = domainCommand(
   "in",
   "Input number actions",
   [
-    entityActionCommand(
+    nativeStepCommand(
       "input_number",
+      "input_number.value",
       "increment",
+      "increase",
       InputNumber.increment,
-      "Raise the value by one step",
+      "Raise the value by a step",
+      "Amount to raise by (default: the entity's step)",
     ),
-    entityActionCommand(
+    nativeStepCommand(
       "input_number",
+      "input_number.value",
       "decrement",
+      "decrease",
       InputNumber.decrement,
-      "Lower the value by one step",
+      "Lower the value by a step",
+      "Amount to lower by (default: the entity's step)",
     ),
     Command.make(
       "set-value",
@@ -748,6 +846,13 @@ const light = domainCommand("light", "l", "Light actions", [
       }).pipe(withBridge),
   ).pipe(Command.withAlias("off"), Command.withDescription("Turn off")),
   lightOnCommand("toggle", Light.toggle, "Toggle").pipe(Command.withAlias("t")),
+  ...stepCommands(
+    "light",
+    "light.brightness",
+    { increase: "increase-brightness", decrease: "decrease-brightness" },
+    "brightness",
+    "Percent to change by (default: 10); 0 turns the light off",
+  ),
 ]);
 
 const speedFlag = Flag.String("speed").pipe(
@@ -799,6 +904,13 @@ const cover = domainCommand("cover", "c", "Cover actions", [
         );
       }).pipe(withBridge),
   ).pipe(Command.withDescription("Set the position")),
+  ...stepCommands(
+    "cover",
+    "cover.position",
+    { increase: "increase-position", decrease: "decrease-position" },
+    "position",
+    "Percent to move by (default: 10)",
+  ),
   entityActionCommand("cover", "open-tilt", Cover.openTilt, "Open the tilt"),
   entityActionCommand("cover", "close-tilt", Cover.closeTilt, "Close the tilt"),
   entityActionCommand(
@@ -819,6 +931,13 @@ const cover = domainCommand("cover", "c", "Cover actions", [
         );
       }).pipe(withBridge),
   ).pipe(Command.withDescription("Set the tilt position")),
+  ...stepCommands(
+    "cover",
+    "cover.tilt_position",
+    { increase: "increase-tilt", decrease: "decrease-tilt" },
+    "tilt position",
+    "Percent to tilt by (default: 10)",
+  ),
 ]);
 
 // Sets a mode the entity lists in an attribute, such as `fan_modes`.
@@ -925,6 +1044,20 @@ const climate = domainCommand("climate", "cl", "Climate actions", [
         Climate.setHumidity(toTarget("climate", input.target), input.humidity),
       ).pipe(withBridge),
   ).pipe(Command.withDescription("Set the target humidity")),
+  ...stepCommands(
+    "climate",
+    "climate.temperature",
+    { increase: "increase-temperature", decrease: "decrease-temperature" },
+    "target temperature",
+    "Degrees to change by (default: the entity's target_temp_step, else 0.5 °C or 1 °F)",
+  ),
+  ...stepCommands(
+    "climate",
+    "climate.humidity",
+    { increase: "increase-humidity", decrease: "decrease-humidity" },
+    "target humidity",
+    "Percent to change by (default: the entity's target_humidity_step, else 1)",
+  ),
   climateModeCommand(
     "preset-mode",
     "Preset mode",
@@ -1138,6 +1271,13 @@ const valve = domainCommand("valve", undefined, "Valve actions", [
         );
       }).pipe(withBridge),
   ).pipe(Command.withDescription("Set the position")),
+  ...stepCommands(
+    "valve",
+    "valve.position",
+    { increase: "increase-position", decrease: "decrease-position" },
+    "position",
+    "Percent to move by (default: 10)",
+  ),
 ]);
 
 const decodeSirenTurnOn = Schema.decodeUnknownEffect(SirenTurnOnData);
@@ -1477,6 +1617,13 @@ const inputSelect = domainCommand(
 
 const number = domainCommand("number", undefined, "Number actions", [
   setValueCommand("number", "New value", finiteNumber, NumberEntity.setValue),
+  ...stepCommands(
+    "number",
+    "number.value",
+    { increase: "increment", decrease: "decrement" },
+    "value",
+    "Amount to change by (default: the entity's step)",
+  ),
 ]);
 
 const text = domainCommand("text", undefined, "Text actions", [
@@ -1556,17 +1703,23 @@ const inputDateTime = domainCommand(
 );
 
 const counter = domainCommand("counter", undefined, "Counter actions", [
-  entityActionCommand(
+  nativeStepCommand(
     "counter",
+    "counter.value",
     "increment",
+    "increase",
     Counter.increment,
-    "Raise the count by one step",
+    "Raise the count by a step",
+    "Amount to raise by (default: the counter's step)",
   ),
-  entityActionCommand(
+  nativeStepCommand(
     "counter",
+    "counter.value",
     "decrement",
+    "decrease",
     Counter.decrement,
-    "Lower the count by one step",
+    "Lower the count by a step",
+    "Amount to lower by (default: the counter's step)",
   ),
   entityActionCommand(
     "counter",
@@ -2550,6 +2703,13 @@ const humidifier = domainCommand(
       Humidifier.setHumidity,
       "Set the target humidity",
     ),
+    ...stepCommands(
+      "humidifier",
+      "humidifier.humidity",
+      { increase: "increase-humidity", decrease: "decrease-humidity" },
+      "target humidity",
+      "Percent to change by (default: the entity's target_humidity_step, else 1)",
+    ),
   ],
 );
 
@@ -2595,6 +2755,13 @@ const waterHeater = domainCommand(
           );
         }).pipe(withBridge),
     ).pipe(Command.withDescription("Set the target temperature")),
+    ...stepCommands(
+      "water_heater",
+      "water_heater.temperature",
+      { increase: "increase-temperature", decrease: "decrease-temperature" },
+      "target temperature",
+      "Degrees to change by (default: the entity's target_temp_step, else 0.5 °C or 1 °F)",
+    ),
     valueCommand(
       "water_heater",
       "operation-mode",
@@ -2679,8 +2846,26 @@ const mediaPlayer = domainCommand(
       ["stop", MediaPlayer.stop, "Stop"],
       ["next", MediaPlayer.nextTrack, "Next track"],
       ["previous", MediaPlayer.previousTrack, "Previous track"],
-      ["volume-up", MediaPlayer.volumeUp, "Turn the volume up"],
-      ["volume-down", MediaPlayer.volumeDown, "Turn the volume down"],
+    ]),
+    nativeStepCommand(
+      "media_player",
+      "media_player.volume",
+      "volume-up",
+      "increase",
+      MediaPlayer.volumeUp,
+      "Turn the volume up",
+      "Volume to add, from 0 to 1 (default: the player's own step)",
+    ),
+    nativeStepCommand(
+      "media_player",
+      "media_player.volume",
+      "volume-down",
+      "decrease",
+      MediaPlayer.volumeDown,
+      "Turn the volume down",
+      "Volume to take away, from 0 to 1 (default: the player's own step)",
+    ),
+    ...simpleCommands("media_player", [
       ["clear-playlist", MediaPlayer.clearPlaylist, "Clear the playlist"],
       ["unjoin", MediaPlayer.unjoin, "Leave the player's group"],
     ]),

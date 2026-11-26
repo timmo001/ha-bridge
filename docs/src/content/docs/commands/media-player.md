@@ -295,6 +295,7 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
+  --step number              Volume to add, from 0 to 1 (default: the player's own step)
   --entity string            Entity ID or name; repeat for more
   --device string            Device ID or name; repeat for more
   --area string              Area ID or name; repeat for more
@@ -323,6 +324,7 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the media_player. prefix; repeat for more (optional)
 
 FLAGS
+  --step number              Volume to take away, from 0 to 1 (default: the player's own step)
   --entity string            Entity ID or name; repeat for more
   --device string            Device ID or name; repeat for more
   --area string              Area ID or name; repeat for more

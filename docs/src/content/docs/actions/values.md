@@ -22,6 +22,13 @@ ha-bridge datetime set-value "2026-10-03 18:00" away_until
 | `time` | `HH:MM` or `HH:MM:SS` |
 | `datetime` | A date and time, such as `2026-10-03 18:00`, in Home Assistant's time zone unless it has an offset |
 
+`number increment` and `number decrement` raise or lower a number by `--step`, else the entity's own `step`, within its `min` and `max`. Home Assistant has no action for this, so the bridge sets the new value from the current one, and quick steps add up; see [Stepping a value](/actions#stepping-a-value):
+
+```bash
+ha-bridge number increment oven_target
+ha-bridge number decrement --step 0.5 trv_offset
+```
+
 For input numbers, see [Input numbers](/actions/input-numbers).
 
 ## Input date and time helpers
@@ -39,6 +46,7 @@ ha-bridge input_datetime set-datetime last_backup --timestamp 1790000000
 | Command | Home Assistant action |
 | --- | --- |
 | `number set-value` | `number.set_value` |
+| `number increment`, `number decrement` | `number.set_value`, from the current value |
 | `text set-value` | `text.set_value` |
 | `input_text set-value` | `input_text.set_value` |
 | `input_text reload` | `input_text.reload` |

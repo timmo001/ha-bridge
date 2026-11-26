@@ -28,7 +28,7 @@ INHERITED FLAGS
 
 ```text
 DESCRIPTION
-  Raise the value by one step
+  Raise the value by a step
 
 USAGE
   ha-bridge input_number increment [flags] [<entity_id...>]
@@ -37,6 +37,7 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the input_number. prefix; repeat for more (optional)
 
 FLAGS
+  --step number              Amount to raise by (default: the entity's step)
   --entity string            Entity ID or name; repeat for more
   --device string            Device ID or name; repeat for more
   --area string              Area ID or name; repeat for more
@@ -56,7 +57,7 @@ INHERITED FLAGS
 
 ```text
 DESCRIPTION
-  Lower the value by one step
+  Lower the value by a step
 
 USAGE
   ha-bridge input_number decrement [flags] [<entity_id...>]
@@ -65,6 +66,7 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the input_number. prefix; repeat for more (optional)
 
 FLAGS
+  --step number              Amount to lower by (default: the entity's step)
   --entity string            Entity ID or name; repeat for more
   --device string            Device ID or name; repeat for more
   --area string              Area ID or name; repeat for more

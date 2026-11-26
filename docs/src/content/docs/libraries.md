@@ -44,6 +44,7 @@ Calls fail straight away when the bridge isn't running, rather than waiting for 
 | `GetEntities({ target, domain? })` | The state and display name of every entity the target matches. Fails with `TargetError` when a name doesn't resolve |
 | `WatchEntities({ target, domain? })` | A `Stream` of updates for every matching entity, starting with their current states. It keeps going across Home Assistant reconnects and picks up entities the target newly matches |
 | `CallAction(action)` | The action's response when `return_response` is set, otherwise `null`. Names in the target are resolved first. Fails with `HomeAssistantError` or `TargetError` |
+| `Step({ target, setting, direction, step? })` | Raises or lowers a number, such as `cover.position`, from each entity's current value and within its range, building quick steps on each other. Returns the value each entity was set to. See [the protocol](/using/protocol#rpcs) |
 | `GetConfig()` | Home Assistant's config, such as its name, version and units |
 | `CameraSnapshot({ target })` | The image from the one camera the target matches, as `contentType` and `data` bytes |
 | `RenderTemplate({ template, variables?, strict?, timeout? })` | The template's first render, as `result` and any `warnings`. Fails with `HomeAssistantError` on a render error |

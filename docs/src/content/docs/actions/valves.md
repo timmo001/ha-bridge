@@ -13,6 +13,12 @@ ha-bridge valve stop garden
 ha-bridge valve position 50 garden
 ```
 
+`increase-position` and `decrease-position` move it by a step, 10 unless `--step` says otherwise. Quick steps add up while the valve is still moving; see [Stepping a value](/actions#stepping-a-value):
+
+```bash
+ha-bridge valve increase-position --step 5 garden
+```
+
 | Command | Home Assistant action |
 | --- | --- |
 | `valve open` | `valve.open_valve` |
@@ -20,5 +26,6 @@ ha-bridge valve position 50 garden
 | `valve toggle` | `valve.toggle` |
 | `valve stop` | `valve.stop_valve` |
 | `valve position` | `valve.set_valve_position` |
+| `valve increase-position`, `valve decrease-position` | `valve.set_valve_position`, from the current position |
 
 See [`ha-bridge valve`](/commands/valve) for every argument and flag.

@@ -114,6 +114,23 @@ const dimDesk = Effect.gen(function* () {
 
 Set `return_response: true` for actions that return data. `CallAction` then succeeds with the response; otherwise it succeeds with `null`.
 
+### Step a value
+
+`Step` raises or lowers a number Home Assistant has no step action for, such as a cover's position or a thermostat's target temperature. The bridge reads each entity's current value, adds or takes away `step` (by default the entity's own step size), keeps the result within the entity's range and sets it. Steps in quick succession build on the value the last one set, so they add up even while a cover reports its position late. It succeeds with the value each entity was set to.
+
+```ts
+const openABit = Effect.gen(function* () {
+  const client = yield* BridgeClient;
+
+  yield* client.Step({
+    target: { entity_id: "cover.curtain" },
+    setting: "cover.position",
+    direction: "increase",
+    step: 5,
+  });
+});
+```
+
 ### Calendar events
 
 `getCalendarEvents` returns the events that overlap a time range on every calendar the target matches, keyed by calendar entity ID. All-day events have ISO dates for `start` and `end`; others have date-times. An event may include `status`, `confirmed` or `tentative`, when the calendar reports one.

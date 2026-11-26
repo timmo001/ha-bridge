@@ -21,6 +21,7 @@ ha-bridge l t desk_lamp
 | `light turn-on` | `light.turn_on` |
 | `light turn-off` | `light.turn_off` |
 | `light toggle` | `light.toggle` |
+| `light increase-brightness`, `light decrease-brightness` | `light.turn_on`, from the current brightness |
 
 ## Brightness and colour
 
@@ -49,6 +50,17 @@ ha-bridge light turn-on desk_lamp --effect rainbow
 | `--flash` | `short` or `long` |
 
 Use at most one brightness flag and one colour flag (`--color-temp-kelvin`, the colour flags, `--white` and `--profile`).
+
+## Stepping brightness
+
+`increase-brightness` and `decrease-brightness` change the brightness by a step, 10 percent unless `--step` says otherwise. An off light counts as 0, so stepping up turns it on, and stepping down to 0 turns it off. Unlike `--brightness-step-pct`, quick steps add up even when the light reports its brightness late; see [Stepping a value](/actions#stepping-a-value):
+
+```bash
+ha-bridge light increase-brightness desk_lamp
+ha-bridge light decrease-brightness --step 5 desk_lamp
+```
+
+Both send `light.turn_on` with `brightness_pct`, worked out from the light's current brightness. They fail for a light that only turns on and off.
 
 ## Turning off
 

@@ -33,6 +33,31 @@ Commands that need one entity, such as `script run`, `camera snapshot` and `assi
 
 [`get` and `watch`](/using/reading) take full entity IDs, since they read entities in any domain.
 
+## Stepping a value
+
+Numbers that go up and down have commands to raise or lower them by a step, such as `cover increase-position` and `climate decrease-temperature`. Where Home Assistant has no action for that, the bridge reads each entity's current value, adds or takes away the step, keeps the result within the entity's range (its `min_temp` and `max_temp`, `min` and `max`, or 0 to 100) and sets it. `--step` sets the size. Without it, the entity's own step size is used, such as `target_temp_step`, or 10 for positions and brightness:
+
+```bash
+ha-bridge cover increase-position --step 5 curtain
+ha-bridge climate decrease-temperature office
+```
+
+Steps in quick succession add up. A cover reports its position late while it moves, so five quick steps of 5 would otherwise all start from the same position and move it 5 in all. The bridge remembers the value each step set, per entity, for 5 seconds after the last step, and for up to a minute while a cover or valve still reports opening or closing. The next step builds on that value instead of the reported one. Any other action in the domain, such as `cover stop` or an exact `cover position`, makes the next step start from the reported value again.
+
+| Domain | Commands | Step without `--step` |
+| --- | --- | --- |
+| [Covers](/actions/covers) | `increase-position`, `decrease-position`, `increase-tilt`, `decrease-tilt` | 10 |
+| [Valves](/actions/valves) | `increase-position`, `decrease-position` | 10 |
+| [Lights](/actions/lights) | `increase-brightness`, `decrease-brightness` | 10 percent |
+| [Climate](/actions/climate) | `increase-temperature`, `decrease-temperature` | `target_temp_step`, else 0.5 °C or 1 °F |
+| [Climate](/actions/climate) and [humidifiers](/actions/humidifiers) | `increase-humidity`, `decrease-humidity` | `target_humidity_step`, else 1 |
+| [Water heaters](/actions/humidifiers) | `increase-temperature`, `decrease-temperature` | `target_temp_step`, else 0.5 °C or 1 °F |
+| [Numbers](/actions/values) | `increment`, `decrement` | The entity's `step` |
+| [Input numbers](/actions/input-numbers) and [counters](/actions/counters) | `increment`, `decrement` | Home Assistant's own action, with the entity's `step` |
+| [Media players](/actions/media-players) | `volume-up`, `volume-down` | Home Assistant's own action, with the player's step |
+
+The last two rows use Home Assistant's own step actions unless `--step` is given, which steps through the bridge instead. [`fan increase-speed`](/actions/fans) already takes `--step`.
+
 ## Domains
 
 | Domain | Command | Alias | What it does |

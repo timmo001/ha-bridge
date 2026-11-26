@@ -26,7 +26,11 @@ ha-bridge mp source HDMI1 lounge
 ha-bridge mp sound-mode Movie lounge
 ```
 
-`volume` is from 0 to 1. The source and sound mode are from the player's `source_list` and `sound_mode_list`.
+`volume` is from 0 to 1. `volume-up` and `volume-down` step by the player's own amount, or by `--step` (from 0 to 1), which the bridge sets from the current volume as `media_player.volume_set`, adding up quick steps; see [Stepping a value](/actions#stepping-a-value). The source and sound mode are from the player's `source_list` and `sound_mode_list`.
+
+```bash
+ha-bridge mp volume-up --step 0.05 lounge
+```
 
 ## Playing media
 
@@ -67,7 +71,7 @@ ha-bridge mp search "Abbey Road" kitchen
 | `play`, `pause`, `play-pause`, `stop` | `media_player.media_play`, `media_pause`, `media_play_pause`, `media_stop` |
 | `next`, `previous` | `media_player.media_next_track`, `media_previous_track` |
 | `seek` | `media_player.media_seek` |
-| `volume`, `volume-up`, `volume-down`, `mute` | `media_player.volume_set`, `volume_up`, `volume_down`, `volume_mute` |
+| `volume`, `volume-up`, `volume-down`, `mute` | `media_player.volume_set`, `volume_up`, `volume_down`, `volume_mute`; `volume-up` and `volume-down` send `volume_set` with `--step` |
 | `source`, `sound-mode` | `media_player.select_source`, `select_sound_mode` |
 | `play-media` | `media_player.play_media` |
 | `shuffle`, `repeat`, `clear-playlist` | `media_player.shuffle_set`, `repeat_set`, `clear_playlist` |

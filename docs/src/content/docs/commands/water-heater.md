@@ -112,6 +112,64 @@ INHERITED FLAGS
   --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
 ```
 
+## `ha-bridge water_heater increase-temperature`
+
+```text
+DESCRIPTION
+  Raise the target temperature by a step
+
+USAGE
+  ha-bridge water_heater increase-temperature [flags] [<entity_id...>]
+
+ARGUMENTS
+  entity_id... string    Entity ID, with or without the water_heater. prefix; repeat for more (optional)
+
+FLAGS
+  --step number              Degrees to change by (default: the entity's target_temp_step, else 0.5 °C or 1 °F)
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```
+
+## `ha-bridge water_heater decrease-temperature`
+
+```text
+DESCRIPTION
+  Lower the target temperature by a step
+
+USAGE
+  ha-bridge water_heater decrease-temperature [flags] [<entity_id...>]
+
+ARGUMENTS
+  entity_id... string    Entity ID, with or without the water_heater. prefix; repeat for more (optional)
+
+FLAGS
+  --step number              Degrees to change by (default: the entity's target_temp_step, else 0.5 °C or 1 °F)
+  --entity string            Entity ID or name; repeat for more
+  --device string            Device ID or name; repeat for more
+  --area string              Area ID or name; repeat for more
+  --floor string             Floor ID or name; repeat for more
+  --label string             Label ID or name; repeat for more
+  --exclude-entity string    Entity ID or name to leave out; repeat for more
+  --exclude-device string    Device ID or name to leave out; repeat for more
+  --exclude-area string      Area ID or name to leave out; repeat for more
+  --exclude-floor string     Floor ID or name to leave out; repeat for more
+  --exclude-label string     Label ID or name to leave out; repeat for more
+
+INHERITED FLAGS
+  --socket string    Path to the bridge socket (default: $HA_BRIDGE_SOCK, then $XDG_RUNTIME_DIR/ha-bridge/ha-bridge.sock)
+```
+
 ## `ha-bridge water_heater operation-mode`
 
 ```text

@@ -35,6 +35,13 @@ ha-bridge climate temperature thermostat --target-temp-low 18 --target-temp-high
 ha-bridge climate humidity 45 dehumidifier
 ```
 
+`increase-temperature` and `decrease-temperature` change the target temperature by a step: `--step`, else the entity's `target_temp_step`, else 0.5 °C or 1 °F. `increase-humidity` and `decrease-humidity` change the target humidity by `--step`, else `target_humidity_step`, else 1. Results stay within the entity's `min_temp` and `max_temp`, or `min_humidity` and `max_humidity`, and quick steps add up; see [Stepping a value](/actions#stepping-a-value). Stepping the temperature needs a single target temperature, not a range:
+
+```bash
+ha-bridge climate increase-temperature thermostat
+ha-bridge climate decrease-humidity --step 5 dehumidifier
+```
+
 ## Other modes
 
 These take a mode from the entity's attributes: `preset_modes`, `fan_modes`, `swing_modes` and `swing_horizontal_modes`:
@@ -59,7 +66,9 @@ ha-bridge climate swing-horizontal-mode on air_conditioner
 | `climate toggle` | `climate.toggle` |
 | `climate hvac-mode` | `climate.set_hvac_mode` |
 | `climate temperature` | `climate.set_temperature` |
+| `climate increase-temperature`, `climate decrease-temperature` | `climate.set_temperature`, from the current target |
 | `climate humidity` | `climate.set_humidity` |
+| `climate increase-humidity`, `climate decrease-humidity` | `climate.set_humidity`, from the current target |
 | `climate preset-mode` | `climate.set_preset_mode` |
 | `climate fan-mode` | `climate.set_fan_mode` |
 | `climate swing-mode` | `climate.set_swing_mode` |

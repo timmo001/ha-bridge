@@ -26,7 +26,7 @@ INHERITED FLAGS
 
 ```text
 DESCRIPTION
-  Raise the count by one step
+  Raise the count by a step
 
 USAGE
   ha-bridge counter increment [flags] [<entity_id...>]
@@ -35,6 +35,7 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the counter. prefix; repeat for more (optional)
 
 FLAGS
+  --step number              Amount to raise by (default: the counter's step)
   --entity string            Entity ID or name; repeat for more
   --device string            Device ID or name; repeat for more
   --area string              Area ID or name; repeat for more
@@ -54,7 +55,7 @@ INHERITED FLAGS
 
 ```text
 DESCRIPTION
-  Lower the count by one step
+  Lower the count by a step
 
 USAGE
   ha-bridge counter decrement [flags] [<entity_id...>]
@@ -63,6 +64,7 @@ ARGUMENTS
   entity_id... string    Entity ID, with or without the counter. prefix; repeat for more (optional)
 
 FLAGS
+  --step number              Amount to lower by (default: the counter's step)
   --entity string            Entity ID or name; repeat for more
   --device string            Device ID or name; repeat for more
   --area string              Area ID or name; repeat for more

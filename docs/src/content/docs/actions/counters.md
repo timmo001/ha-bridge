@@ -12,10 +12,16 @@ ha-bridge counter reset coffees
 ha-bridge counter set-value 3 coffees
 ```
 
+`increment` and `decrement` take `--step` to change by another amount. The bridge then sets the new count from the current one, within the counter's `minimum` and `maximum`; see [Stepping a value](/actions#stepping-a-value):
+
+```bash
+ha-bridge counter increment --step 2 coffees
+```
+
 | Command | Home Assistant action |
 | --- | --- |
-| `counter increment` | `counter.increment` |
-| `counter decrement` | `counter.decrement` |
+| `counter increment` | `counter.increment`, or `counter.set_value` with `--step` |
+| `counter decrement` | `counter.decrement`, or `counter.set_value` with `--step` |
 | `counter reset` | `counter.reset` |
 | `counter set-value` | `counter.set_value` |
 
