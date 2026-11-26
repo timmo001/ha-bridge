@@ -16,6 +16,7 @@ import { HomeAssistant } from "../homeassistant/HomeAssistant.js";
 import { EntityConfigs } from "../homeassistant/EntityConfigs.js";
 import { HomeAssistantLogs } from "../homeassistant/Logs.js";
 import { Registry } from "../homeassistant/Registry.js";
+import { Steps } from "../homeassistant/Steps.js";
 import { Updates } from "../homeassistant/Updates.js";
 import { BridgeRpcs } from "@timmo001/effect-ha-bridge";
 
@@ -26,11 +27,16 @@ const Handlers = BridgeRpcs.toLayer(
     const entityConfigs = yield* EntityConfigs;
     const updates = yield* Updates;
     const registry = yield* Registry;
+    const steps = yield* Steps;
 
     return BridgeRpcs.of({
       GetEntities: (request) => homeAssistant.getEntities(request),
       WatchEntities: (request) => homeAssistant.watchEntities(request),
-      CallAction: (action) => homeAssistant.callAction(action),
+      CallAction: (action) =>
+        steps
+          .forget(action.action)
+          .pipe(Effect.andThen(homeAssistant.callAction(action))),
+      Step: (request) => steps.step(request),
       GetConfig: () => homeAssistant.getConfig,
       CameraSnapshot: ({ target }) => homeAssistant.cameraSnapshot(target),
       Search: (request) => homeAssistant.search(request),
@@ -221,6 +227,7 @@ export const serve = (socketPath: string) =>
               EntityConfigs.layer,
               Updates.layer,
               Registry.layer,
+              Steps.layer,
             ).pipe(
               Layer.provideMerge(HomeAssistant.layer),
               Layer.provide(FetchHttpClient.layer),

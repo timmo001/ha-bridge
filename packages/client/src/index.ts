@@ -18,6 +18,8 @@ export * from "./Search.js";
 
 export * from "./socketPath.js";
 
+export * from "./Step.js";
+
 export * from "./Target.js";
 
 export * from "./Updates.js";

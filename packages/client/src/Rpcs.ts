@@ -66,6 +66,7 @@ import {
   UpdateLabelRequest,
 } from "./Registry.js";
 import { SearchEmpty, SearchRequest, SearchResults } from "./Search.js";
+import { StepRequest, StepResult } from "./Step.js";
 import { TargetError, TargetRequest } from "./Target.js";
 import {
   CheckUpdatesRequest,
@@ -102,6 +103,15 @@ export class BridgeRpcs extends RpcGroup.make(
   Rpc.make("CallAction", {
     payload: Action,
     success: Schema.NullOr(Schema.Json),
+    error: TargetFailure,
+  }),
+  // Raises or lowers a number by a step, from each entity's current value
+  // and kept within its range. Steps in quick succession build on the value
+  // the last one set rather than a reported value that may lag behind, so
+  // five quick steps of 5 move a cover 25.
+  Rpc.make("Step", {
+    payload: StepRequest,
+    success: Schema.Array(StepResult),
     error: TargetFailure,
   }),
   Rpc.make("GetConfig", {
