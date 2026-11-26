@@ -15,6 +15,7 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 - Use Home Assistant's current names: actions, not services. Commands are named after the domain (`light`, `media_player`, `alarm_control_panel`), each with action subcommands.
 - Look up commands and flags before using them; there are over 90 domains and flags change. Don't guess from memory or from Go Automate, which this replaced.
 - Subcommands drop the domain from Home Assistant's action names and use hyphens: `cover.close_cover` is `cover close`, `light.turn_on` is `light turn-on` and `media_player.volume_set` is `media_player volume-set`. Check `ha-bridge <domain> --help` for the list.
+- To raise or lower a number by a step, use the step commands, such as `cover increase-position --step 5` or `climate decrease-temperature`, rather than reading the value and setting a new one. They stay in the entity's range and add up quick steps; see `/actions#stepping-a-value`.
 - Never run `ha-bridge setup` for the user. It prompts for a token; ask them to run it.
 - Ask before actions with real-world effects the user didn't request, such as unlocking, opening covers or garage doors, disarming alarms, restarting Home Assistant or running scripts.
 - Ask before `system_log clear` or changing log levels with `logger`. Clearing throws away the evidence a diagnosis needs, and debug levels flood the log.
