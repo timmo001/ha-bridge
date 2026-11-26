@@ -61,6 +61,7 @@ import {
   RegistryItems,
   SetCategoryRequest,
   SetDeviceAreaRequest,
+  SetEntityAreaRequest,
   UpdateCategoryRequest,
   UpdateLabelRequest,
 } from "./Registry.js";
@@ -355,6 +356,13 @@ export class BridgeRpcs extends RpcGroup.make(
   // as it is afterwards.
   Rpc.make("SetDeviceArea", {
     payload: SetDeviceAreaRequest,
+    success: Schema.Array(RegistryEntry),
+    error: TargetFailure,
+  }),
+  // Gives entities an area of their own, or clears it so they follow their
+  // device's. Succeeds with each entity as it is afterwards.
+  Rpc.make("SetEntityArea", {
+    payload: SetEntityAreaRequest,
     success: Schema.Array(RegistryEntry),
     error: TargetFailure,
   }),

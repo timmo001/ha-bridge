@@ -21,7 +21,7 @@ The release tarballs also carry both skills beside the binary, in `skills/ha-bri
 
 ## ha-bridge-cli
 
-`ha-bridge-cli` teaches an agent to use the CLI: finding the right command and flags, calling actions, reading and watching state, feeding bars and scripts, reading and changing [automation](/actions/automations#reading-and-changing-configs) and [script](/actions/scripts#reading-and-changing-configs) configs, [labels, categories and device areas](/using/registries), and reading, watching and searching [logs](/using/logs) to diagnose a problem or confirm a fix. It also sets rules, such as asking before actions with real-world effects and redacting logs before they leave the machine.
+`ha-bridge-cli` teaches an agent to use the CLI: finding the right command and flags, calling actions, reading and watching state, feeding bars and scripts, reading and changing [automation](/actions/automations#reading-and-changing-configs) and [script](/actions/scripts#reading-and-changing-configs) configs, [labels, categories and areas](/using/registries), and reading, watching and searching [logs](/using/logs) to diagnose a problem or confirm a fix. It also sets rules, such as asking before actions with real-world effects and redacting logs before they leave the machine.
 
 The skill needs the `ha-bridge` CLI and a [running bridge](/running). It points agents at these docs, through the docs MCP server when it's connected. It also covers running [inside a Home Assistant app](/configuration#inside-a-home-assistant-app), where the app runs the bridge and there's no systemd.
 
@@ -37,7 +37,7 @@ This site serves a skill that points agents at these docs rather than what they 
 
 ## OpenCode plugin
 
-The OpenCode plugin in `packages/opencode` adds an `ha-bridge` Code Mode namespace: typed tools for reading entities, history, logs and configs, rendering templates, testing conditions, searching, calling actions, and managing labels, categories and device areas. Load it from the repository in your OpenCode config:
+The OpenCode plugin in `packages/opencode` adds an `ha-bridge` Code Mode namespace: typed tools for reading entities, history, logs and configs, rendering templates, testing conditions, searching, calling actions, and managing labels, categories and device and entity areas. Load it from the repository in your OpenCode config:
 
 ```json
 {

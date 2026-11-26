@@ -3,7 +3,7 @@ title: Labels, categories and areas
 description: Read and change the labels, categories and areas of entities, devices and areas, as Home Assistant's settings pages do.
 ---
 
-`label`, `category`, `device` and `registry` work with Home Assistant's registries as its settings pages do, so you can organise entities, devices and areas from the shell without Spook or the frontend. Changes need a token that belongs to an admin.
+`label`, `category`, `device`, `entity` and `registry` work with Home Assistant's registries as its settings pages do, so you can organise entities, devices and areas from the shell without Spook or the frontend. Changes need a token that belongs to an admin.
 
 ## Reading what an item has
 
@@ -71,7 +71,7 @@ ha-bridge category clear automation.morning_lights
 
 An entity keeps its categories in other scopes.
 
-## Device areas
+## Areas
 
 `device set-area` moves devices to an area, and `device clear-area` takes them out of theirs. Both take device and area IDs or names:
 
@@ -82,8 +82,15 @@ ha-bridge device clear-area "Kitchen speaker"
 
 A device's entities without an area of their own follow it.
 
+`entity set-area` gives entities an area of their own, which overrides their device's. It's also how automations, scripts and helpers get an area, since they have no device. `entity clear-area` takes the entity's own area away, so it follows its device again, or has no area when it has no device. Both take entity IDs and an area ID or name:
+
+```bash
+ha-bridge entity set-area Office automation.morning_lights input_boolean.guest_mode
+ha-bridge entity clear-area sensor.kitchen_speaker_power
+```
+
 ## Output and failures
 
-`label add` and `remove`, `category set` and `clear`, and `device set-area` and `clear-area` print nothing when they succeed. `--json` prints each item afterwards, as `registry get --json` does. A name that matches nothing or more than one label, category, device or area exits 1 and says so, as does an entity Home Assistant has no registry entry for. Without an admin token, changes exit 1 before asking Home Assistant.
+`label add` and `remove`, `category set` and `clear`, and `device` and `entity` `set-area` and `clear-area` print nothing when they succeed. `--json` prints each item afterwards, as `registry get --json` does. A name that matches nothing or more than one label, category, device or area exits 1 and says so, as does an entity Home Assistant has no registry entry for. Without an admin token, changes exit 1 before asking Home Assistant.
 
-See [`label`](/commands/label), [`category`](/commands/category), [`device`](/commands/device) and [`registry`](/commands/registry) for every argument and flag, and [Bridge protocol](/using/protocol#rpcs) for the RPCs behind them.
+See [`label`](/commands/label), [`category`](/commands/category), [`device`](/commands/device), [`entity`](/commands/entity) and [`registry`](/commands/registry) for every argument and flag, and [Bridge protocol](/using/protocol#rpcs) for the RPCs behind them.

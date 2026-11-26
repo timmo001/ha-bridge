@@ -147,3 +147,13 @@ export const SetDeviceAreaRequest = Schema.Struct({
 });
 
 export type SetDeviceAreaRequest = typeof SetDeviceAreaRequest.Type;
+
+// Gives entities, by entity ID, an area of their own by ID or name, or
+// clears it with null so each follows its device's area again. Works for
+// automations, scripts and helpers as well as device entities.
+export const SetEntityAreaRequest = Schema.Struct({
+  entity_id: Ids,
+  area: Schema.NullOr(Schema.String),
+});
+
+export type SetEntityAreaRequest = typeof SetEntityAreaRequest.Type;

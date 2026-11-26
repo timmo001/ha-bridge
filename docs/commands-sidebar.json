@@ -80,6 +80,7 @@
   "/commands/label",
   "/commands/category",
   "/commands/device",
+  "/commands/entity",
   "/commands/registry",
   "/commands/bayesian",
   "/commands/command-line",

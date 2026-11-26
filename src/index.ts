@@ -6269,6 +6269,56 @@ const device = domainCommand(
   ],
 );
 
+const entity = domainCommand(
+  "entity",
+  undefined,
+  "Entity registry changes, for device entities, automations, scripts and helpers alike. They need an admin token",
+  [
+    Command.make(
+      "set-area",
+      {
+        json: registryJsonFlag,
+        area: Argument.String("area").pipe(
+          Argument.withDescription("Area ID or name"),
+        ),
+        entities: categoryEntitiesArgument,
+      },
+      (input) =>
+        Effect.gen(function* () {
+          const client = yield* BridgeClient;
+
+          const entries = yield* client
+            .SetEntityArea({ entity_id: input.entities, area: input.area })
+            .pipe(Effect.catchTags(registryFailures("set the area")));
+
+          yield* printEntries(entries, input.json);
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Give entities an area of their own, overriding their device's. --json prints each entity afterwards",
+      ),
+    ),
+    Command.make(
+      "clear-area",
+      { json: registryJsonFlag, entities: categoryEntitiesArgument },
+      (input) =>
+        Effect.gen(function* () {
+          const client = yield* BridgeClient;
+
+          const entries = yield* client
+            .SetEntityArea({ entity_id: input.entities, area: null })
+            .pipe(Effect.catchTags(registryFailures("clear the area")));
+
+          yield* printEntries(entries, input.json);
+        }).pipe(withBridge),
+    ).pipe(
+      Command.withDescription(
+        "Clear entities' own area, so each follows its device's again. --json prints each entity afterwards",
+      ),
+    ),
+  ],
+);
+
 const registry = domainCommand(
   "registry",
   undefined,
@@ -6414,6 +6464,7 @@ const commands = [
   label,
   category,
   device,
+  entity,
   registry,
   ...yamlReloadCommands,
 ] as const;

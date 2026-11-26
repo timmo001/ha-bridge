@@ -20,6 +20,7 @@ import {
   type RegistryItems,
   type SetCategoryRequest,
   type SetDeviceAreaRequest,
+  type SetEntityAreaRequest,
   TargetError,
   type UpdateCategoryRequest,
   type UpdateLabelRequest,
@@ -72,6 +73,9 @@ export interface RegistryService {
   ) => Effect.Effect<ReadonlyArray<RegistryEntry>, RegistryFailure>;
   readonly setDeviceArea: (
     request: SetDeviceAreaRequest,
+  ) => Effect.Effect<ReadonlyArray<RegistryEntry>, RegistryFailure>;
+  readonly setEntityArea: (
+    request: SetEntityAreaRequest,
   ) => Effect.Effect<ReadonlyArray<RegistryEntry>, RegistryFailure>;
 }
 
@@ -167,7 +171,7 @@ const resolveEach = (
     resolveCandidate(kind, value, candidates),
   );
 
-// Labels, categories and device areas, read and written through Home
+// Labels, categories and device and entity areas, read and written through Home
 // Assistant's registries as its settings pages do. Every read asks Home
 // Assistant rather than the bridge's cache, so a change made a moment ago
 // is never lost.
@@ -649,6 +653,43 @@ export class Registry extends Context.Service<Registry, RegistryService>()(
         );
       });
 
+      const setEntityArea = Effect.fn("Registry.setEntityArea")(function* (
+        request: SetEntityAreaRequest,
+      ) {
+        const entityIds = unique(request.entity_id);
+
+        if (entityIds.length === 0) {
+          return yield* new TargetError({
+            message: "give at least one entity",
+          });
+        }
+
+        yield* requireAdmin("Setting entity areas");
+        const known = yield* lookups;
+
+        const areaId =
+          request.area === null
+            ? null
+            : yield* resolveCandidate(
+                "area",
+                request.area,
+                areaCandidates(known.areas),
+              );
+
+        const current = yield* entityEntries(entityIds);
+
+        const updated = yield* Effect.forEach(current, (entry) =>
+          (entry.area_id ?? null) === areaId
+            ? Effect.succeed(entry)
+            : updateEntity({ entity_id: entry.entity_id, area_id: areaId }),
+        );
+
+        return yield* describe(
+          { entities: updated, devices: [], areas: [] },
+          known,
+        );
+      });
+
       return Registry.of({
         entries,
         labels,
@@ -662,6 +703,7 @@ export class Registry extends Context.Service<Registry, RegistryService>()(
         deleteCategory,
         setCategory,
         setDeviceArea,
+        setEntityArea,
       });
     }),
   );

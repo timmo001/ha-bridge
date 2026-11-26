@@ -32,6 +32,7 @@ import {
   RegistryItems,
   SetCategoryRequest,
   SetDeviceAreaRequest,
+  SetEntityAreaRequest,
   UpdateCategoryRequest,
   UpdateLabelRequest,
   EntityConfig,
@@ -560,6 +561,15 @@ export const agentTools: ReadonlyArray<AgentTool> = [
     input: SetDeviceAreaRequest,
     output: Schema.Array(RegistryEntry),
     run: (input) => withBridge((bridge) => bridge.SetDeviceArea(input)),
+  }),
+  tool({
+    name: "set_entity_area",
+    description:
+      "Give entities, automations, scripts or helpers, by entity ID, an area of their own by ID or name, or clear it with null so each follows its device's area again. Returns each entity afterwards.",
+    access: "write",
+    input: SetEntityAreaRequest,
+    output: Schema.Array(RegistryEntry),
+    run: (input) => withBridge((bridge) => bridge.SetEntityArea(input)),
   }),
   tool({
     name: "create_label",

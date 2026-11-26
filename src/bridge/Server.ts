@@ -71,6 +71,7 @@ const Handlers = BridgeRpcs.toLayer(
       DeleteCategory: (request) => registry.deleteCategory(request),
       SetCategory: (request) => registry.setCategory(request),
       SetDeviceArea: (request) => registry.setDeviceArea(request),
+      SetEntityArea: (request) => registry.setEntityArea(request),
     });
   }),
 );

@@ -107,10 +107,12 @@ export const HomeAssistantCommand = Schema.Union([
   // Changes an entity's registry entry as `{entity_entry}`. `labels`
   // replaces them all, and Home Assistant drops IDs it doesn't have.
   // `categories` only changes the scopes it names; null takes the entity
-  // out of that scope's category. Needs an admin token.
+  // out of that scope's category. A null `area_id` clears the entity's own
+  // area, so it follows its device's. Needs an admin token.
   Schema.Struct({
     type: Schema.Literal("config/entity_registry/update"),
     entity_id: Schema.String,
+    area_id: Schema.optional(Schema.NullOr(Schema.String)),
     labels: Schema.optional(Schema.Array(Schema.String)),
     categories: Schema.optional(
       Schema.Record(Schema.String, Schema.NullOr(Schema.String)),
