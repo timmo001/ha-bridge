@@ -43,7 +43,7 @@ compatibility: Requires the ha-bridge CLI and a running bridge (ha-bridge serve,
 | Logs, Core's errors and log search                   | `/using/logs`                                  |
 | Updates: list, check, release notes, install         | `/actions/updates`                             |
 | Searching                                            | `/using/search`                                |
-| Labels, categories and areas                  | `/using/registries`                            |
+| Labels, categories and areas                         | `/using/registries`                            |
 | Connecting an app or another language                | `/libraries`, `/using/protocol`                |
 | Socket path, config and the user service             | `/configuration`, `/running`                   |
 
