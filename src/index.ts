@@ -4956,6 +4956,7 @@ const recorder = domainCommand("recorder", undefined, "Recorder actions", [
         Flag.withDescription(
           "Keep the first 1000 changes of an entity with more, rather than failing",
         ),
+        Flag.withDefault(false),
       ),
     },
     (input) =>
